@@ -125,6 +125,15 @@ pub fn kriticna(staza: &str, cilj: &str) -> bool {
     })
 }
 
+/// Odluke (7. 11. 2026.): ime radnog prostora ne ovisi o popisu paketa. Da ovisi, svaki novi
+/// paket izgubio bi cijelu referencu i s njom usporedbu postojećih funkcija.
+pub fn ime_cilja(imena: Vec<&str>) -> String {
+    match imena.as_slice() {
+        [jedno] => (*jedno).to_string(),
+        _ => "radni-prostor".to_string(),
+    }
+}
+
 pub fn izmjeri(mapa: &Path, meta: &Metapodaci, llvm: &Pokrivenost) -> Result<Mjerenje, String> {
     let imena: BTreeSet<_> = meta
         .packages
@@ -132,7 +141,7 @@ pub fn izmjeri(mapa: &Path, meta: &Metapodaci, llvm: &Pokrivenost) -> Result<Mje
         .filter(|p| meta.workspace_members.contains(&p.id))
         .map(|p| p.name.as_str())
         .collect();
-    let cilj = imena.into_iter().collect::<Vec<_>>().join("+");
+    let cilj = ime_cilja(imena.into_iter().collect());
     let mut funkcije = Vec::new();
     for staza in izvori(mapa, meta)? {
         funkcije.extend(izmjeri_datoteku(mapa, &staza, &cilj, llvm)?);

@@ -2,6 +2,16 @@ use std::{collections::BTreeMap, fs};
 use xtask::{alati, mjerenje::*, pravila::*};
 
 #[test]
+fn novi_paket_ne_mijenja_ime_radnog_prostora() {
+    assert_eq!(ime_cilja(vec!["proba_koordinate"]), "proba_koordinate");
+    assert_eq!(ime_cilja(vec!["koordinate", "xtask"]), "radni-prostor");
+    assert_eq!(
+        ime_cilja(vec!["geometrija", "koordinate", "xtask"]),
+        "radni-prostor"
+    );
+}
+
+#[test]
 fn spaja_podrucja_i_instanciranja_bez_testova() {
     let mapa = std::env::temp_dir().join(format!("terrasimple-mjerenje-{}", std::process::id()));
     fs::create_dir_all(mapa.join("src")).unwrap();

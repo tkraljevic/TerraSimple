@@ -1,11 +1,137 @@
 {
   "schema": 1,
   "mjerenja": {
-    "xtask": {
-      "cilj": "xtask",
+    "radni-prostor": {
+      "cilj": "radni-prostor",
       "metoda": "syn-cc-v1/llvm-regions-v1",
-      "pokrivenost": 0.9085872576177285,
+      "pokrivenost": 0.9162967660114141,
       "funkcije": [
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::std :: fmt :: Display for Greska::fmt",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": true,
+          "podrucja": 8,
+          "pokrivena": 8
+        },
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::proj_iz_definicije",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": true,
+          "podrucja": 5,
+          "pokrivena": 5
+        },
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::konacna",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": true,
+          "podrucja": 8,
+          "pokrivena": 8
+        },
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::mnozitelj",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": true,
+          "podrucja": 5,
+          "pokrivena": 5
+        },
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::Pretvornik::novi",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": true,
+          "podrucja": 8,
+          "pokrivena": 8
+        },
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::Pretvornik::iz_definicija",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": true,
+          "podrucja": 10,
+          "pokrivena": 10
+        },
+        {
+          "kljuc": "koordinate/src/pretvorba.rs::Pretvornik::pretvori",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": true,
+          "podrucja": 25,
+          "pokrivena": 25
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::Sustav::iz_epsg",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": true,
+          "podrucja": 6,
+          "pokrivena": 6
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::Sustav::epsg",
+          "cc": 5,
+          "pokrivenost": 1.0,
+          "rizik": 5.0,
+          "kriticna": true,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::Sustav::iz_retka_geopaketa",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": true,
+          "podrucja": 10,
+          "pokrivena": 10
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::Sustav::tocnost_prema_wgs_m",
+          "cc": 5,
+          "pokrivenost": 1.0,
+          "rizik": 5.0,
+          "kriticna": true,
+          "podrucja": 5,
+          "pokrivena": 5
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::Sustav::je_geografski",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": true,
+          "podrucja": 2,
+          "pokrivena": 2
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::Sustav::definicija",
+          "cc": 5,
+          "pokrivenost": 1.0,
+          "rizik": 5.0,
+          "kriticna": true,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
+          "kljuc": "koordinate/src/sustav.rs::broj_na_kraju_definicije",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": true,
+          "podrucja": 19,
+          "pokrivena": 19
+        },
         {
           "kljuc": "xtask/src/alati.rs::citaj_json",
           "cc": 2,
@@ -214,9 +340,601 @@
           "pokrivena": 22
         },
         {
+          "kljuc": "xtask/src/mjerenje.rs::ime_cilja",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
           "kljuc": "xtask/src/mjerenje.rs::izmjeri",
           "cc": 5,
-          "pokrivenost": 0.9814814814814815,
+          "pokrivenost": 0.9818181818181818,
+          "rizik": 5.00015026296018,
+          "kriticna": false,
+          "podrucja": 55,
+          "pokrivena": 54
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::izmjeri_datoteku",
+          "cc": 6,
+          "pokrivenost": 0.9436619718309859,
+          "rizik": 6.0064373545378595,
+          "kriticna": false,
+          "podrucja": 71,
+          "pokrivena": 67
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::pripada",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 4,
+          "pokrivena": 4
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::podrucja",
+          "cc": 5,
+          "pokrivenost": 1.0,
+          "rizik": 5.0,
+          "kriticna": false,
+          "podrucja": 26,
+          "pokrivena": 26
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::valjano_podrucje",
+          "cc": 6,
+          "pokrivenost": 0.7894736842105263,
+          "rizik": 6.33590902463916,
+          "kriticna": false,
+          "podrucja": 19,
+          "pokrivena": 15
+        },
+        {
+          "kljuc": "xtask/src/poruke.rs::broj",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 3,
+          "pokrivena": 3
+        },
+        {
+          "kljuc": "xtask/src/poruke.rs::tekst",
+          "cc": 3,
+          "pokrivenost": 0.7931034482758621,
+          "rizik": 3.0797080651113204,
+          "kriticna": false,
+          "podrucja": 29,
+          "pokrivena": 23
+        },
+        {
+          "kljuc": "xtask/src/poruke.rs::oblikuj",
+          "cc": 5,
+          "pokrivenost": 0.9,
+          "rizik": 5.025,
+          "kriticna": false,
+          "podrucja": 30,
+          "pokrivena": 27
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::Funkcija::nova",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 8,
+          "pokrivena": 8
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::Mjerenje::novo",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 5,
+          "pokrivena": 5
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::rizik",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 6,
+          "pokrivena": 6
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::nalaz",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 13,
+          "pokrivena": 13
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::gornja",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 11,
+          "pokrivena": 11
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::provjeri_funkciju",
+          "cc": 4,
+          "pokrivenost": 1.0,
+          "rizik": 4.0,
+          "kriticna": false,
+          "podrucja": 43,
+          "pokrivena": 43
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::usporedi",
+          "cc": 5,
+          "pokrivenost": 1.0,
+          "rizik": 5.0,
+          "kriticna": false,
+          "podrucja": 50,
+          "pokrivena": 50
+        },
+        {
+          "kljuc": "xtask/src/pravila.rs::provjeri_iznimke",
+          "cc": 7,
+          "pokrivenost": 1.0,
+          "rizik": 7.0,
+          "kriticna": false,
+          "podrucja": 27,
+          "pokrivena": 27
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::analiziraj",
+          "cc": 4,
+          "pokrivenost": 1.0,
+          "rizik": 4.0,
+          "kriticna": false,
+          "podrucja": 21,
+          "pokrivena": 21
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::testna",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": false,
+          "podrucja": 13,
+          "pokrivena": 13
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::polozaj",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 9,
+          "pokrivena": 9
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Popis::dodaj",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 30,
+          "pokrivena": 30
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_item_mod",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 15,
+          "pokrivena": 15
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_item_impl",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 24,
+          "pokrivena": 24
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_item_trait",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 11,
+          "pokrivena": 11
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_item_fn",
+          "cc": 2,
+          "pokrivenost": 0.8888888888888888,
+          "rizik": 2.0054869684499312,
+          "kriticna": false,
+          "podrucja": 9,
+          "pokrivena": 8
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_impl_item_fn",
+          "cc": 2,
+          "pokrivenost": 0.8888888888888888,
+          "rizik": 2.0054869684499312,
+          "kriticna": false,
+          "podrucja": 9,
+          "pokrivena": 8
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_trait_item_fn",
+          "cc": 2,
+          "pokrivenost": 0.9,
+          "rizik": 2.004,
+          "kriticna": false,
+          "podrucja": 10,
+          "pokrivena": 9
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Popis::visit_item_macro",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_type_macro",
+          "cc": 1,
+          "pokrivenost": 0.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 2,
+          "pokrivena": 0
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_item_fn",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 2,
+          "pokrivena": 2
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_expr",
+          "cc": 8,
+          "pokrivenost": 1.0,
+          "rizik": 8.0,
+          "kriticna": false,
+          "podrucja": 19,
+          "pokrivena": 19
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_arm",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_pat_or",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_local",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 11,
+          "pokrivena": 11
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::Visit < 'ast > for Brojac::visit_macro",
+          "cc": 4,
+          "pokrivenost": 0.9166666666666666,
+          "rizik": 4.0092592592592595,
+          "kriticna": false,
+          "podrucja": 24,
+          "pokrivena": 22
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::izrazi_makroa",
+          "cc": 9,
+          "pokrivenost": 0.9444444444444444,
+          "rizik": 9.01388888888889,
+          "kriticna": false,
+          "podrucja": 54,
+          "pokrivena": 51
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::poznati_makro",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 37,
+          "pokrivena": 37
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::odluka",
+          "cc": 6,
+          "pokrivenost": 1.0,
+          "rizik": 6.0,
+          "kriticna": false,
+          "podrucja": 4,
+          "pokrivena": 4
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::matches_izraz",
+          "cc": 5,
+          "pokrivenost": 0.84,
+          "rizik": 5.1024,
+          "kriticna": false,
+          "podrucja": 25,
+          "pokrivena": 21
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::json_vrijednost",
+          "cc": 6,
+          "pokrivenost": 0.95,
+          "rizik": 6.0045,
+          "kriticna": false,
+          "podrucja": 20,
+          "pokrivena": 19
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::json_objekt",
+          "cc": 7,
+          "pokrivenost": 0.8260869565217391,
+          "rizik": 7.257746363113339,
+          "kriticna": false,
+          "podrucja": 23,
+          "pokrivena": 19
+        },
+        {
+          "kljuc": "xtask/src/slozenost.rs::json_niz",
+          "cc": 5,
+          "pokrivenost": 0.8666666666666667,
+          "rizik": 5.059259259259259,
+          "kriticna": false,
+          "podrucja": 15,
+          "pokrivena": 13
+        }
+      ]
+    },
+    "xtask": {
+      "cilj": "xtask",
+      "metoda": "syn-cc-v1/llvm-regions-v1",
+      "pokrivenost": 0.9085872576177284,
+      "funkcije": [
+        {
+          "kljuc": "xtask/src/alati.rs::citaj_json",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 20,
+          "pokrivena": 20
+        },
+        {
+          "kljuc": "xtask/src/alati.rs::greska_datoteke",
+          "cc": 1,
+          "pokrivenost": 1.0,
+          "rizik": 1.0,
+          "kriticna": false,
+          "podrucja": 7,
+          "pokrivena": 7
+        },
+        {
+          "kljuc": "xtask/src/alati.rs::zapisi_json",
+          "cc": 2,
+          "pokrivenost": 0.75,
+          "rizik": 2.0625,
+          "kriticna": false,
+          "podrucja": 16,
+          "pokrivena": 12
+        },
+        {
+          "kljuc": "xtask/src/alati.rs::pokreni",
+          "cc": 3,
+          "pokrivenost": 1.0,
+          "rizik": 3.0,
+          "kriticna": false,
+          "podrucja": 34,
+          "pokrivena": 34
+        },
+        {
+          "kljuc": "xtask/src/alati.rs::dostupnost",
+          "cc": 5,
+          "pokrivenost": 0.8235294117647058,
+          "rizik": 5.137390596376959,
+          "kriticna": false,
+          "podrucja": 51,
+          "pokrivena": 42
+        },
+        {
+          "kljuc": "xtask/src/main.rs::main",
+          "cc": 2,
+          "pokrivenost": 0.0,
+          "rizik": 6.0,
+          "kriticna": false,
+          "podrucja": 7,
+          "pokrivena": 0
+        },
+        {
+          "kljuc": "xtask/src/main.rs::zahtjev",
+          "cc": 2,
+          "pokrivenost": 0.0,
+          "rizik": 6.0,
+          "kriticna": false,
+          "podrucja": 14,
+          "pokrivena": 0
+        },
+        {
+          "kljuc": "xtask/src/main.rs::procitaj_argumente",
+          "cc": 8,
+          "pokrivenost": 1.0,
+          "rizik": 8.0,
+          "kriticna": false,
+          "podrucja": 49,
+          "pokrivena": 49
+        },
+        {
+          "kljuc": "xtask/src/main.rs::izvrsi",
+          "cc": 8,
+          "pokrivenost": 0.8205128205128205,
+          "rizik": 8.370066926279945,
+          "kriticna": false,
+          "podrucja": 39,
+          "pokrivena": 32
+        },
+        {
+          "kljuc": "xtask/src/main.rs::mapa_izvjestaja",
+          "cc": 2,
+          "pokrivenost": 0.7142857142857143,
+          "rizik": 2.0932944606413995,
+          "kriticna": false,
+          "podrucja": 14,
+          "pokrivena": 10
+        },
+        {
+          "kljuc": "xtask/src/main.rs::prikupi",
+          "cc": 4,
+          "pokrivenost": 0.7878787878787878,
+          "rizik": 4.152711689901772,
+          "kriticna": false,
+          "podrucja": 33,
+          "pokrivena": 26
+        },
+        {
+          "kljuc": "xtask/src/main.rs::pokusaj",
+          "cc": 3,
+          "pokrivenost": 0.8717948717948718,
+          "rizik": 3.018965255651646,
+          "kriticna": false,
+          "podrucja": 39,
+          "pokrivena": 34
+        },
+        {
+          "kljuc": "xtask/src/main.rs::provjere",
+          "cc": 3,
+          "pokrivenost": 0.8983050847457628,
+          "rizik": 3.009465427331908,
+          "kriticna": false,
+          "podrucja": 59,
+          "pokrivena": 53
+        },
+        {
+          "kljuc": "xtask/src/main.rs::prikazi",
+          "cc": 4,
+          "pokrivenost": 0.9642857142857144,
+          "rizik": 4.0007288629737605,
+          "kriticna": false,
+          "podrucja": 28,
+          "pokrivena": 27
+        },
+        {
+          "kljuc": "xtask/src/main.rs::valjana_referenca",
+          "cc": 6,
+          "pokrivenost": 1.0,
+          "rizik": 6.0,
+          "kriticna": false,
+          "podrucja": 22,
+          "pokrivena": 22
+        },
+        {
+          "kljuc": "xtask/src/main.rs::ocijeni",
+          "cc": 8,
+          "pokrivenost": 0.9666666666666668,
+          "rizik": 8.00237037037037,
+          "kriticna": false,
+          "podrucja": 60,
+          "pokrivena": 58
+        },
+        {
+          "kljuc": "xtask/src/main.rs::ucitaj_postavke",
+          "cc": 3,
+          "pokrivenost": 0.8333333333333334,
+          "rizik": 3.0416666666666665,
+          "kriticna": false,
+          "podrucja": 12,
+          "pokrivena": 10
+        },
+        {
+          "kljuc": "xtask/src/main.rs::provjeri_naredbu",
+          "cc": 4,
+          "pokrivenost": 1.0,
+          "rizik": 4.0,
+          "kriticna": false,
+          "podrucja": 11,
+          "pokrivena": 11
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::metapodaci",
+          "cc": 2,
+          "pokrivenost": 0.7142857142857143,
+          "rizik": 2.0932944606413995,
+          "kriticna": false,
+          "podrucja": 14,
+          "pokrivena": 10
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::izvori",
+          "cc": 7,
+          "pokrivenost": 0.8181818181818182,
+          "rizik": 7.294515401953419,
+          "kriticna": false,
+          "podrucja": 33,
+          "pokrivena": 27
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::dodaj_izvore",
+          "cc": 6,
+          "pokrivenost": 0.6,
+          "rizik": 8.304,
+          "kriticna": false,
+          "podrucja": 25,
+          "pokrivena": 15
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::obradi_zapis",
+          "cc": 6,
+          "pokrivenost": 0.8214285714285714,
+          "rizik": 6.204992711370263,
+          "kriticna": false,
+          "podrucja": 28,
+          "pokrivena": 23
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::kriticna",
+          "cc": 2,
+          "pokrivenost": 1.0,
+          "rizik": 2.0,
+          "kriticna": false,
+          "podrucja": 22,
+          "pokrivena": 22
+        },
+        {
+          "kljuc": "xtask/src/mjerenje.rs::izmjeri",
+          "cc": 5,
+          "pokrivenost": 0.9814814814814816,
           "rizik": 5.000158766448204,
           "kriticna": false,
           "podrucja": 54,
@@ -225,7 +943,7 @@
         {
           "kljuc": "xtask/src/mjerenje.rs::izmjeri_datoteku",
           "cc": 6,
-          "pokrivenost": 0.9436619718309859,
+          "pokrivenost": 0.943661971830986,
           "rizik": 6.0064373545378595,
           "kriticna": false,
           "podrucja": 71,
