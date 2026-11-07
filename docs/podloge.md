@@ -10,7 +10,7 @@ Tablica u nastavku prikazuje sve pregledane izvore, skupinu u koju su svrstani t
 
 | Red. br. | Izvor | Skupina | Razlog u jednoj rečenici |
 | :--- | :--- | :--- | :--- |
-| 1a. | **DGU Geoportal — javni WMS (`DOF`, `HOK`, `TK25`)** | **može biti ugrađen u program** | Službeni otvoreni podaci Republike Hrvatske prema Pravilniku (NN 56/2023, NN 106/2025) dopuštaju besplatnu komercijalnu i nekomercijalnu ugradnju u aplikacije te ispis uz navođenje izvora bez korisničkog računa ili ključa. Za rad tijela javne vlasti vidi poglavlje 4, točku 0. |
+| 1a. | **DGU Geoportal — javni WMS (`DOF`, `HOK`, `TK25`)** | **može biti ugrađen u program** | Službeni otvoreni podaci Republike Hrvatske prema Pravilniku (NN 56/2023, NN 106/2025) dopuštaju besplatnu komercijalnu i nekomercijalnu ugradnju u aplikacije te ispis uz navođenje izvora bez korisničkog računa ili ključa. |
 | 1b. | **DGU Geoportal — dodatni javni WMS slojevi po godištima (`DOF 2014/16`, `DOF 2017`, `TK100`, `TK200`)** | **može biti ugrađen u program** | Objavljeni su kao javne mrežne usluge pod istim Pravilnikom (NN 56/2023, Prilog 1.) i Otvorenom dozvolom (NN 67/2017) bez naknade i ključa za komercijalnu i nekomercijalnu upotrebu. |
 | 2. | **OpenFreeMap** | **može biti ugrađen u program** | Nudi besplatne vektorske pločice cijelog svijeta bez ključa i računa, izričito dopušta komercijalnu upotrebu, ispis i ograničeno preuzimanje za rad bez mreže uz prilagođeni `User-Agent` i propisani navod izvora. |
 | 3a. | **OpenStreetMap — podaci (ODbL 1.0)** | **može biti ugrađen u program** | Licenca ODbL 1.0 slobodno dopušta komercijalnu i nekomercijalnu upotrebu, ugradnju u programe otvorenog koda i ispis karata kao izvedenih djela (*Produced Work*) uz obvezno navođenje izvora. |
@@ -49,7 +49,7 @@ Gornja glavna tablica ocjenjuje svaki izvor prema strožem mjerilu iz zadatka (s
 **Da — oba izvora mogu ostati ugrađena u izdanje 0.0.1 točno kako je planirano:**
 
 1. **OpenFreeMap** dopušta besplatnu ugradnju u program otvorenog koda pod licencom `EUPL-1.2`, korištenje u komercijalne/poslovne svrhe, spremanje pločica na disk i ograničeno preuzimanje područja za rad bez mreže (do 3.000 pločica ili 50 MB po preuzimanju uz najviše 4 usporedna zahtjeva) te izvoz i ispis u PDF, uz propisani navod izvora. Jedinstveni `User-Agent` (npr. `TerraSimple/0.0.1`) uvjeti traže za preuzimanje područja za rad bez mreže. Predlažemo ga i za obično pregledavanje, a `walkers` ga podržava preko `HttpOptions`.
-2. **DGU Geoportal WMS (`DOF`, `HOK`, `TK25`)** objavljen je kao javna mrežna usluga bez ključa i naknade (`<Fees>NONE</Fees>`, `<AccessConstraints>NONE</AccessConstraints>`) temeljem *Pravilnika o određivanju visine stvarnih troškova izdavanja i uvjeta korištenja podataka* (NN 56/2023 i NN 106/2025, čl. 9., 10. i 19. te Prilog 1.) i *Otvorene dozvole* (NN 67/2017). Propisi dopuštaju uporabu u komercijalne i nekomercijalne svrhe te integriranje u proizvode i aplikacije. Uz navod izvora korisnik mora naznačiti izmjene ili dorade podataka (čl. 19. st. 7.), a DGU može opozvati prava pri neprimjerenom korištenju (čl. 19. st. 10.). Definicija korisnika u čl. 9. st. 1. isključuje tijela javne vlasti kad koriste podatke za poslove iz svoje nadležnosti (vidi poglavlje 4, točku 0.).
+2. **DGU Geoportal WMS (`DOF`, `HOK`, `TK25`)** objavljen je kao javna mrežna usluga bez ključa i naknade (`<Fees>NONE</Fees>`, `<AccessConstraints>NONE</AccessConstraints>`) temeljem *Pravilnika o određivanju visine stvarnih troškova izdavanja i uvjeta korištenja podataka* (NN 56/2023 i NN 106/2025, čl. 9., 10. i 19. te Prilog 1.) i *Otvorene dozvole* (NN 67/2017). Propisi dopuštaju uporabu u komercijalne i nekomercijalne svrhe te integriranje u proizvode i aplikacije. Uz navod izvora korisnik mora naznačiti izmjene ili dorade podataka (čl. 19. st. 7.), a DGU može opozvati prava pri neprimjerenom korištenju (čl. 19. st. 10.). Izmjene iz NN 106/2025 (https://narodne-novine.nn.hr/clanci/sluzbeni/2025_07_106_1505.html, pročitano 7. 11. 2026.) ne mijenjaju čl. 19. ni točke Priloga 1. za te podloge.
 
 ### 2.2. Koji točno natpis treba stajati na karti i na ispisu u izdanju 0.0.1?
 
@@ -321,10 +321,6 @@ Tijekom čitanja stranice DGU-a o otvorenim podacima (`https://dgu.gov.hr/otvore
 ---
 
 ## 4. Što treba pitati pružatelje i što nije bilo moguće utvrditi
-
-0. **Državna geodetska uprava (DGU) — upotreba u tijelu javne vlasti (dodano pri pregledu):**
-   - *Što piše:* čl. 9. st. 1. Pravilnika NN 56/2023 kao korisnika ponovne uporabe navodi svaku fizičku i pravnu osobu, ali isključuje tijela javne vlasti kada koriste podatke radi obavljanja poslova iz nadležnosti. Izmjene iz NN 106/2025 (https://narodne-novine.nn.hr/clanci/sluzbeni/2025_07_106_1505.html, pročitano 7. 11. 2026.) ne mijenjaju čl. 9. ni čl. 19.
-   - *Što treba pitati DGU:* Pod kojim uvjetima tijelo javne vlasti koristi WMS podloge kad radi poslove iz svoje nadležnosti, i traže li se tada drukčiji navod ili dogovor?
 
 1. **Državna geodetska uprava (DGU) — tehnička ograničenja i predmemoriranje WMS pločica:**
    - *Što nije navedeno u uvjetima:* Ni *Pravilnik* (NN 56/2023, NN 106/2025) ni XML dokument `GetCapabilities` (`https://geoportal.dgu.hr/wms?SERVICE=WMS&REQUEST=GetCapabilities`) ne spominju tehničko ograničenje broja WMS zahtjeva u sekundi po klijentu niti koliko dugo i u kojem opsegu aplikacija smije lokalno predmemorirati (ili unaprijed preuzeti za rad na terenu bez mreže) pojedino manje područje iz WMS usluge.

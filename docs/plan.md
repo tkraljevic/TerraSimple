@@ -545,5 +545,3 @@ propisani navod izvora na karti i na ispisu, što `walkers` ne radi sam.
    stoji njegova licenca (OFL). Repozitorij je zasad privatan na GitHubu (7. 11. 2026.).
 2. Glatkoća karte u prozoru, s upaljenim ekranom i pravim mišem.
 3. Kasnije odluka o potpisivanju programa za Windows i macOS.
-4. Prije službene upotrebe u tijelu javne vlasti pitati DGU o uvjetima za WMS (vidi [podloge.md](podloge.md),
-   poglavlje 4). Pitanje još nije poslano.
