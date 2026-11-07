@@ -65,6 +65,14 @@ impl Promjena {
         }
     }
 
+    /// Slojevi kojima se ovom promjenom mijenja izgled na karti.
+    pub(crate) fn promijenjeni_slojevi(&self) -> [Option<IdSloja>; 2] {
+        match self {
+            Self::StilSloja { sloj, .. } => [Some(*sloj), None],
+            _ => self.slojevi_objekata(),
+        }
+    }
+
     /// Sloj se između izmjene i poništavanja može zaključati. Slojeva kojih još nema nije briga,
     /// jer nastaju ranijom promjenom iste skupine.
     pub(crate) fn dopustena(&self, p: &Projekt) -> Result<(), Greska> {
@@ -145,14 +153,11 @@ fn postavi_roditelja(p: &mut Projekt, stavka: Stavka, u: Option<IdMape>) -> Resu
 fn iskopcaj(p: &mut Projekt, stavka: Stavka) -> Result<(Option<IdMape>, usize), Greska> {
     let roditelj = roditelj_od(p, stavka)?;
     let djeca = djeca_mut(p, roditelj)?;
-    let polozaj = djeca
-        .iter()
-        .position(|s| *s == stavka)
-        .unwrap_or(djeca.len());
-    if polozaj < djeca.len() {
-        djeca.remove(polozaj);
+    let polozaj = djeca.iter().position(|s| *s == stavka);
+    if let Some(i) = polozaj {
+        djeca.remove(i);
     }
-    Ok((roditelj, polozaj))
+    Ok((roditelj, polozaj.unwrap_or(djeca.len())))
 }
 
 fn ukopcaj(

@@ -35,5 +35,9 @@ jobs:
         run: |
           cargo install cargo-llvm-cov --version 0.9.1 --locked
           cargo install cargo-deny --version 0.20.2 --locked
+      # Testovi crtanja trebaju karticu, a Linux na CI-ju ima samo softversku.
+      - name: Softverska kartica
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers
       - name: Provjera
         run: cargo xtask provjera

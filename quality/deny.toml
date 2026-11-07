@@ -2,7 +2,9 @@
 db-urls = ["https://github.com/RustSec/advisory-db"]
 
 [licenses]
-allow = ["EUPL-1.2", "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "Unicode-3.0", "CC0-1.0"]
+# 0BSD (varint-rs), BSL-1.0 (xxhash-rust) i CDLA-Permissive-2.0 (podaci certifikata, webpki-root-certs)
+# dolaze posredno kroz `walkers`. Sve tri su dopuštajuće (7. 11. 2026.).
+allow = ["EUPL-1.2", "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "Unicode-3.0", "CC0-1.0", "0BSD", "BSL-1.0", "CDLA-Permissive-2.0"]
 confidence-threshold = 0.9
 unused-allowed-license = "allow"
 
