@@ -1,0 +1,547 @@
+{
+  "revizija": "53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c",
+  "izvor": "https://github.com/lucide-icons/lucide/tree/53fab88ff9d1b48f4704b5b5b560d6b4d560bf4c",
+  "usporedjeno": 2029,
+  "ikone": [
+    {
+      "ikona": "trazi",
+      "izvor": "icons/search.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 2,
+      "osnovica_sha256": "a4d4f2037b10d7aabb3b1bace55e583bb04f2b9ac0a79190250ad13ba5fdae59"
+    },
+    {
+      "ikona": "x",
+      "izvor": "icons/x.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 2,
+      "osnovica_sha256": "970c88bb9c311ef5afc3003d3eaaf5844c77cefedcfb2f8d93f75276c29a8061"
+    },
+    {
+      "ikona": "desno",
+      "izvor": "icons/chevron-right.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 2,
+      "osnovica_sha256": "68578439584ec57f2f6aaaf27044842ec93b0a6f72225462fbbd2927c85b09a9"
+    },
+    {
+      "ikona": "dolje",
+      "izvor": "icons/chevron-down.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 2,
+      "osnovica_sha256": "f429f71e80a691c3fcd942d335b59b26acf449a9363027a36a8dfa0ca4f46433"
+    },
+    {
+      "ikona": "natrag",
+      "izvor": "icons/arrow-left.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 3,
+      "dijelovi_osnovice": 3,
+      "osnovica_sha256": "29505c9addeafc7f4c0f7398b61f6fc1dc61ebf676f9b2f20af45bb7c84ea0df"
+    },
+    {
+      "ikona": "mapa",
+      "izvor": "icons/folder.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčiji obris mape i prijelaz gornjeg jezička.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 10,
+      "osnovica_sha256": "551925f98eceb645535d339aaebf4caf76db7bd0dcbcb9f983b29a510259f06b"
+    },
+    {
+      "ikona": "nova_mapa",
+      "izvor": "icons/folder-plus.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčiji obris mape i položaj znaka plus.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 12,
+      "osnovica_sha256": "05c1715224f10e36de82067e01b68b54416ec0d738705a961862f3f99c9cdefa"
+    },
+    {
+      "ikona": "uvezi",
+      "izvor": "icons/download.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 6,
+      "dijelovi_osnovice": 8,
+      "osnovica_sha256": "712565a1aa61248c62c16d24971e11fb0018efcb8ad2d0c5bed6a6c16f7c4fa3"
+    },
+    {
+      "ikona": "izvezi",
+      "izvor": "icons/upload.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 6,
+      "dijelovi_osnovice": 8,
+      "osnovica_sha256": "4ea9fca8c23ac894c228ec743ffbe21b55e8bb6ecca35bd50e127ff4a718f616"
+    },
+    {
+      "ikona": "tocka",
+      "izvor": "icons/map-pin.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 3,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "cd71e303a0ce2b55e1e02d81dc8724f1192752fc0e7f6e6a3b6e9f0440bb181d"
+    },
+    {
+      "ikona": "linija",
+      "izvor": "icons/route.svg",
+      "rezultat": "Nema podudarnog cijelog crteža",
+      "napomena": "Dva krajnja čvora spojena ravnom crtom; uspoređeni route ima zavojitu putanju.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 3,
+      "osnovica_sha256": "f5e8263d370dbe8ededcf9efea4940fb342f72d4f982d2517fa6437f8ce2fef5"
+    },
+    {
+      "ikona": "poligon",
+      "izvor": "icons/pentagon.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "1629b89bb4ef5c1baa48d10d1c216ec1594ebb2cd390e1fdfd359e6bef19b548"
+    },
+    {
+      "ikona": "ravnalo",
+      "izvor": "icons/ruler.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drugi nagib, obris i crtice; za 14/16 px ostaju samo dvije crtice.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 8,
+      "osnovica_sha256": "bf3a21ce0a3e9ae335bb4d8579149175b622edf8e4363e7d5954d5c75d0b04a0"
+    },
+    {
+      "ikona": "odaberi",
+      "izvor": "icons/mouse-pointer-2.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "050bf519ef9dc9d985ebf806471b71735190acc96e4fc856c174e7f47ce2bbf4"
+    },
+    {
+      "ikona": "zaslon",
+      "izvor": "icons/maximize.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 8,
+      "dijelovi_osnovice": 12,
+      "osnovica_sha256": "e9f10b83df9bdf1f3c3458a8c1a009814fd150ed0afd51e73671b6161e4f93eb"
+    },
+    {
+      "ikona": "ispis",
+      "izvor": "icons/printer.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 5,
+      "dijelovi_osnovice": 13,
+      "osnovica_sha256": "86d459c572aec2e8524d453e81c4b8c9f305b3b5df4128f01216efbf05f219ea"
+    },
+    {
+      "ikona": "plus",
+      "izvor": "icons/plus.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 2,
+      "osnovica_sha256": "266346efa9ce5e7dc0004abe75c35f1d721eb68f7348ac68abbe4e8bcb852906"
+    },
+    {
+      "ikona": "minus",
+      "izvor": "icons/minus.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "b58ab6957e9fb6ab20cf3f70b8c6704b8c67aee25c2d7a98169cb5d24a7b2843"
+    },
+    {
+      "ikona": "slojevi",
+      "izvor": "icons/layers.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Prilagođeni vrhovi i ravni, umjesto zaobljenih prijelaza.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 8,
+      "osnovica_sha256": "5587cce1a6b83db7a421d1f6eb1cd6039adf7954f4d1a0e2276526b8bd0e6b71"
+    },
+    {
+      "ikona": "sjever",
+      "izvor": "icons/navigation-2.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Osnovni obris podudaran s navigation-2; u doradi su dodani os i prilagođen vrh.",
+      "podudarni_dijelovi": 4,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "12b95ce7f9d70053955188b27325e2b934c8ffbf90610bb975c753f200026716"
+    },
+    {
+      "ikona": "ponisti",
+      "izvor": "icons/undo-2.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "a4afb8c7bf2dfae0e4fedb0b710e059c488eecbbb2d4f850c82896d13e56bb51"
+    },
+    {
+      "ikona": "ponovi",
+      "izvor": "icons/redo-2.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "f2f7a5417cadb754fdcba8185b0cea20d4abdea5c4d2355a9a1bbe9b5b26013c"
+    },
+    {
+      "ikona": "mjesec",
+      "izvor": "icons/moon.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "de79e1b55de1836d50633e583203fac341e76643049416fafa4366b8c2f1daa0"
+    },
+    {
+      "ikona": "olovka",
+      "izvor": "icons/pencil.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "809a55d7c6c5458bf292a8a087164dcd0e5985d96bc44e491752324302ea5594"
+    },
+    {
+      "ikona": "kanta",
+      "izvor": "icons/trash.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 4,
+      "dijelovi_osnovice": 11,
+      "osnovica_sha256": "69339889c901c5bdd4eb2370afed544ba4cd6f539dd172729cb4b65c0a243e21"
+    },
+    {
+      "ikona": "tablica",
+      "izvor": "icons/table.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Osnovica je Lucide table, ne table-2. U doradi su ravni završeci unutarnjih crta i poravnanje na piksele.",
+      "podudarni_dijelovi": 4,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "a1eeb639a5124b4b48faa45b9a5ee4a4740976de09e8894948620016f4a6a715"
+    },
+    {
+      "ikona": "datoteka",
+      "izvor": "icons/file.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 4,
+      "dijelovi_osnovice": 10,
+      "osnovica_sha256": "e433d43d09f9c99258cb5d491ab1dbf748b859ef0c23087529e4042091c2624b"
+    },
+    {
+      "ikona": "baza",
+      "izvor": "icons/database.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 7,
+      "dijelovi_osnovice": 7,
+      "osnovica_sha256": "09731f9dae57e003c2edfc793c30b129aa40e5e1c2ca0af1ff042fa3f66d449f"
+    },
+    {
+      "ikona": "kvacica",
+      "izvor": "icons/check.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 2,
+      "osnovica_sha256": "e166b2df884c85c25fe8fcf8a290fa75ae068846ed101ec12b73f1427010ed31"
+    },
+    {
+      "ikona": "upozorenje",
+      "izvor": "icons/triangle-exclamation-point.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "33096dd3846b638e57ed291090e12160270828b6655802c6d6b7e9d143bfa847"
+    },
+    {
+      "ikona": "info",
+      "izvor": "icons/info.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudarna osnovna geometrija; materijal i veličine dodani su zasebno.",
+      "podudarni_dijelovi": 3,
+      "dijelovi_osnovice": 3,
+      "osnovica_sha256": "14da0d7185a7f556272f21b68f0249aff2ffc00186cd513cafc94f599aed5d25"
+    },
+    {
+      "ikona": "slika",
+      "izvor": "icons/image.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "d5c1fa7249d5984663e7121c92b6cfd42667f8785a053a2a3705988bac6d1f6b"
+    },
+    {
+      "ikona": "tekst",
+      "izvor": "icons/type.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "464e0bd72b4dfac5b7a6e53b1aab465d9359638808fe4efb85f9a4de2f950e8e"
+    },
+    {
+      "ikona": "brava",
+      "izvor": "icons/lock.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 3,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "b0436fb9166e9c7f052d7614c84784b7f9c2dd2c81235ba4ac9a82953a6e2427"
+    },
+    {
+      "ikona": "mreza",
+      "izvor": "icons/globe.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Prilagođena krivulja meridijana; obod i ekvator se podudaraju.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 6,
+      "osnovica_sha256": "273facbfca6d9c2b2ef4404fcc62027996a99d91a31da0a1038c7d59003ed32f"
+    },
+    {
+      "ikona": "filtar",
+      "izvor": "icons/funnel.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 6,
+      "osnovica_sha256": "1397b5c9be57cb3dcc7beb0e5cb31bb0ad328deaa6abec44430e92b28e25b049"
+    },
+    {
+      "ikona": "spremi",
+      "izvor": "icons/save.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 13,
+      "osnovica_sha256": "b7e5a67fa4b5bb81506ca9a3144996e8bfd425fc654021c729fc9d93cac259da"
+    },
+    {
+      "ikona": "legenda",
+      "izvor": "icons/list.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 6,
+      "osnovica_sha256": "23bcf043696232306ac1e5353773d67c16428f06a5fa621775d4c16909586aa0"
+    },
+    {
+      "ikona": "mjerilo",
+      "izvor": "icons/ruler-dimension-line.svg",
+      "rezultat": "Nema podudarnog cijelog crteža",
+      "napomena": "Otvoreno grafičko mjerilo s tri crtice; uspoređeno ravnalo ima zatvoreno tijelo i druge oznake.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "18aec1693f097edeb4257a1589523ec8bd441c1cfc69a293d92f87d46c4aa5df"
+    },
+    {
+      "ikona": "kalendar",
+      "izvor": "icons/calendar.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "d190ed35206174a2924438e78afe9b70bc4e58b29cfb5833c08e6a4e3aadb288"
+    },
+    {
+      "ikona": "okvir",
+      "izvor": "icons/square.svg",
+      "rezultat": "Podudarno",
+      "napomena": "Podudaran pravokutnik square; koristi se kao alat za okvir ispisa.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "18de8b36c75fed7781df1865f2faa7f7b3d08abbedc960b77bc58a1789a8b23a"
+    },
+    {
+      "ikona": "uspravno",
+      "izvor": "icons/rectangle-vertical.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "bc62445a8d3a88ceb36aac5f7c8e846129f19a5f737766acd99fdd8ef6cb0195"
+    },
+    {
+      "ikona": "polozeno",
+      "izvor": "icons/rectangle-horizontal.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "44721474dce59daa1697f44bfff3680ac1beac0ede3f15224c43a73e6e24c653"
+    },
+    {
+      "ikona": "karta",
+      "izvor": "icons/map.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 10,
+      "osnovica_sha256": "ca602579f3475dab5ad54e479816356249e98d663f176e717659f04f31483be3"
+    },
+    {
+      "ikona": "crta",
+      "izvor": "icons/slash.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drugi krajevi dijagonale.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "fd31a84113e348810aa913ef37a5efa5c4f3f906679094805a5a6a004c5f88ed"
+    },
+    {
+      "ikona": "pomoc",
+      "izvor": "icons/circle-question-mark.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "468f18e621e49855386557354f3f03991e53cd404750b40ec9ab96592f711c62"
+    },
+    {
+      "ikona": "poravnaj",
+      "izvor": "icons/align-start-vertical.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 3,
+      "osnovica_sha256": "f0e8791ccd462d017344c123f61040febeb2d04736880f21bf28c0421c481672"
+    },
+    {
+      "ikona": "ispred",
+      "izvor": "icons/copy.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "c689266e1e962365a4072f62d7a91092b8300b89cbc4c3747a3dde2198627694"
+    },
+    {
+      "ikona": "hvataljka",
+      "izvor": "icons/grip-vertical.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Isti raspored stupaca; gornji i donji red imaju druge koordinate.",
+      "podudarni_dijelovi": 2,
+      "dijelovi_osnovice": 6,
+      "osnovica_sha256": "8a1439723f27f497510b7becbee6a16c806890c47b24dddb46249d04a7cb6032"
+    },
+    {
+      "ikona": "kap",
+      "izvor": "icons/droplet.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "07db384b5c3a8431f78af079e445d7f63eb3177eab459ede71e6613a75b8fd53"
+    },
+    {
+      "ikona": "zastava",
+      "izvor": "icons/flag.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "fa44c8e813f1f87a57c9596d13871da3672d4c22747f907360a0a443c5e54b29"
+    },
+    {
+      "ikona": "kuca",
+      "izvor": "icons/house.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 5,
+      "osnovica_sha256": "19d38ae0f7cdbbe112751f75a3bd1a177b6e5841746b2c7e795142f8a6120d1d"
+    },
+    {
+      "ikona": "trokut",
+      "izvor": "icons/triangle.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 3,
+      "osnovica_sha256": "6b1bb2586d54077d047d34084a0dcfd0f1e4c5f667630c3774b7734108f57d4a"
+    },
+    {
+      "ikona": "krug",
+      "izvor": "icons/circle.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Promijenjen polumjer kruga.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "424a1a7d3b24b6a86b28086ec4319effbb1a15a7f14071cd3abd27fcc730adde"
+    },
+    {
+      "ikona": "kvadrat",
+      "izvor": "icons/square.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Uži pravokutnik na drugom položaju i s manjim polumjerom; oznaka točke na karti.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 1,
+      "osnovica_sha256": "926d862c5d7509bd7fdd09cbaa8db0059d872ac2ee749acf616a2d7fdf90cd7a"
+    },
+    {
+      "ikona": "zvijezda",
+      "izvor": "icons/star.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 10,
+      "osnovica_sha256": "0863a7dcd4e8f864afbb2165b86bc6ddfe6c5677041b597b9fe82a335a2a9ceb"
+    },
+    {
+      "ikona": "valovi",
+      "izvor": "icons/waves-horizontal.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 4,
+      "osnovica_sha256": "9b373cf0f2cf5108b8ca38b8c12bc23db9a07b4593c37d511e5df4b66e2e1016"
+    },
+    {
+      "ikona": "kriz",
+      "izvor": "icons/circle-plus.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 3,
+      "osnovica_sha256": "365ae2f665e3599a41d55892bb46389a43e84fa9052642a4d19e8edcf08d1f64"
+    },
+    {
+      "ikona": "premjesti",
+      "izvor": "icons/folder-input.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 1,
+      "dijelovi_osnovice": 13,
+      "osnovica_sha256": "20052ac1c055d3a760f5b35fce7338a2a16ef521e52a545dc46412df044753ad"
+    },
+    {
+      "ikona": "stil",
+      "izvor": "icons/palette.svg",
+      "rezultat": "Prilagođeno / srodno",
+      "napomena": "Drukčije koordinate, polumjeri ili sastav crta.",
+      "podudarni_dijelovi": 0,
+      "dijelovi_osnovice": 7,
+      "osnovica_sha256": "f977567b35de99fd04ffc7981aa2871d91ead7329aeaa4b1ca11d8b8152a4b8e"
+    }
+  ]
+}

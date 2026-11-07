@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="naslov opis">
+  <title id="naslov">TerraSimple</title>
+  <desc id="opis">Topografsko slovo T od svijetlih slojnica s oker naglaskom na tamnozelenoj podlozi.</desc>
+  <rect width="512" height="512" rx="112" fill="#06452f"/>
+  <g fill="none" stroke="#fff9ed" stroke-width="22" stroke-linejoin="round">
+    <path d="M66 130 C126 91 171 94 222 118 S280 150 326 137 S404 122 446 145"/>
+    <path d="M66 179 C121 141 166 136 208 154 S263 183 255 218 C249 244 247 266 247 296 V438"/>
+    <path d="M90 212 C122 190 157 184 182 195 S204 225 204 247 V436" stroke-linecap="round"/>
+    <path d="M446 183 C403 162 361 170 329 187 S289 221 289 255 V436" stroke-linecap="round"/>
+  </g>
+  <path d="M306 108 C360 82 400 79 445 102" fill="none" stroke="#e7ac3b" stroke-width="22" stroke-linecap="round"/>
+</svg>

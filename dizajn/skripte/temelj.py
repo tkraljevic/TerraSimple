@@ -1,7 +1,8 @@
 """Zajednički dijelovi nacrta: naredbe za FigCraft, boje, ikone i sastavnice.
 
 Sve boje su u PALETE, pa se tema i glavna boja mijenjaju na jednom mjestu.
-Ikone su u stilu Lucide, ucrtane na mreži 24 x 24.
+Geometrija je dijelom preuzeta ili prilagođena iz zbirke Lucide.
+Usporedba svih ikona i obavijesti o licencama nalaze se uz resurse ikona.
 """
 import re
 

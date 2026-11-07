@@ -21,7 +21,7 @@ profesionalac nastavlja tamo gdje je običan korisnik stao.
 
 Stanje: dokumenti, nacrt sučelja, plan, provjera kvalitete i devet proba u `probe/` (izgled,
 karta, crtanje, GeoPackage, koordinate, ispis, GeoTIFF, KML, mnogo vrhova). Program je tek
-započet: postoji prvi paket, `koordinate`.
+započet: postoje prva dva paketa, `koordinate` i `geometrija`.
 
 Odluke (27. 10. 2026.): radni naziv je TerraSimple, bez „GIS” u imenu.
 Prije objave provjeriti žigove, domenu i GitHub.
@@ -32,3 +32,5 @@ Prije objave provjeriti žigove, domenu i GitHub.
 - [Kvaliteta koda (6. 11. 2026.)](docs/kvaliteta.md)
 - [Plan rada, potvrđen 7. 11. 2026.](docs/plan.md)
 - Nacrt sučelja: `dizajn/TerraSimple.figcraft`
+- Nacrt s ikonama u stilu satin glass (stil: Odluke (7. 11. 2026.)): `dizajn/TerraSimple-ikone-efekti.figcraft`
+- [Veličine i stanja ikona](resursi/ikone/sucelje/efekti/README.md) i [pregledi](dizajn/pregledi-ikona/README.md).

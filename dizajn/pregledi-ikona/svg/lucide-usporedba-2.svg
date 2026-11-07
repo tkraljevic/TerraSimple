@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="970" viewBox="0 0 1140 970"><metadata>ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+---
+
+The following Lucide icons are derived from the Feather project:
+
+airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out
+
+The MIT License (MIT) (for the icons listed above)
+
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</metadata><rect width="1140" height="970" fill="#F3F7F4" /><text x="24" y="28" font-size="18" font-family="Arial" fill="#174A3F">Osnovice prije dorada: lijevo projekt, desno Lucide</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="65"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16 L12 12" /><path d="M12 8 L12 8.1" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="65">
+  <circle cx="12" cy="12" r="10" />
+  <path d="M12 16v-4" />
+  <path d="M12 8h.01" />
+</svg><text x="174" y="84" font-size="14" font-family="Arial" fill="#174A3F">info</text><text x="174" y="103" font-size="10" font-family="Arial" fill="#174A3F">info</text><text x="174" y="119" font-size="11" font-family="Arial" fill="#174A3F">Podudaran crtež</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="65"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15 L16 10 L5 21" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="65">
+  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+  <circle cx="9" cy="9" r="2" />
+  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+</svg><text x="550" y="84" font-size="14" font-family="Arial" fill="#174A3F">slika</text><text x="550" y="103" font-size="10" font-family="Arial" fill="#174A3F">image</text><text x="550" y="119" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="65"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 L4 4 L20 4 L20 7" /><path d="M9 20 L15 20" /><path d="M12 4 L12 20" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="65">
+  <path d="M12 4v16" />
+  <path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2" />
+  <path d="M9 20h6" />
+</svg><text x="926" y="84" font-size="14" font-family="Arial" fill="#174A3F">tekst</text><text x="926" y="103" font-size="10" font-family="Arial" fill="#174A3F">type</text><text x="926" y="119" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="153"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11 L7 7 C7 4 9 2 12 2 C15 2 17 4 17 7 L17 11" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="153">
+  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+</svg><text x="174" y="172" font-size="14" font-family="Arial" fill="#174A3F">brava</text><text x="174" y="191" font-size="10" font-family="Arial" fill="#174A3F">lock</text><text x="174" y="207" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="153"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12 L22 12" /><path d="M12 2 C15 5 16 9 16 12 C16 15 15 19 12 22 C9 19 8 15 8 12 C8 9 9 5 12 2 Z" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="153">
+  <circle cx="12" cy="12" r="10" />
+  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+  <path d="M2 12h20" />
+</svg><text x="550" y="172" font-size="14" font-family="Arial" fill="#174A3F">mreza</text><text x="550" y="191" font-size="10" font-family="Arial" fill="#174A3F">globe</text><text x="550" y="207" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="153"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3 L2 3 L10 12.5 L10 19 L14 21 L14 12.5 Z" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="153">
+  <path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" />
+</svg><text x="926" y="172" font-size="14" font-family="Arial" fill="#174A3F">filtar</text><text x="926" y="191" font-size="10" font-family="Arial" fill="#174A3F">funnel</text><text x="926" y="207" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="241"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 L5 21 C4 21 3 20 3 19 L3 5 C3 4 4 3 5 3 L16 3 L21 8 L21 19 C21 20 20 21 19 21 Z" /><path d="M17 21 L17 13 L7 13 L7 21" /><path d="M7 3 L7 8 L15 8" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="241">
+  <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+  <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
+  <path d="M7 3v4a1 1 0 0 0 1 1h7" />
+</svg><text x="174" y="260" font-size="14" font-family="Arial" fill="#174A3F">spremi</text><text x="174" y="279" font-size="10" font-family="Arial" fill="#174A3F">save</text><text x="174" y="295" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="241"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6 L21 6" /><path d="M8 12 L21 12" /><path d="M8 18 L21 18" /><path d="M3 6 L3.1 6" /><path d="M3 12 L3.1 12" /><path d="M3 18 L3.1 18" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="241">
+  <path d="M3 5h.01" />
+  <path d="M3 12h.01" />
+  <path d="M3 19h.01" />
+  <path d="M8 5h13" />
+  <path d="M8 12h13" />
+  <path d="M8 19h13" />
+</svg><text x="550" y="260" font-size="14" font-family="Arial" fill="#174A3F">legenda</text><text x="550" y="279" font-size="10" font-family="Arial" fill="#174A3F">list</text><text x="550" y="295" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="241"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17 L22 17" /><path d="M2 12 L2 17" /><path d="M12 12 L12 17" /><path d="M22 12 L22 17" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="241">
+  <path d="M10 15v-3" />
+  <path d="M14 15v-3" />
+  <path d="M18 15v-3" />
+  <path d="M2 8V4" />
+  <path d="M22 6H2" />
+  <path d="M22 8V4" />
+  <path d="M6 15v-3" />
+  <rect x="2" y="12" width="20" height="8" rx="2" />
+</svg><text x="926" y="260" font-size="14" font-family="Arial" fill="#174A3F">mjerilo</text><text x="926" y="279" font-size="10" font-family="Arial" fill="#174A3F">ruler-dimension-line</text><text x="926" y="295" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="329"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2 L16 6" /><path d="M8 2 L8 6" /><path d="M3 10 L21 10" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="329">
+  <path d="M8 2v3" />
+  <path d="M16 2v3" />
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <path d="M3 9h18" />
+</svg><text x="174" y="348" font-size="14" font-family="Arial" fill="#174A3F">kalendar</text><text x="174" y="367" font-size="10" font-family="Arial" fill="#174A3F">calendar</text><text x="174" y="383" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="329"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="329">
+  <rect width="18" height="18" x="3" y="3" rx="2" />
+</svg><text x="550" y="348" font-size="14" font-family="Arial" fill="#174A3F">okvir</text><text x="550" y="367" font-size="10" font-family="Arial" fill="#174A3F">square</text><text x="550" y="383" font-size="11" font-family="Arial" fill="#174A3F">Podudaran crtež</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="329"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="1.5" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="329">
+  <rect width="12" height="20" x="6" y="2" rx="2" />
+</svg><text x="926" y="348" font-size="14" font-family="Arial" fill="#174A3F">uspravno</text><text x="926" y="367" font-size="10" font-family="Arial" fill="#174A3F">rectangle-vertical</text><text x="926" y="383" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="417"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="1.5" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="417">
+  <rect width="20" height="12" x="2" y="6" rx="2" />
+</svg><text x="174" y="436" font-size="14" font-family="Arial" fill="#174A3F">polozeno</text><text x="174" y="455" font-size="10" font-family="Arial" fill="#174A3F">rectangle-horizontal</text><text x="174" y="471" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="417"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 L3 6 L3 21 L9 18 L15 21 L21 18 L21 3 L15 6 Z" /><path d="M9 3 L9 18" /><path d="M15 6 L15 21" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="417">
+  <path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" />
+  <path d="M15 5.764v15" />
+  <path d="M9 3.236v15" />
+</svg><text x="550" y="436" font-size="14" font-family="Arial" fill="#174A3F">karta</text><text x="550" y="455" font-size="10" font-family="Arial" fill="#174A3F">map</text><text x="550" y="471" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="417"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L20 4" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="417">
+  <path d="M22 2 2 22" />
+</svg><text x="926" y="436" font-size="14" font-family="Arial" fill="#174A3F">crta</text><text x="926" y="455" font-size="10" font-family="Arial" fill="#174A3F">slash</text><text x="926" y="471" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="505"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9 9 C9 7 10.5 6 12 6 C13.5 6 15 7 15 9 C15 11 12 11.5 12 14" /><path d="M12 17.5 L12 17.6" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="505">
+  <circle cx="12" cy="12" r="10" />
+  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+  <path d="M12 17h.01" />
+</svg><text x="174" y="524" font-size="14" font-family="Arial" fill="#174A3F">pomoc</text><text x="174" y="543" font-size="10" font-family="Arial" fill="#174A3F">circle-question-mark</text><text x="174" y="559" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="505"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 L4 21" /><rect x="8" y="6" width="12" height="4" rx="1" /><rect x="8" y="14" width="7" height="4" rx="1" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="505">
+  <rect width="9" height="6" x="6" y="14" rx="2" />
+  <rect width="16" height="6" x="6" y="4" rx="2" />
+  <path d="M2 2v20" />
+</svg><text x="550" y="524" font-size="14" font-family="Arial" fill="#174A3F">poravnaj</text><text x="550" y="543" font-size="10" font-family="Arial" fill="#174A3F">align-start-vertical</text><text x="550" y="559" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="505"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="1.5" /><path d="M21 8 L21 19 C21 20 20 21 19 21 L8 21" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="505">
+  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+</svg><text x="926" y="524" font-size="14" font-family="Arial" fill="#174A3F">ispred</text><text x="926" y="543" font-size="10" font-family="Arial" fill="#174A3F">copy</text><text x="926" y="559" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="593"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="593">
+  <circle cx="9" cy="12" r="1" />
+  <circle cx="9" cy="5" r="1" />
+  <circle cx="9" cy="19" r="1" />
+  <circle cx="15" cy="12" r="1" />
+  <circle cx="15" cy="5" r="1" />
+  <circle cx="15" cy="19" r="1" />
+</svg><text x="174" y="612" font-size="14" font-family="Arial" fill="#174A3F">hvataljka</text><text x="174" y="631" font-size="10" font-family="Arial" fill="#174A3F">grip-vertical</text><text x="174" y="647" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="593"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C12 2 5 10 5 15 C5 19 8 22 12 22 C16 22 19 19 19 15 C19 10 12 2 12 2 Z" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="593">
+  <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+</svg><text x="550" y="612" font-size="14" font-family="Arial" fill="#174A3F">kap</text><text x="550" y="631" font-size="10" font-family="Arial" fill="#174A3F">droplet</text><text x="550" y="647" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="593"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22 L5 3" /><path d="M5 4 L19 4 L15 9 L19 14 L5 14" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="593">
+  <path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" />
+</svg><text x="926" y="612" font-size="14" font-family="Arial" fill="#174A3F">zastava</text><text x="926" y="631" font-size="10" font-family="Arial" fill="#174A3F">flag</text><text x="926" y="647" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="681"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L12 3 L21 11" /><path d="M5 9 L5 21 L19 21 L19 9" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="681">
+  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg><text x="174" y="700" font-size="14" font-family="Arial" fill="#174A3F">kuca</text><text x="174" y="719" font-size="10" font-family="Arial" fill="#174A3F">house</text><text x="174" y="735" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="681"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="681">
+  <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+</svg><text x="550" y="700" font-size="14" font-family="Arial" fill="#174A3F">trokut</text><text x="550" y="719" font-size="10" font-family="Arial" fill="#174A3F">triangle</text><text x="550" y="735" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="681"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="681">
+  <circle cx="12" cy="12" r="10" />
+</svg><text x="926" y="700" font-size="14" font-family="Arial" fill="#174A3F">krug</text><text x="926" y="719" font-size="10" font-family="Arial" fill="#174A3F">circle</text><text x="926" y="735" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="769"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="769">
+  <rect width="18" height="18" x="3" y="3" rx="2" />
+</svg><text x="174" y="788" font-size="14" font-family="Arial" fill="#174A3F">kvadrat</text><text x="174" y="807" font-size="10" font-family="Arial" fill="#174A3F">square</text><text x="174" y="823" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="769"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15 9 L22 9.5 L16.5 14 L18.5 21.5 L12 17.5 L5.5 21.5 L7.5 14 L2 9.5 L9 9 Z" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="769">
+  <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+</svg><text x="550" y="788" font-size="14" font-family="Arial" fill="#174A3F">zvijezda</text><text x="550" y="807" font-size="10" font-family="Arial" fill="#174A3F">star</text><text x="550" y="823" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="769"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8 C5 5 8 5 12 8 C16 11 19 11 22 8" /><path d="M2 15 C5 12 8 12 12 15 C16 18 19 18 22 15" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="769">
+  <path d="M2 12q2.5 2 5 0t5 0 5 0 5 0" />
+  <path d="M2 19q2.5 2 5 0t5 0 5 0 5 0" />
+  <path d="M2 5q2.5 2 5 0t5 0 5 0 5 0" />
+</svg><text x="926" y="788" font-size="14" font-family="Arial" fill="#174A3F">valovi</text><text x="926" y="807" font-size="10" font-family="Arial" fill="#174A3F">waves-horizontal</text><text x="926" y="823" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="24" y="857"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7 L12 17" /><path d="M7 12 L17 12" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="109" y="857">
+  <circle cx="12" cy="12" r="10" />
+  <path d="M8 12h8" />
+  <path d="M12 8v8" />
+</svg><text x="174" y="876" font-size="14" font-family="Arial" fill="#174A3F">kriz</text><text x="174" y="895" font-size="10" font-family="Arial" fill="#174A3F">circle-plus</text><text x="174" y="911" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="400" y="857"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5 L9 5 L11 8 L20 8 C21 8 22 9 22 10 L22 18 C22 19 21 20 20 20 L4 20 C3 20 2 19 2 18 L2 7 C2 6 3 5 4 5 Z" /><path d="M9 14 L15 14" /><path d="M12 11 L15 14 L12 17" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="485" y="857">
+  <path d="M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1" />
+  <path d="M2 13h10" />
+  <path d="m9 16 3-3-3-3" />
+</svg><text x="550" y="876" font-size="14" font-family="Arial" fill="#174A3F">premjesti</text><text x="550" y="895" font-size="10" font-family="Arial" fill="#174A3F">folder-input</text><text x="550" y="911" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text><svg width="52" height="52" viewBox="0 0 24 24" x="776" y="857"><g fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="8" cy="10" r="1" /><circle cx="12" cy="7.5" r="1" /><circle cx="16" cy="10" r="1" /><path d="M12 22 C10 22 10 20 11 18.5 C12 17 14 17 16 17 C19 17 22 15.5 22 12" /></g></svg><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#174A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="861" y="857">
+  <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
+  <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+  <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+  <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+  <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+</svg><text x="926" y="876" font-size="14" font-family="Arial" fill="#174A3F">stil</text><text x="926" y="895" font-size="10" font-family="Arial" fill="#174A3F">palette</text><text x="926" y="911" font-size="11" font-family="Arial" fill="#174A3F">Različita geometrija</text></svg>

@@ -1,0 +1,201 @@
+{
+  "svg": 720,
+  "png_velicine": 1440,
+  "png_kompatibilni": 240,
+  "najveca_alfa_ruba": 0,
+  "tablica": [
+    {
+      "velicina": 14,
+      "unutarnje_crte": 2,
+      "zavrseci_na_okviru": true
+    },
+    {
+      "velicina": 16,
+      "unutarnje_crte": 2,
+      "zavrseci_na_okviru": true
+    },
+    {
+      "velicina": 18,
+      "unutarnje_crte": 3,
+      "zavrseci_na_okviru": true
+    },
+    {
+      "velicina": 20,
+      "unutarnje_crte": 3,
+      "zavrseci_na_okviru": true
+    },
+    {
+      "velicina": 22,
+      "unutarnje_crte": 3,
+      "zavrseci_na_okviru": true
+    }
+  ],
+  "pregledi": 40,
+  "povecanja_najblizi_susjed": 40,
+  "zasloni": 24,
+  "logotipi": 24,
+  "zasticene_datoteke": 61,
+  "usporedba_iscrtavanja": [
+    {
+      "tema": "svijetla",
+      "velicina": 14,
+      "skala": 1,
+      "srednja_razlika_rgb": 5.1575,
+      "najveca_srednja_razlika": 9.1708,
+      "ikona_najvece_razlike": "slika"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 14,
+      "skala": 2,
+      "srednja_razlika_rgb": 1.2003,
+      "najveca_srednja_razlika": 2.0581,
+      "ikona_najvece_razlike": "baza"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 16,
+      "skala": 1,
+      "srednja_razlika_rgb": 4.8404,
+      "najveca_srednja_razlika": 8.0183,
+      "ikona_najvece_razlike": "pomoc"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 16,
+      "skala": 2,
+      "srednja_razlika_rgb": 1.1014,
+      "najveca_srednja_razlika": 1.8917,
+      "ikona_najvece_razlike": "spremi"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 18,
+      "skala": 1,
+      "srednja_razlika_rgb": 3.3515,
+      "najveca_srednja_razlika": 6.0833,
+      "ikona_najvece_razlike": "tablica"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 18,
+      "skala": 2,
+      "srednja_razlika_rgb": 2.1025,
+      "najveca_srednja_razlika": 3.7849,
+      "ikona_najvece_razlike": "tablica"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 20,
+      "skala": 1,
+      "srednja_razlika_rgb": 3.3194,
+      "najveca_srednja_razlika": 6.2219,
+      "ikona_najvece_razlike": "tablica"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 20,
+      "skala": 2,
+      "srednja_razlika_rgb": 2.0457,
+      "najveca_srednja_razlika": 3.8781,
+      "ikona_najvece_razlike": "tablica"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 22,
+      "skala": 1,
+      "srednja_razlika_rgb": 3.0322,
+      "najveca_srednja_razlika": 5.3461,
+      "ikona_najvece_razlike": "tablica"
+    },
+    {
+      "tema": "svijetla",
+      "velicina": 22,
+      "skala": 2,
+      "srednja_razlika_rgb": 1.8909,
+      "najveca_srednja_razlika": 3.3939,
+      "ikona_najvece_razlike": "tablica"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 14,
+      "skala": 1,
+      "srednja_razlika_rgb": 2.5589,
+      "najveca_srednja_razlika": 5.6903,
+      "ikona_najvece_razlike": "olovka"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 14,
+      "skala": 2,
+      "srednja_razlika_rgb": 0.7061,
+      "najveca_srednja_razlika": 1.7284,
+      "ikona_najvece_razlike": "valovi"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 16,
+      "skala": 1,
+      "srednja_razlika_rgb": 2.411,
+      "najveca_srednja_razlika": 4.935,
+      "ikona_najvece_razlike": "pomoc"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 16,
+      "skala": 2,
+      "srednja_razlika_rgb": 0.6203,
+      "najveca_srednja_razlika": 1.7319,
+      "ikona_najvece_razlike": "valovi"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 18,
+      "skala": 1,
+      "srednja_razlika_rgb": 1.0825,
+      "najveca_srednja_razlika": 2.7575,
+      "ikona_najvece_razlike": "mreza"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 18,
+      "skala": 2,
+      "srednja_razlika_rgb": 0.8424,
+      "najveca_srednja_razlika": 1.7792,
+      "ikona_najvece_razlike": "hvataljka"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 20,
+      "skala": 1,
+      "srednja_razlika_rgb": 1.0595,
+      "najveca_srednja_razlika": 2.8891,
+      "ikona_najvece_razlike": "mreza"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 20,
+      "skala": 2,
+      "srednja_razlika_rgb": 0.7871,
+      "najveca_srednja_razlika": 1.5958,
+      "ikona_najvece_razlike": "stil"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 22,
+      "skala": 1,
+      "srednja_razlika_rgb": 0.9558,
+      "najveca_srednja_razlika": 2.5595,
+      "ikona_najvece_razlike": "mreza"
+    },
+    {
+      "tema": "tamna",
+      "velicina": 22,
+      "skala": 2,
+      "srednja_razlika_rgb": 0.7087,
+      "najveca_srednja_razlika": 1.3908,
+      "ikona_najvece_razlike": "baza"
+    }
+  ],
+  "napomena": "Razlike dvaju iscrtavanja su izmjerene, ne pretpostavlja se jednakost piksela."
+}
