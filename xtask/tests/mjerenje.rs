@@ -106,6 +106,7 @@ fn kriticni_moduli_ne_ovise_o_platformi() {
     assert!(kriticna("src/lib.rs::projekt::spremi", "program"));
     assert!(kriticna("src/main.rs::a", "proba_koordinate"));
     assert!(!kriticna("src/karta.rs::a", "program"));
+    assert!(kriticna(r"src\atributi.rs::spremi", "program"));
 }
 
 #[test]

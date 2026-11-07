@@ -1,8 +1,7 @@
 granica = Provjera { $vrsta } nije prošla na mjestu { $mjesto }: izmjereno je { $sada }, a granica je { $granica }.
 nevaljana-iznimka = Iznimka { $kljuc } nema sve obvezne podatke ili je ključ ponovljen.
 istekla-iznimka = Iznimka { $kljuc } istekla je { $rok }.
-duboka = Duboka provjera još nije napravljena. Mutacije, ponovljeni kod i fuzz nisu provjereni.
-uporaba = Pokrenite cargo xtask provjera ili cargo xtask zapamti, uz neobvezno --mapa <staza>.
+uporaba = Pokrenite cargo xtask provjera, cargo xtask provjera-duboka ili cargo xtask zapamti, uz neobvezno --mapa <staza>.
 alat = Alat { $alat } nije dostupan ili se ne može pokrenuti. Instalirajte ga naredbom { $uputa }. Pojedinosti: { $greska }
 pad-alata = Provjera { $alat } nije prošla u mapi { $mapa }. Izlaz alata: { $izlaz }
 datoteka = Datoteka { $staza } ne može se pročitati ili zapisati: { $greska }
@@ -18,3 +17,12 @@ zapamceno = Referentno mjerenje namjerno je zapisano u { $staza }. To nije potvr
 nemjereno = Za funkciju { $funkcija } nema LLVM područja. Pokrivenost se oprezno računa kao 0 %.
 izvodi = Pokreće se provjera { $alat } u mapi { $mapa }.
 nepodrzan-makro = Funkcijski ili ugniježđeni makro na mjestu { $mjesto } nije moguće pouzdano izmjeriti.
+
+mutacija = Datoteka { $datoteka }, funkcija { $funkcija }: { $promjena }.
+mutacije-osnova = Testovi neizmijenjenog paketa nisu prošli. Mutacije nisu pouzdano izmjerene.
+mutacije-prazno = Nema kritičnih paketa ili potpunog mjerenja mutacija. Duboka provjera nije prošla.
+bez-fuzza = Fuzz nije pokrenut: još nema paketa koji čita nepouzdane datoteke.
+duplikacija = Udio ponovljenih redaka iznosi { $udio } %. Prvo mjerenje samo izvještava.
+mutacija-neprevodiva = Mutacija se ne može prevesti i nije uhvaćena testom: { $opis }
+mutacije-alat = Alat za mutacije nije završio valjano: { $kod }.
+mutacija-pad = Mutacija nije prošla; ishod je { $ishod }: { $opis }

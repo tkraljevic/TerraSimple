@@ -121,7 +121,8 @@ pub fn kriticna(staza: &str, cilj: &str) -> bool {
         "geopaket",
     ];
     dijelovi.iter().any(|d| {
-        cilj.split(['-', '_']).any(|p| p == *d) || staza.split(['/', '.', ':']).any(|p| p == *d)
+        cilj.split(['-', '_']).any(|p| p == *d)
+            || staza.split(['/', '\\', '.', ':']).any(|p| p == *d)
     })
 }
 
