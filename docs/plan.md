@@ -7,8 +7,8 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 ## Stanje
 
 Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
-naredba `cargo xtask provjera`, devet proba u `probe/` (rezultati su u fazi 0) i prvi paket
-programa, `koordinate`. Rust 1.99.1
+naredba `cargo xtask provjera`, devet proba u `probe/` (rezultati su u fazi 0) i prva dva paketa
+programa, `koordinate` i `geometrija`. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
@@ -364,6 +364,25 @@ a ne izmjerena. Rok nije važan, nego da program na kraju bude koristan.
 
 Redoslijed: `koordinate`, `geometrija` (mjere), `slojevi` (model i naredbe s poništavanjem),
 `karta` (crtanje na kartici iz `probe/mnogo`), `prozor`, a zatim spremanje u GeoPackage.
+
+**Rezultat paketa `geometrija` (7. 11. 2026., `geographiclib-rs` 0.2.7, QGIS 3.44.15, PROJ 9.8):**
+duljina crte te opseg i površina lika računaju se na elipsoidu WGS84, a uz svaku mjeru piše metoda.
+
+- **Točnost:** na 150 crta i likova najveće je odstupanje od QGIS-a 0,0005 mm na duljini i
+  0,004 m² na površini, i to na liku od 93 000 km². QGIS i PROJ daju iste brojeve jer računaju istom
+  bibliotekom, pa je to jedna provjera, a ne dvije.
+- **Neovisna provjera:** slažu se dva objavljena primjera iz GeographicLiba (JFK–LHR i Antarktika),
+  Vincentyjeve formule unutar 1 mm i točna formula za pojas između paralela. Svih 20 namjerno
+  ubačenih grešaka testovi su uhvatili, među njima i pogrešku od milijuntog dijela površine.
+- **Kao u QGIS-u:** opseg uključuje rubove rupa, a lik koji siječe sam sebe dobiva razliku svojih
+  dijelova, pa simetrična osmica ima površinu 0. Treba upozorenje, koje još nije napravljeno.
+- **Krive koordinate:** točka u metrima predana kao stupnjevi vraća grešku, a ne besmislen broj.
+- **Brzina:** 10 000 vrhova oko 5 ms, a 3 milijuna vrhova 0,3 do 0,5 s, pa se računa samo kad se lik
+  promijeni, a velike likove treba računati u pozadini. Mjereno na M4 Pro, uz opterećeno računalo.
+- **Površina u ravnini nije ista:** u HTRS96/TM na 1 ha ima 1,6 do 2 m² manje u Zagrebu i Splitu, a
+  5,2 m² više u Osijeku, 8,7 m² u Puli i 10,6 m² u Iloku. QGIS bez elipsoida i računi u ravnini dat će
+  te brojeve. Program zasad prikazuje samo elipsoid.
+- Nije provjereno: Windows, Linux, usporedba sa stvarnim katastarskim površinama. Visina se ne računa.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 

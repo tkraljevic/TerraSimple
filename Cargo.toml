@@ -1,4 +1,4 @@
 [workspace]
-members = ["koordinate", "xtask"]
+members = ["geometrija", "koordinate", "xtask"]
 exclude = ["probe"]
 resolver = "3"
