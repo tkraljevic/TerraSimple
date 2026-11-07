@@ -53,7 +53,8 @@ pub struct MjereLika {
     pub metoda: Metoda,
 }
 
-fn provjeri_tocku(t: Tocka) -> Result<(), Greska> {
+/// Je li točka valjana dužina i širina u stupnjevima.
+pub fn provjeri_tocku(t: Tocka) -> Result<(), Greska> {
     if !(t[0].is_finite() && t[1].is_finite()) {
         return Err(Greska::NijeBroj);
     }

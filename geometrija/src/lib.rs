@@ -4,4 +4,6 @@
 
 mod mjere;
 
-pub use mjere::{Greska, Metoda, MjereCrte, MjereLika, Tocka, mjeri_crtu, mjeri_lik};
+pub use mjere::{
+    Greska, Metoda, MjereCrte, MjereLika, Tocka, mjeri_crtu, mjeri_lik, provjeri_tocku,
+};
