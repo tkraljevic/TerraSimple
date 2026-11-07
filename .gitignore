@@ -1,0 +1,13 @@
+target/
+.DS_Store
+
+# Zadaci sadrže lokalne staze do privatnih karata, a repozitorij će biti javan.
+docs/zadaci/
+
+# Probu koordinata nanovo računa QGIS.
+probe/koordinate/provjera/referenca.csv
+probe/koordinate/provjera/wkt_*.txt
+
+# Podloga DGU-a služi samo za probu i ne ide u repozitorij.
+probe/ispis/provjera/dof_*.jpg
+probe/ispis/primjer/proba_ispisa_*.pdf

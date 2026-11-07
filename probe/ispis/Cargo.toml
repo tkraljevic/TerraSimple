@@ -1,0 +1,11 @@
+[package]
+name = "proba_ispis"
+version = "0.0.0"
+edition = "2021"
+license = "EUPL-1.2"
+publish = false
+
+[dependencies]
+krilla = "0.8"
+
+[workspace]

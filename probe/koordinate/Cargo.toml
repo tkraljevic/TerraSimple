@@ -1,0 +1,12 @@
+[package]
+name = "proba_koordinate"
+version = "0.0.0"
+edition = "2021"
+license = "EUPL-1.2"
+publish = false
+
+[dependencies]
+proj4rs = "=0.3.0"
+proj4wkt = "=0.2.0"
+
+[workspace]

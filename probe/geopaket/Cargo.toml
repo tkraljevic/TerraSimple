@@ -1,0 +1,13 @@
+[package]
+name = "proba_geopaket"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "EUPL-1.2"
+
+[dependencies]
+rusqlite = { version = "0.41", features = ["bundled", "functions"] }
+geozero = { version = "0.15", default-features = false, features = ["with-wkb", "with-geo", "with-wkt"] }
+geo-types = "0.7"
+quick-xml = "0.39"
+serde_json = "1"

@@ -1,0 +1,11 @@
+[package]
+name = "proba_crtanje"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = { version = "0.37.0", features = ["wgpu"] }
+geographiclib-rs = "0.2.7"
+image = { version = "0.25.10", default-features = false, features = ["png"] }
+lyon = "1.0.19"
+walkers = { version = "0.65.0", features = ["vector", "mvt", "pmtiles"] }

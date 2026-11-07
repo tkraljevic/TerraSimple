@@ -1,0 +1,3 @@
+# Probe dijele prevedene biblioteke, da svaka ne zauzima 1,4 GB.
+[build]
+target-dir = "target"

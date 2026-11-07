@@ -1,0 +1,13 @@
+[package]
+name = "proba_geotiff"
+version = "0.0.0"
+edition = "2021"
+license = "EUPL-1.2"
+publish = false
+
+[dependencies]
+tiff = "0.11"
+libc = "0.2"
+weezl = "0.1"
+
+[workspace]
