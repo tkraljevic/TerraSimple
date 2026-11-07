@@ -1,0 +1,19 @@
+[package]
+name = "karta"
+version = "0.0.0"
+edition = "2024"
+license = "EUPL-1.2"
+publish = false
+
+[dependencies]
+slojevi = { path = "../slojevi", version = "0.0.0" }
+geometrija = { path = "../geometrija", version = "0.0.0" }
+eframe = { version = "=0.37.0", default-features = false, features = ["wgpu"] }
+walkers = { version = "=0.65.0", features = ["vector", "mvt", "pmtiles"] }
+wgpu = "30"
+bytemuck = { version = "1", features = ["derive"] }
+lyon_tessellation = "1"
+
+[dev-dependencies]
+pollster = "0.4"
+image = { version = "0.25", default-features = false, features = ["png"] }

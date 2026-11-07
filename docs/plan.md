@@ -7,8 +7,8 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 ## Stanje
 
 Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
-naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i prva tri paketa
-programa, `koordinate`, `geometrija` i `slojevi`. Rust 1.99.1
+naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i prva četiri paketa
+programa, `koordinate`, `geometrija`, `slojevi` i `karta`. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
@@ -393,7 +393,7 @@ duljina crte te opseg i površina lika računaju se na elipsoidu WGS84, a uz sva
 - **`walkers_extras` se ne koristi za KML.** Gubi stilove, nazive i visine, prazna točka ruši program, a
   crta sve iznova na procesoru u svakom okviru. Ostaju naš čitač i crtanje iz `probe/mnogo`.
 - **Inercija (Odluke (7. 11. 2026.)):** karta klizi i dok traje crtanje, a klik dok klizi samo je
-  zaustavi i ne upisuje točku. Sljedeći klik upisuje točku. To još nije napravljeno ni isprobano s
+  zaustavi i ne upisuje točku. Sljedeći klik upisuje točku. Napravljeno je u paketu `karta` i isprobano
   pravim mišem. Mjerenje je pokazalo da poziv `center_at(detached)` zaustavlja kartu, a da poziv
   poslije `Map::show` kod puštanja tipke ostavlja skok od 54 px, pa mora biti prije njega.
 - **Zum:** dopušteno je 0 do 26. Iznad zadnje razine podataka (14 kod OpenFreeMapa, 15 kod PMTilesa
@@ -423,6 +423,33 @@ i ponavljanjem. Sučelje i MCP šalju iste naredbe.
   ga hvata.
 - **Još nije tu:** vidljivost i otvorene mape (stanje prikaza, koje se ne poništava), nepoznati stupci,
   sustav sloja, popis izmijenjenog za spremanje i granica povijesti. Dolaze s `prozor` i GeoPackageom.
+
+**Rezultat paketa `karta` (7. 11. 2026., `walkers` 0.65, `wgpu` 30):** karta s podlogom, crtanje i mjerenje.
+Primjer se pokreće s `cargo run -p karta --example prozor`. Pravim mišem isprobano je na macOS-u, uz ocjenu
+„sve radi što je potrebno dobro”.
+
+- **Crtanje:** točka, linija i poligon. Lijevi klik dodaje točku, povlačenje je pomiče, desni klik briše, a
+  dvoklik završava. Svaka promjena ide kroz naredbe iz paketa `slojevi`, pa se može poništiti.
+- **Nastavljanje linije (Odluke (7. 11. 2026.)):** klik na krajnju točku gotove linije nastavlja je s te
+  strane. Objekt se mijenja tek na završetku, a cijelo produljenje je jedan korak za poništavanje.
+- **Mjerenje:** duljina i površina idu preko paketa `geometrija`, s pločom po zaslonu D. Ništa se ne sprema
+  dok korisnik to ne zatraži.
+- **Crtanje na kartici:** geometrija ostaje na kartici, u komadima i na šest razina detalja, a priprema se
+  ponavlja samo kad se sloj promijeni. Za to je sloj dobio broj inačice.
+- **Podloge:** OpenFreeMap i DGU, s navodom izvora.
+- **Provjera:** 94 testa, od kojih 5 crta na pravoj kartici i čita piksele. Redovna provjera prolazi s 94,64 %
+  na 326 funkcija u cijelom repozitoriju.
+- **Namjerne greške:** prva tura našla je 58 preživjelih, a nakon novih testova ostalo ih je 6 od 406. Svih
+  6 ostaju s razlogom jer ne mijenjaju rezultat: smjer zrake i rub u provjeri je li točka unutar lika (2), početak
+  petlje i jednake udaljenosti u pojednostavljenju (3) te greška 0 kod premalog lika (1). Mjerene su
+  `crtanje.rs`, `karta.rs` i `priprema.rs` te `promjena.rs` iz paketa `slojevi`. Crtač, kamera, Mercator i podloga
+  nisu, ali crtač i kameru provjeravaju testovi s pravom karticom.
+- **Ograničenje:** nema MSAA, jer `walkers` crta bez više uzoraka. Kose crte zato imaju malo nazubljene rubove.
+- **Licence:** na popis dopuštenih dodani su `0BSD`, `BSL-1.0` i `CDLA-Permissive-2.0`, koje traže biblioteke
+  ispod `walkers`.
+- **Nije provjereno:** ručni rad na Windowsu i Linuxu (na njima se zasad vrte samo testovi na CI-ju), glatkoća u
+  prozoru s upaljenim ekranom i rad na slabijem računalu. Upozorenje za lik koji siječe sam sebe još nije
+  napravljeno.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 

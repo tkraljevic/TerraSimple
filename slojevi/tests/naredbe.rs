@@ -570,6 +570,29 @@ fn stil_sloja_i_objekta_se_vracaju() {
 }
 
 #[test]
+fn inacica_sloja_raste_i_pri_ponistavanju_a_tudi_sloj_miruje() {
+    let mut u = Uredjivac::novi();
+    let a = sloj(&mut u, None, VrstaGeometrije::Tocka);
+    let b = sloj(&mut u, None, VrstaGeometrije::Tocka);
+    assert_eq!(u.inacica_sloja(a), 0);
+    let ukupno = u.inacica();
+    objekt(&mut u, a, tocka());
+    let nakon = u.inacica_sloja(a);
+    assert!(nakon > 0);
+    assert!(u.inacica() > ukupno);
+    assert_eq!(u.inacica_sloja(b), 0);
+    assert_eq!(u.ponisti(), Ok(true));
+    assert!(u.inacica_sloja(a) > nakon);
+    let stil = u.inacica_sloja(b);
+    u.izvrsi(NaredbaStabla::PostaviStil {
+        sloj: b,
+        stil: Stil::default(),
+    })
+    .expect("stil");
+    assert!(u.inacica_sloja(b) > stil);
+}
+
+#[test]
 fn preimenovanje_mape_i_sloja_se_vraca() {
     let mut u = Uredjivac::novi();
     let m = mapa(&mut u, None, "Staro");

@@ -20,6 +20,24 @@ pub struct Uredjivac {
     natrag: Vec<Korak>,
     naprijed: Vec<Korak>,
     sljedeci_id: u64,
+    inacice: Inacice,
+}
+
+/// Što se promijenilo, da karta iznova priprema samo te slojeve. Izvan je projekta, jer poništena
+/// izmjena vraća isti projekt, a pripremu ipak treba ponoviti.
+#[derive(Debug, Default)]
+struct Inacice {
+    ukupno: u64,
+    slojevi: BTreeMap<IdSloja, u64>,
+}
+
+impl Inacice {
+    fn zabiljezi(&mut self, promjena: &Promjena) {
+        self.ukupno += 1;
+        for sloj in promjena.promijenjeni_slojevi().into_iter().flatten() {
+            self.slojevi.insert(sloj, self.ukupno);
+        }
+    }
 }
 
 fn provjeri_naziv(naziv: &str) -> Result<(), Greska> {
@@ -82,6 +100,16 @@ impl Uredjivac {
         &self.projekt
     }
 
+    /// Raste pri svakoj izmjeni projekta, i pri poništavanju.
+    pub fn inacica(&self) -> u64 {
+        self.inacice.ukupno
+    }
+
+    /// Raste kad se promijene objekti ili stil sloja.
+    pub fn inacica_sloja(&self, sloj: IdSloja) -> u64 {
+        self.inacice.slojevi.get(&sloj).copied().unwrap_or(0)
+    }
+
     pub fn moze_natrag(&self) -> bool {
         !self.natrag.is_empty()
     }
@@ -125,14 +153,29 @@ impl Uredjivac {
 
     /// Vraća je li bilo što poništiti. Ako je sloj u međuvremenu zaključan, povijest ostaje netaknuta.
     pub fn ponisti(&mut self) -> Result<bool, Greska> {
-        Self::prebaci(&mut self.projekt, &mut self.natrag, &mut self.naprijed)
+        Self::prebaci(
+            &mut self.projekt,
+            &mut self.natrag,
+            &mut self.naprijed,
+            &mut self.inacice,
+        )
     }
 
     pub fn ponovi(&mut self) -> Result<bool, Greska> {
-        Self::prebaci(&mut self.projekt, &mut self.naprijed, &mut self.natrag)
+        Self::prebaci(
+            &mut self.projekt,
+            &mut self.naprijed,
+            &mut self.natrag,
+            &mut self.inacice,
+        )
     }
 
-    fn prebaci(p: &mut Projekt, iz: &mut Vec<Korak>, u: &mut Vec<Korak>) -> Result<bool, Greska> {
+    fn prebaci(
+        p: &mut Projekt,
+        iz: &mut Vec<Korak>,
+        u: &mut Vec<Korak>,
+        inacice: &mut Inacice,
+    ) -> Result<bool, Greska> {
         let Some(korak) = iz.last() else {
             return Ok(false);
         };
@@ -142,6 +185,9 @@ impl Uredjivac {
         let Some(korak) = iz.pop() else {
             return Ok(false);
         };
+        korak
+            .iter()
+            .for_each(|promjena| inacice.zabiljezi(promjena));
         u.push(primijeni_redom(p, korak)?);
         Ok(true)
     }
@@ -303,6 +349,7 @@ impl Skupina<'_> {
 
     pub fn izvrsi(&mut self, naredba: impl Into<Naredba>) -> Result<Option<Novo>, Greska> {
         let (promjena, novo) = self.uredjivac.pripremi(naredba.into())?;
+        self.uredjivac.inacice.zabiljezi(&promjena);
         self.obratno
             .push(promjena.primijeni(&mut self.uredjivac.projekt)?);
         Ok(novo)
