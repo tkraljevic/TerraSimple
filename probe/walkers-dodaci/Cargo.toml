@@ -1,0 +1,20 @@
+[package]
+name = "proba-walkers-dodaci"
+version = "0.1.0"
+edition = "2024"
+license = "EUPL-1.2"
+publish = false
+
+[workspace]
+
+[dependencies]
+eframe = { version = "0.37.0", features = ["wgpu"] }
+walkers = { version = "0.65.0", features = ["vector", "mvt", "pmtiles"] }
+walkers_extras = { version = "0.65.0" }
+kml = { version = "0.14.0", default-features = false, features = ["geo-types"] }
+geojson = "1.0"
+image = { version = "0.25.10", default-features = false, features = ["png"] }
+proj4rs = "0.3"
+pmtiles = { version = "0.24.0", default-features = false, features = ["mmap-async-tokio"] }
+tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "time"] }
+bytes = "1.12"

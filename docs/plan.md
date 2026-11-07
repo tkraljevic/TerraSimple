@@ -7,7 +7,7 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 ## Stanje
 
 Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
-naredba `cargo xtask provjera`, devet proba u `probe/` (rezultati su u fazi 0) i prva dva paketa
+naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i prva dva paketa
 programa, `koordinate` i `geometrija`. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
@@ -119,8 +119,8 @@ i duboka provjera još nisu napravljeni.
     uvjet, Odluke (7. 11. 2026.)), Windows, Linux, pomicanje mišem, tamna tema karte, ispod zuma 11
     i iznad 17. Vrijeme do prve slike nije izmjereno, jer je brojač pokazao samo
     donju granicu iz probe (0,5 s).
-  - `walkers` ima i `with_projection`, a `walkers_extras` sloj za KML i GeoJSON. Oboje
-    treba pogledati prije faze 1.
+  - `walkers` ima i `with_projection`, a `walkers_extras` sloj za KML i GeoJSON. Oboje je
+    pogledano prije paketa `karta` (vidi rezultat probe `walkers-dodaci` u fazi 1).
 - **Crtanje mišem (6. 11. 2026., `probe/crtanje`):** lijevi klik, povlačenje točke,
   povlačenje karte, desni klik, dvoklik, srednja točka, poništavanje, Backspace i Esc
   rade na pravoj karti. Samoprovjera od 25 radnji prošla je 10 puta od 10, s istom
@@ -136,7 +136,8 @@ i duboka provjera još nisu napravljeni.
     prva provjera bila preslaba. Zato kritični računi moraju imati stroge testove i
     usporedbu s neovisnim izračunom.
   - **Inercija:** karta nakon brzog povlačenja još klizi, pa klik odmah nakon toga može
-    promašiti. Treba odlučiti smije li karta kliziti dok traje crtanje.
+    promašiti. Prijedlog je da ne klizi dok traje crtanje (vidi rezultat probe `walkers-dodaci`
+    u fazi 1).
   - **Lik koji siječe sam sebe:** program ga sad bez upozorenja prima, a QGIS takvu
     geometriju smatra neispravnom. Treba upozorenje.
   - **Samoprovjera mora biti stabilna:** prve inačice padale su nasumično jer su čekale u
@@ -383,6 +384,28 @@ duljina crte te opseg i površina lika računaju se na elipsoidu WGS84, a uz sva
   5,2 m² više u Osijeku, 8,7 m² u Puli i 10,6 m² u Iloku. QGIS bez elipsoida i računi u ravnini dat će
   te brojeve. Program zasad prikazuje samo elipsoid.
 - Nije provjereno: Windows, Linux, usporedba sa stvarnim katastarskim površinama. Visina se ne računa.
+
+**Rezultat probe `walkers-dodaci` (7. 11. 2026., `walkers` 0.65, cijeli izvještaj u
+`probe/walkers-dodaci/REZULTAT.md`):** odgovorila je na ono što je trebalo znati prije paketa `karta`.
+
+- **Ekran ostaje u Mercatoru.** `with_projection` s HTRS96/TM radi za točke i crtanje, ali pločice se ne
+  preračunavaju, pa OpenFreeMap i PMTiles tada ne rade. HTRS96/TM računa paket `koordinate`.
+- **`walkers_extras` se ne koristi za KML.** Gubi stilove, nazive i visine, prazna točka ruši program, a
+  crta sve iznova na procesoru u svakom okviru. Ostaju naš čitač i crtanje iz `probe/mnogo`.
+- **Inercija:** prijedlog je da karta ne klizi dok traje crtanje. Poziv `center_at(detached)` mora biti u
+  svakom okviru prije `Map::show`. Tada karta u simulaciji staje točno na mišu, a poziv poslije
+  `Map::show` ostavlja skok od 54 px kod brzog povlačenja.
+- **Zum:** dopušteno je 0 do 26. Iznad zadnje razine podataka (14 kod OpenFreeMapa, 15 kod PMTilesa
+  Sektora B) rastegne se niža razina, a bez pločice ne prikazuje se ništa. Pada nije bilo na 9 ispitanih
+  zumova.
+- **Tamna tema karte radi**, ali stil treba doraditi zbog niskog kontrasta, a program mora prikazivati
+  oznaku izvora podataka.
+- **Pregled izvještaja:** prva inačica imala je opis inercije koji ne odgovara kodu i preporuku sa skokom
+  karte. Testovi su prolazili jer su klizanje mjerili tek nakon okvira u kojem nastaje. Dva namjerna
+  kvara samo postavljaju zastavicu, a provjere stila i visine ne mogu pasti, pa te zaključke potvrđuje
+  kod biblioteke.
+- Nije provjereno: pravi miš, Windows, Linux, karta samo s DGU WMS-om u HTRS96/TM, brzina i oštrina
+  rastegnute karte.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 
