@@ -28,7 +28,7 @@ fn pripremi(korijen: &Path) -> String {
 fn cijeli_tijek_ne_skriva_pad_i_ne_pomice_referencu() {
     let korijen = env::temp_dir().join(format!("terrasimple-naredba-{}", std::process::id()));
     let cargo = pripremi(&korijen);
-    let korijen = fs::canonicalize(korijen).unwrap();
+    let korijen = alati::bez_windows_predmetka(fs::canonicalize(korijen).unwrap());
     let zahtjev = |naredba: &str| Zahtjev {
         naredba: naredba.into(),
         mapa: korijen.clone(),
@@ -41,11 +41,8 @@ fn cijeli_tijek_ne_skriva_pad_i_ne_pomice_referencu() {
             .contains("kritičnih paketa")
     );
     assert!(izvrsi(zahtjev("krivo")).is_err());
-    assert!(
-        izvrsi(zahtjev("provjera"))
-            .unwrap_err()
-            .contains("Nema referentnog")
-    );
+    let greska = izvrsi(zahtjev("provjera")).unwrap_err();
+    assert!(greska.contains("Nema referentnog"), "{greska}");
     izvrsi(zahtjev("zapamti")).unwrap();
     izvrsi(zahtjev("provjera")).unwrap();
     let prije = fs::read(korijen.join("quality/baseline.json")).unwrap();
@@ -153,4 +150,14 @@ fn duboka_povezuje_alat_iznimke_i_padove() {
     fs::write(korijen.join("pad-alata"), "").unwrap();
     assert!(izvrsi(zahtjev()).is_err());
     fs::remove_dir_all(korijen).unwrap();
+}
+
+#[test]
+fn windows_predmetak_se_mice_samo_sa_staze_na_disku() {
+    let staza = |s: &str| alati::bez_windows_predmetka(PathBuf::from(s));
+    assert_eq!(staza(r"\\?\D:\a\b"), PathBuf::from(r"D:\a\b"));
+    assert_eq!(staza(r"D:\a\b"), PathBuf::from(r"D:\a\b"));
+    assert_eq!(staza("/tmp/a"), PathBuf::from("/tmp/a"));
+    let mrezna = r"\\?\UNC\posluzitelj\a";
+    assert_eq!(staza(mrezna), PathBuf::from(mrezna));
 }

@@ -1,6 +1,10 @@
 use crate::poruke::tekst;
 use serde::de::DeserializeOwned;
-use std::{fs, path::Path, process::Command};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 pub fn citaj_json<T: DeserializeOwned>(staza: &Path) -> Result<T, String> {
     let sadrzaj = fs::read(staza).map_err(|e| greska_datoteke(staza, e))?;
@@ -114,4 +118,15 @@ pub fn dostupnost(mapa: &Path, cargo: &str) -> Result<(), String> {
         })?;
     }
     Ok(())
+}
+
+/// Na Windowsu `fs::canonicalize` daje stazu s predmetkom `\\?\`, a `cargo` i `llvm-cov` javljaju je bez
+/// njega, pa se staze ne bi poklopile. Mrežne staze ostaju kakve jesu.
+pub fn bez_windows_predmetka(staza: PathBuf) -> PathBuf {
+    let bez_predmetka = staza
+        .to_str()
+        .and_then(|t| t.strip_prefix(r"\\?\"))
+        .filter(|ostatak| !ostatak.starts_with(r"UNC\"))
+        .map(PathBuf::from);
+    bez_predmetka.unwrap_or(staza)
 }

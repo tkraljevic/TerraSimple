@@ -56,6 +56,7 @@ fn procitaj_argumente(
         return Err(tekst("uporaba", &[]));
     }
     let mapa = fs::canonicalize(&mapa).map_err(|e| alati::greska_datoteke(&mapa, e))?;
+    let mapa = alati::bez_windows_predmetka(mapa);
     Ok(Zahtjev {
         naredba,
         mapa,
