@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>Duboke mape</name>
+  <Style id="stil_duboki">
+    <LineStyle><color>ff0055ff</color><width>2.0</width></LineStyle>
+  </Style>
+  <Folder>
+    <name>Razina 1 – Čepin čćđšž</name>
+    <Folder>
+      <name>Razina 2 – Čepin čćđšž</name>
+      <Folder>
+        <name>Razina 3 – Čepin čćđšž</name>
+        <Folder>
+          <name>Razina 4 – Čepin čćđšž</name>
+          <Folder>
+            <name>Razina 5 – Čepin čćđšž</name>
+            <Placemark>
+              <name>Točka na razini 5</name>
+              <styleUrl>#stil_duboki</styleUrl>
+              <Point><coordinates>18.5500,45.5500,5.0</coordinates></Point>
+            </Placemark>
+            <Folder>
+              <name>Razina 6 – Čepin čćđšž</name>
+              <Folder>
+                <name>Razina 7 – Čepin čćđšž</name>
+                <Folder>
+                  <name>Razina 8 – Čepin čćđšž</name>
+                  <Folder>
+                    <name>Razina 9 – Čepin čćđšž</name>
+                    <Folder>
+                      <name>Razina 10 – Čepin čćđšž</name>
+                      <Placemark>
+                        <name>Točka na razini 10</name>
+                        <styleUrl>#stil_duboki</styleUrl>
+                        <Point><coordinates>18.6000,45.6000,10.0</coordinates></Point>
+                      </Placemark>
+                      <Folder>
+                        <name>Razina 11 – Čepin čćđšž</name>
+                        <Folder>
+                          <name>Razina 12 – Čepin čćđšž</name>
+                          <Folder>
+                            <name>Razina 13 – Čepin čćđšž</name>
+                            <Folder>
+                              <name>Razina 14 – Čepin čćđšž</name>
+                              <Folder>
+                                <name>Razina 15 – Čepin čćđšž</name>
+                                <Placemark>
+                                  <name>Točka na razini 15</name>
+                                  <styleUrl>#stil_duboki</styleUrl>
+                                  <Point><coordinates>18.6500,45.6500,15.0</coordinates></Point>
+                                </Placemark>
+                                <Placemark>
+                                  <name>Najdublja linija Županja – razina 15</name>
+                                  <description><![CDATA[Najdublji opis na <b>razini 15</b>: Đakovo, Šećerana.]]></description>
+                                  <styleUrl>#stil_duboki</styleUrl>
+                                  <LineString><coordinates>18.60,45.50,90.0 18.65,45.55,92.5</coordinates></LineString>
+                                </Placemark>
+                              </Folder>
+                            </Folder>
+                          </Folder>
+                        </Folder>
+                      </Folder>
+                    </Folder>
+                  </Folder>
+                </Folder>
+              </Folder>
+            </Folder>
+          </Folder>
+        </Folder>
+      </Folder>
+    </Folder>
+  </Folder>
+</Document>
+</kml>

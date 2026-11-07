@@ -6,9 +6,9 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 
 ## Stanje
 
-Postoje dokumenti, nacrt i sedam proba u `probe/` (rezultati su u fazi 0). Rust 1.99.1
+Postoje dokumenti, nacrt, naredba `cargo xtask provjera` i osam proba u `probe/` (rezultati su u fazi 0). Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
-`geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla` i `tiff`. Ostale biblioteke
+`geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
 
 Rok koji dolazi izvana: Google najavljuje da se Earth Pro od 25. 6. 2027. više
@@ -28,7 +28,8 @@ Stanje s crates.io 6. 11. 2026. Sve su dopuštajućih licenci, spojivih s EUPL-o
 | Mjere na elipsoidu | `geographiclib-rs` | 0.2 | MIT | |
 | Koordinate | `proj4rs` | 0.3 | MIT/Apache | Proba: unutar 1 mm prema QGIS-u. Sustave daje naš popis, ne `proj4wkt`. |
 | GeoPackage | `rusqlite`, `geozero` | 0.41, 0.15 | MIT, MIT/Apache | SQLite se ugrađuje u program. Iz `geozero` samo `with-wkb`, jer `with-gpkg` vuče `sqlx`. |
-| KML, GeoJSON, SHP | `kml`, `geojson`, `shapefile` | 0.15, 1.0, 0.9 | MIT/Apache, MIT/Apache, MIT | |
+| KML | vlastiti čitač | | | Na `quick-xml` i `zip`. Biblioteka `kml` 0.15 tiho gubi podatke (Odluke (7. 11. 2026.)). |
+| GeoJSON, SHP | `geojson`, `shapefile` | 1.0, 0.9 | MIT/Apache, MIT | |
 | KMZ, XML | `zip`, `quick-xml` | 9.4, 0.42 | MIT | |
 | Podloge iz datoteke | `tiff`, `pmtiles`, `mbtiles` | 0.11, 0.28, 0.22 | MIT, MIT/Apache, MIT/Apache | |
 | PDF | `krilla` | 0.8 | MIT/Apache | Proba: unutar 0,04 mm prema računu. Zamjena: `pdf-writer`. |
@@ -83,6 +84,7 @@ mjerilo i na kraju se zapiše odluka. Ako neka padne, plan se mijenja prije faze
 | Čita li QGIS naš GeoPackage? | Slojevi, stupci i stil sloja otvaraju se u QGIS-u, a izmjena u QGIS-u vidi se kod nas. |
 | Može li stil jednog objekta u QGIS? | Objekt s vlastitim stilom i u QGIS-u izgleda isto. Ako ne, zapisujemo ograničenje. |
 | Čita li se pravi `myplaces.kml`? | Duboke mape, nazivi, opisi i stilovi uvoze se bez gubitka. Datoteka ne ide u repozitorij. |
+| Vuče li karta stvarne podatke? (predloženo 7. 11. 2026.) | 3 milijuna vrhova iz `myplaces.kml`, u 208 slojeva, glatko se pomiču i približavaju. Još nije rađeno. |
 | Je li PDF u mjerilu? | A4 izmjeren na papiru odgovara mjerilu, a dijakritika je ispravna. A3 se provjerava bez papira, jer pisača za A3 nemamo. |
 | Može li GeoTIFF od 2,4 GB? | Otvara se bez čekanja i bez punjenja memorije. |
 
@@ -291,6 +293,32 @@ i duboka provjera još nisu napravljeni.
     bolje nego u praksi), slika stvarnih 2,4 GB, iscrtavanje u `egui`, preračun u Mercator
     ekrana, visinski modeli (16 bita, decimalni brojevi), Windows i Linux.
 
+- **KML i KMZ (7. 11. 2026., `probe/kml`, `quick-xml` 0.42, cijeli izvještaj u
+  `probe/kml/REZULTAT.md`):** prolazi po broju elemenata. Pravi `myplaces.kml` (147 MB, 87 105
+  objekata, 3 032 552 vrha, 251 spremnik, dubina 8) i još 8 stvarnih datoteka čitaju se
+  cijeli, a isto vrijedi za KMZ. Vrijeme je oko 0,4 s, a memorija 203 MB. Brojke su neovisno
+  potvrđene, a 2 033 stvarna naziva ne pojavljuju se ni u probi ni u izlazu.
+  Nije provjereno: **vrijednosti znak po znak na stvarnoj datoteci** (samo na izmišljenim
+  primjerima), povratak u Google Earth, Windows i Linux.
+  - **Vlastiti čitač (Odluke (7. 11. 2026.)):** `kml` 0.15 tiho gubi 2 069 vrhova, 52 stila i
+    jedan opis mape, a na praznoj točki ruši program. Takve točke u stvarnim datotekama nema,
+    nego je to izmišljeni primjer. Čitač ima 2 444 retka koje održavamo sami. Što ne razumije,
+    broji i prijavljuje.
+  - **Rupe:** 332 lika imaju više prstenova u istom `innerBoundaryIs`, ukupno 4 287 rupa.
+    Koliko znam, to je izvan službene sheme. Google Earth to čuva pri spremanju, a GDAL iz
+    svakog uzima samo prvi prsten, pa bi QGIS iz tog KML-a izgubio 3 475 rupa. Program ih
+    mora čitati sve, a u GeoPackage i KML pisati tako da ih QGIS vidi.
+  - **Količina:** kartu smo probali s 10 000 vrhova, a stvarnih je 3 milijuna, 300 puta više.
+    To je nova proba u tablici i treba je napraviti prije faze 1.
+  - **Isključene stavke:** 85 972 stavke imaju `visibility=0`, pa ih uvoz ne smije crtati.
+  - **Slojevi:** podjela po vrsti geometrije daje 208 slojeva. Miješani `MultiGeometry` (točka
+    i linija, 1 279 objekata) dijeli se na dva sloja. Stablo slojeva mora podnijeti toliko.
+  - **Stil:** `StyleMap` često stoji prije `Style`, a ista oznaka ponavlja se u ugniježđenim
+    dokumentima, pa se stilovi rješavaju tek nakon čitanja. Boje su zapisane kao `aabbggrr`.
+  - **Google Earth sam sprema:** i bez korisnikova spremanja zapiše stanje prikaza (`open`,
+    `visibility`). Podaci su 7. 11. ostali znak po znak isti. Program stanje prikaza drži
+    odvojeno, da otvaranje karte ne izgleda kao izmjena projekta.
+
 ### Faza 1: karta i crtanje (4–6 tjedana)
 
 Zasloni A, B, C, D. Podloge OpenFreeMap i DGU, tražilica, crtanje točaka, linija i
@@ -386,6 +414,5 @@ ništa u fazama.
 1. Potvrda plana.
 2. Javna objava tek kad je ime provjereno i kad uz font Inter iz `probe/izgled/fonti`
    stoji njegova licenca (OFL). Repozitorij je zasad privatan na GitHubu (7. 11. 2026.).
-3. Pravi `myplaces.kml` za probu, izvan repozitorija. Nađen je na računalu (147 MB), u
-   mapi podataka Google Eartha.
+3. Običan laptop, za probe karte i GeoTIFF-a.
 4. Kasnije odluka o potpisivanju programa za Windows i macOS.

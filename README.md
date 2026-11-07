@@ -19,8 +19,9 @@ TerraSimple bi bio između njih: jednostavan kao Google Earth Pro, na
 računalu i bez interneta, a sve nacrtano odmah se otvara u QGIS-u, pa
 profesionalac nastavlja tamo gdje je običan korisnik stao.
 
-Stanje: dokumenti, nacrt sučelja, prijedlog plana i sedam proba u `probe/`
-(izgled, karta, crtanje, GeoPackage, koordinate, ispis, GeoTIFF). Program nije započet.
+Stanje: dokumenti, nacrt sučelja, prijedlog plana, provjera kvalitete i osam proba u
+`probe/` (izgled, karta, crtanje, GeoPackage, koordinate, ispis, GeoTIFF, KML). Program nije
+započet.
 
 Odluke (27. 10. 2026.): radni naziv je TerraSimple, bez „GIS” u imenu.
 Prije objave provjeriti žigove, domenu i GitHub.

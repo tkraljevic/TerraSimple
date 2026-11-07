@@ -15,3 +15,5 @@ probe/koordinate/provjera/wkt_*.txt
 # Podloga DGU-a služi samo za probu i ne ide u repozitorij.
 probe/ispis/provjera/dof_*.jpg
 probe/ispis/primjer/proba_ispisa_*.pdf
+
+__pycache__/
