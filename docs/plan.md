@@ -7,7 +7,7 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 ## Stanje
 
 Postoje dokumenti, nacrt i sedam proba u `probe/` (rezultati su u fazi 0). Rust 1.99.1
-je instaliran, a git repozitorij je lokalan, bez objave. Isprobani su `egui`, `walkers`, `lyon`,
+je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla` i `tiff`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
 
@@ -382,8 +382,8 @@ ništa u fazama.
 ## Što treba od korisnika
 
 1. Potvrda plana.
-2. Javni GitHub tek kad je ime provjereno i kad uz font Inter iz `probe/izgled/fonti`
-   stoji njegova licenca (OFL). Git repozitorij je zasad samo lokalan (7. 11. 2026.).
+2. Javna objava tek kad je ime provjereno i kad uz font Inter iz `probe/izgled/fonti`
+   stoji njegova licenca (OFL). Repozitorij je zasad privatan na GitHubu (7. 11. 2026.).
 3. Pravi `myplaces.kml` za probu, izvan repozitorija. Nađen je na računalu (147 MB), u
    mapi podataka Google Eartha.
 4. Kasnije odluka o potpisivanju programa za Windows i macOS.

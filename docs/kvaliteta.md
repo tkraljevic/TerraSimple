@@ -5,7 +5,7 @@ TerraSimple preuzima standarde kvalitete iz goCOP-a (`docs/CODE_QUALITY.md` i
 samo alati, jer je goCOP-ov `dev/quality` napisan za Go.
 
 Stanje 7. 11. 2026.: ovo je dogovor o standardu, a ne izvještaj. Postoje probe i
-lokalni git repozitorij, ali programa još nema, pa nijedna provjera nije pokrenuta
+privatni git repozitorij, ali programa još nema, pa nijedna provjera nije pokrenuta
 i nijedan alat ovdje nije isproban. Referentno mjerenje radi se čim postoji prvi
 izvršivi dio programa.
 
