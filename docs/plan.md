@@ -86,7 +86,9 @@ mjerilo i na kraju se zapiše odluka. Ako neka padne, plan se mijenja prije faze
 | Je li PDF u mjerilu? | A4 izmjeren na papiru odgovara mjerilu, a dijakritika je ispravna. A3 se provjerava bez papira, jer pisača za A3 nemamo. |
 | Može li GeoTIFF od 2,4 GB? | Otvara se bez čekanja i bez punjenja memorije. |
 
-Usput se postavlja `cargo xtask provjera` i prvo referentno mjerenje.
+Usput se postavlja `cargo xtask provjera` i prvo referentno mjerenje. Oboje je napravljeno
+7. 11. 2026. (`xtask/IZVJESTAJ.md`). Mjeri se zasad samo sam `xtask`, a Windows, Linux, CI
+i duboka provjera još nisu napravljeni.
 
 **Rezultati:**
 

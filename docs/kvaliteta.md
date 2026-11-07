@@ -4,10 +4,10 @@ TerraSimple preuzima standarde kvalitete iz goCOP-a (`docs/CODE_QUALITY.md` i
 `quality/config.json` u goCOP-u) i globalni standard (EMM #2845). Mijenjaju se
 samo alati, jer je goCOP-ov `dev/quality` napisan za Go.
 
-Stanje 7. 11. 2026.: ovo je dogovor o standardu, a ne izvještaj. Postoje probe i
-privatni git repozitorij, ali programa još nema, pa nijedna provjera nije pokrenuta
-i nijedan alat ovdje nije isproban. Referentno mjerenje radi se čim postoji prvi
-izvršivi dio programa.
+Stanje 7. 11. 2026.: `cargo xtask provjera` radi na macOS-u i prolazi, ali mjeri samo
+sebe, jer programa još nema. Referentno mjerenje zato pokriva samo `xtask` (64 funkcije,
+90,86 % područja), a mjerenje programa dodaje se čim nastane njegov prvi izvršivi dio.
+Windows i Linux nisu isprobani. Pregled je u `xtask/IZVJESTAJ.md`.
 
 ## Cilj
 
@@ -57,6 +57,17 @@ Brojke iz goCOP-a mjerene su drugim alatom i na drugom jeziku:
 
 Zato se granice potvrđuju na prvom mjerenju. Ako se pokažu krive za Rust,
 promjena se zapisuje s razlogom, a ne radi se potiho.
+
+Kako mjeri `xtask` (Odluke (7. 11. 2026.)):
+
+- **Pokrivenost** se računa iz LLVM-ovih područja, a ne iz redaka. Testni kod ne ulazi u
+  mjeru, a funkcija bez područja vrijedi kao nepokrivena.
+- **Složenost** broji naš brojač na `syn`, jer `rust-code-analysis-cli` ne čita sav noviji
+  Rust, a ipak vraća uspjeh. Osnova je 1. Po 1 dodaju `if`, `for`, `while`, `loop`, `?`, `&&`,
+  `||`, `let ... else`, čuvar grane i dodatna alternativa uzorka, a `match` dodaje broj grana
+  manje jedan. Zatvaranje se broji u funkciju koja ga sadrži. Nepoznat makro ruši analizu.
+- **Kritični kod** nema dopušten stari dug: granice 7 i 95 % vrijede uvijek, i s referencom.
+- **Ukupnih 85 %** je apsolutna donja granica, i kad je referenca niža.
 
 ## Pravila pisanja koda
 
@@ -122,7 +133,7 @@ je javan, pa u testne podatke ne ide ništa iz goCOP-a.
 | Oblik koda | `rustfmt` | uvijek |
 | Statička analiza | `clippy`, upozorenja su greške | uvijek |
 | Testovi i pokrivenost | `cargo test`, `cargo-llvm-cov` | uvijek |
-| Složenost po funkciji | `rust-code-analysis`; zadnje izdanje je iz 2023., pa ako ne čita noviji Rust, broji je `xtask` | uvijek |
+| Složenost po funkciji | `xtask`, jer `rust-code-analysis` ne čita sav noviji Rust | uvijek |
 | Ranjivosti i licence ovisnosti | `cargo-deny` | uvijek |
 | Mutacije | `cargo-mutants` | sporo, zasebno |
 | Ponovljeni kod | `jscpd` ili sličan, odabrati na prvom mjerenju | sporo, zasebno |
@@ -140,23 +151,29 @@ njihov JSON. Radi jednako na Windowsu, macOS-u i Linuxu, a ne treba `make`.
 
 ## Naredbe
 
-Ovako će izgledati kad kod postoji. Još ne rade.
-
 ```bash
 cargo xtask provjera
 ```
 
 Pokreće sve iz retka „uvijek”, uspoređuje s `quality/baseline.json` i pada kad
-padne test, kad statička analiza nađe grešku ili kad izmjena nešto pogorša.
+padne test, kad statička analiza nađe grešku ili kad izmjena nešto pogorša. Uz
+`--mapa <staza>` provjerava drugi Cargo paket.
+
+```bash
+cargo xtask zapamti
+```
+
+Namjerno zapisuje novo referentno mjerenje, a to radi čovjek nakon pregleda.
 
 ```bash
 cargo xtask provjera-duboka
 ```
 
-Mutacije, ponovljeni kod i fuzz, zasebno jer dugo traju.
+Mutacije, ponovljeni kod i fuzz, zasebno jer dugo traju. Zasad nije napravljena i uvijek
+vraća grešku, pa se ni udio ponovljenog koda još ne mjeri.
 
-Ista `provjera` radi u CI-ju na svakom pull requestu i slanju u glavnu granu, na
-sve tri platforme, a jednom tjedno i s provjerom ranjivosti.
+Ista `provjera` treba raditi u CI-ju na svakom pull requestu i slanju u glavnu granu, na
+sve tri platforme, a jednom tjedno i s provjerom ranjivosti. CI još nije postavljen.
 
 ## Referentno mjerenje i iznimke
 
@@ -173,4 +190,7 @@ sve tri platforme, a jednom tjedno i s provjerom ranjivosti.
 
 - **Testovi sučelja:** provjeriti može li `egui_kittest` pokriti crtanje mišem
   (lijevi klik, povlačenje, desni klik, dvoklik).
-- **Granice za Rust:** potvrditi na prvom mjerenju.
+- **Granice za Rust:** potvrditi na prvom mjerenju programa.
+- **Proturječje u granicama kritičnog koda:** uz složenost 7 i pokrivenost 95 % rizik je
+  7,006, pa granica rizika 7 u tom slučaju traži 100 % pokrivenosti. Odlučiti na prvom
+  mjerenju programa, a dotad granice ostaju kako pišu.
