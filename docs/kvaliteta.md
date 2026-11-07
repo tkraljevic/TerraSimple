@@ -4,10 +4,9 @@ TerraSimple preuzima standarde kvalitete iz goCOP-a (`docs/CODE_QUALITY.md` i
 `quality/config.json` u goCOP-u) i globalni standard (EMM #2845). Mijenjaju se
 samo alati, jer je goCOP-ov `dev/quality` napisan za Go.
 
-Stanje 7. 11. 2026.: `cargo xtask provjera` radi na macOS-u i prolazi, ali mjeri samo
-sebe, jer programa još nema. Referentno mjerenje zato pokriva samo `xtask` (64 funkcije,
-90,86 % područja), a mjerenje programa dodaje se čim nastane njegov prvi izvršivi dio.
-Windows i Linux nisu isprobani. Pregled je u `xtask/IZVJESTAJ.md`.
+Stanje 7. 11. 2026.: redovna i duboka provjera postoje. Duboka mjeri mutacije
+kritičnih paketa i prvi udio ponovljenog koda. Stvarni rezultati i ograničenja su u
+`xtask/IZVJESTAJ-DUBOKA.md`. Windows, Linux i stvarni CI još nisu isprobani.
 
 ## Cilj
 
@@ -125,7 +124,7 @@ kritični dijelovi moraju imati i ove testove:
 
 Prednost imaju standardni alati Rusta. Projekt je pod licencom EUPL-1.2, pa
 `cargo-deny` provjerava i jesu li licence ovisnosti spojive s njom. Repozitorij
-je javan, pa u testne podatke ne ide ništa iz goCOP-a.
+je privatan, a kasnije može postati javan. U testne podatke ne ide ništa iz goCOP-a.
 
 
 | Provjera | Alat | Kada |
@@ -136,8 +135,8 @@ je javan, pa u testne podatke ne ide ništa iz goCOP-a.
 | Složenost po funkciji | `xtask`, jer `rust-code-analysis` ne čita sav noviji Rust | uvijek |
 | Ranjivosti i licence ovisnosti | `cargo-deny` | uvijek |
 | Mutacije | `cargo-mutants` | sporo, zasebno |
-| Ponovljeni kod | `jscpd` ili sličan, odabrati na prvom mjerenju | sporo, zasebno |
-| Čitanje nepouzdanih datoteka | `cargo-fuzz` | sporo, zasebno |
+| Ponovljeni kod | mali brojač u `xtask` (`retci-10-v1`) | sporo, zasebno |
+| Čitanje nepouzdanih datoteka | `cargo-fuzz`, još nije uveden | nakon prvog čitača nepouzdanih datoteka |
 
 Go treba zasebnu provjeru istodobnog pristupa. Rust utrke podataka u sigurnom
 kodu odbija već pri prevođenju, pa je dovoljan `forbid(unsafe_code)`. Ako se
@@ -169,11 +168,35 @@ Namjerno zapisuje novo referentno mjerenje, a to radi čovjek nakon pregleda.
 cargo xtask provjera-duboka
 ```
 
-Mutacije, ponovljeni kod i fuzz, zasebno jer dugo traju. Zasad nije napravljena i uvijek
-vraća grešku, pa se ni udio ponovljenog koda još ne mjeri.
+Mutacije pokreće `cargo-mutants` 27.1.0 nad članovima radnog prostora koje isti
+središnji popis u `mjerenje::kriticna` označuje kritičnima. Trenutačno su to
+`koordinate` i `geometrija`. Po paketu prvo prolaze neizmijenjeni testovi; zatim se
+svaka mutacija prevodi najviše 180 sekundi i testira najviše 60 sekundi. Koriste se
+dva radnika i `--locked`, bez dodatne konfiguracije ili filtara mutacija.
+Na macOS-u dugo mjerenje pokrenuti kao `/usr/sbin/taskpolicy -b cargo xtask provjera-duboka`.
+Na drugim sustavima pokreće se obična naredba.
 
-Ista `provjera` treba raditi u CI-ju na svakom pull requestu i slanju u glavnu granu, na
-sve tri platforme, a jednom tjedno i s provjerom ranjivosti. CI još nije postavljen.
+Preživjela mutacija ruši provjeru i ispisuje datoteku, funkciju i promjenu.
+Istek vremena, nepotpun rezultat, pad osnovnih testova ili kvar alata također ruše
+provjeru. Mutacija koja se ne može prevesti zasebno se ispisuje; nije uhvaćena
+testom, ali sama ne ruši provjeru. Izvorni izlazi ostaju u `.quality/`.
+
+Prvi udio ponovljenog koda samo izvještava i ne mijenja referencu. Broje se
+blokovi od najmanje deset jednakih uzastopnih nepraznih redaka, nakon uklanjanja
+rubnih razmaka i redaka koji počinju s `//`. Udio je broj označenih redaka kroz
+broj svih takvih redaka; preklapanja se broje jednom, a oba pojavljivanja ulaze
+u brojnik. Izvori su Cargo produkcijski ciljevi i njihova mapa `src`, uključujući
+ugrađene testove. Zasebna mapa `tests` ne ulazi. To nije prepoznavanje semantički
+istog koda: drukčija imena i formatiranje mogu sakriti ponavljanje, a blok-komentari
+i literali mogu ući u mjeru. O usporedbi budućih mjerenja treba odlučiti nakon pregleda
+prvog udjela; granica i referenca sada nisu promijenjene.
+
+Fuzz nije pokrenut niti uveden: još nema paketa koji čita nepouzdane datoteke.
+
+`.github/workflows/kvaliteta.yml` priprema redovnu provjeru za svaki PR i slanje
+u `master`, na Windowsu, macOS-u i Linuxu. `duboka.yml` priprema tjedno i ručno
+pokretanje na Linuxu. Oba koriste predmemoriju i ograničeno trajanje. Lokalno je
+provjerena sintaksa YAML-a; stvarni CI i druge platforme nisu pokrenuti.
 
 ## Referentno mjerenje i iznimke
 
@@ -182,6 +205,10 @@ sve tri platforme, a jednom tjedno i s provjerom ranjivosti. CI još nije postav
   provjere.
 - Iznimke su u `quality/config.json`, svaka s razlogom, odgovornom osobom i
   rokom. Istekla iznimka ruši provjeru.
+- Ekvivalentna ili neopažljiva mutacija može se odobriti samo pregledanom iznimkom
+  `mutacija:<točno ime iz cargo-mutants>`, s istim razlogom, osobom i rokom.
+  Rok i potpunost provjeravaju se prije pokretanja. Ne koriste se skrivene oznake
+  preskakanja u izvornom kodu ili zasebne postavke cargo-mutants.
 - Iznimka se ne dodaje samo da bi provjera prošla, a posebno ne za grešku u
   podacima ili uvozu.
 - Izvještaj nikad ne označava neizvršenu provjeru kao prošlu.

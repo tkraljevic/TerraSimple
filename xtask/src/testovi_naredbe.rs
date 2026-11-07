@@ -38,7 +38,7 @@ fn cijeli_tijek_ne_skriva_pad_i_ne_pomice_referencu() {
     assert!(
         izvrsi(zahtjev("provjera-duboka"))
             .unwrap_err()
-            .contains("nije napravljena")
+            .contains("kritičnih paketa")
     );
     assert!(izvrsi(zahtjev("krivo")).is_err());
     assert!(
@@ -114,6 +114,43 @@ fn argumenti_prihvacaju_samo_poznati_oblik() {
     assert!(procitaj(&["provjera", "--mapa", &korijen.to_string_lossy()]).is_ok());
     assert!(procitaj(&["provjera", "--mapa"]).is_err());
     assert!(procitaj(&["provjera", "--krivo"]).is_err());
-    assert!(procitaj(&["provjera", "--mapa", "/terrasimple-nepostoji"]).is_err());
+    assert!(
+        procitaj(&[
+            "provjera",
+            "--mapa",
+            &korijen.join("terrasimple-nepostoji").to_string_lossy()
+        ])
+        .is_err()
+    );
     assert!(procitaj(&["provjera", "--mapa", &korijen.to_string_lossy(), "visak"]).is_err());
+}
+
+#[test]
+fn duboka_povezuje_alat_iznimke_i_padove() {
+    let korijen = env::temp_dir().join(format!("terrasimple-duboka-{}", std::process::id()));
+    let cargo = pripremi(&korijen);
+    fs::write(korijen.join("kritican"), "").unwrap();
+    let zahtjev = || Zahtjev {
+        naredba: "provjera-duboka".into(),
+        mapa: korijen.clone(),
+        korijen: korijen.clone(),
+        cargo: cargo.clone(),
+    };
+    izvrsi(zahtjev()).unwrap();
+    fs::write(korijen.join("ishod"), "MissedMutant").unwrap();
+    fs::write(korijen.join("kod"), "2").unwrap();
+    assert!(izvrsi(zahtjev()).unwrap_err().contains("replace a"));
+    fs::write(korijen.join("quality/config.json"), r#"{"iznimke":[{"kljuc":"mutacija:src/lib.rs:1: replace a with true","razlog":"Pregledano.","odgovorna_osoba":"Održavatelj","rok":"2099-01-01"}]}"#).unwrap();
+    izvrsi(zahtjev()).unwrap();
+    fs::write(korijen.join("kod"), "1").unwrap();
+    assert!(
+        izvrsi(zahtjev())
+            .unwrap_err()
+            .contains("nije završio valjano")
+    );
+    fs::write(korijen.join("ishod"), "Timeout").unwrap();
+    assert!(izvrsi(zahtjev()).is_err());
+    fs::write(korijen.join("pad-alata"), "").unwrap();
+    assert!(izvrsi(zahtjev()).is_err());
+    fs::remove_dir_all(korijen).unwrap();
 }

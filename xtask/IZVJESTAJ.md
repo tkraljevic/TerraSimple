@@ -1,3 +1,5 @@
+> Raniji izvještaj prve redovne provjere. Aktualna duboka provjera i CI opisani su u [IZVJESTAJ-DUBOKA.md](IZVJESTAJ-DUBOKA.md).
+
 # Provjera kvalitete — 7. 11. 2026.
 
 Naredba je napravljena i isprobana na macOS-u. Sam `xtask` ima 18 prolaznih

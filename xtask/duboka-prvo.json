@@ -1,0 +1,568 @@
+{
+  "alat": "cargo-mutants 27.1.0",
+  "datum": "2026-11-07",
+  "paketi": {
+    "koordinate": {
+      "ukupno": 45,
+      "uhvaceno": 40,
+      "prezivjelo": 0,
+      "bez_rezultata": 5,
+      "neprevodivo": 5,
+      "vrijeme_isteklo": 0,
+      "trajanje_s": 92.971809,
+      "mutacije": [
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "<impl std::fmt::Display for Greska>::fmt",
+          "promjena": "koordinate/src/pretvorba.rs:19:9: replace <impl std::fmt::Display for Greska>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "proj_iz_definicije",
+          "promjena": "koordinate/src/pretvorba.rs:30:5: replace proj_iz_definicije -> Result<Proj, Greska> with Ok(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "konacna",
+          "promjena": "koordinate/src/pretvorba.rs:42:5: replace konacna -> Result<[f64; 2], Greska> with Ok([0.0; 2])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "konacna",
+          "promjena": "koordinate/src/pretvorba.rs:42:5: replace konacna -> Result<[f64; 2], Greska> with Ok([-1.0; 2])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "konacna",
+          "promjena": "koordinate/src/pretvorba.rs:42:25: replace && with || in konacna",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "mnozitelj",
+          "promjena": "koordinate/src/pretvorba.rs:51:5: replace mnozitelj -> f64 with 0.0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "mnozitelj",
+          "promjena": "koordinate/src/pretvorba.rs:51:5: replace mnozitelj -> f64 with 1.0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "mnozitelj",
+          "promjena": "koordinate/src/pretvorba.rs:51:5: replace mnozitelj -> f64 with -1.0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::novi",
+          "promjena": "koordinate/src/pretvorba.rs:56:9: replace Pretvornik::novi -> Result<Self, Greska> with Ok(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "konacna",
+          "promjena": "koordinate/src/pretvorba.rs:42:5: replace konacna -> Result<[f64; 2], Greska> with Ok([1.0; 2])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::iz_definicija",
+          "promjena": "koordinate/src/pretvorba.rs:65:9: replace Pretvornik::iz_definicija -> Result<Self, Greska> with Ok(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:74:9: replace Pretvornik::pretvori -> Result<[f64; 2], Greska> with Ok([0.0; 2])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:74:9: replace Pretvornik::pretvori -> Result<[f64; 2], Greska> with Ok([1.0; 2])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:74:9: replace Pretvornik::pretvori -> Result<[f64; 2], Greska> with Ok([-1.0; 2])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:76:31: replace * with + in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:76:31: replace * with / in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:76:41: replace * with + in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:76:41: replace * with / in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:79:26: replace * with + in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:79:26: replace * with / in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:79:39: replace * with + in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/pretvorba.rs",
+          "funkcija": "Pretvornik::pretvori",
+          "promjena": "koordinate/src/pretvorba.rs:79:39: replace * with / in Pretvornik::pretvori",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::iz_epsg",
+          "promjena": "koordinate/src/sustav.rs:31:9: replace Sustav::iz_epsg -> Option<Self> with Some(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::iz_epsg",
+          "promjena": "koordinate/src/sustav.rs:31:9: replace Sustav::iz_epsg -> Option<Self> with None",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::iz_epsg",
+          "promjena": "koordinate/src/sustav.rs:31:44: replace == with != in Sustav::iz_epsg",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::epsg",
+          "promjena": "koordinate/src/sustav.rs:36:9: replace Sustav::epsg -> i64 with 0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::epsg",
+          "promjena": "koordinate/src/sustav.rs:36:9: replace Sustav::epsg -> i64 with 1",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::epsg",
+          "promjena": "koordinate/src/sustav.rs:36:9: replace Sustav::epsg -> i64 with -1",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::iz_retka_geopaketa",
+          "promjena": "koordinate/src/sustav.rs:50:9: replace Sustav::iz_retka_geopaketa -> Option<Self> with Some(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::iz_retka_geopaketa",
+          "promjena": "koordinate/src/sustav.rs:50:9: replace Sustav::iz_retka_geopaketa -> Option<Self> with None",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::tocnost_prema_wgs_m",
+          "promjena": "koordinate/src/sustav.rs:58:9: replace Sustav::tocnost_prema_wgs_m -> f64 with 0.0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::tocnost_prema_wgs_m",
+          "promjena": "koordinate/src/sustav.rs:58:9: replace Sustav::tocnost_prema_wgs_m -> f64 with 1.0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::tocnost_prema_wgs_m",
+          "promjena": "koordinate/src/sustav.rs:58:9: replace Sustav::tocnost_prema_wgs_m -> f64 with -1.0",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::je_geografski",
+          "promjena": "koordinate/src/sustav.rs:66:9: replace Sustav::je_geografski -> bool with true",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::je_geografski",
+          "promjena": "koordinate/src/sustav.rs:66:9: replace Sustav::je_geografski -> bool with false",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::je_geografski",
+          "promjena": "koordinate/src/sustav.rs:66:14: replace == with != in Sustav::je_geografski",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::definicija",
+          "promjena": "koordinate/src/sustav.rs:70:9: replace Sustav::definicija -> &'static str with \"\"",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "Sustav::definicija",
+          "promjena": "koordinate/src/sustav.rs:70:9: replace Sustav::definicija -> &'static str with \"xyzzy\"",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:90:5: replace broj_na_kraju_definicije -> Option<i64> with None",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:90:5: replace broj_na_kraju_definicije -> Option<i64> with Some(0)",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:90:5: replace broj_na_kraju_definicije -> Option<i64> with Some(1)",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:90:5: replace broj_na_kraju_definicije -> Option<i64> with Some(-1)",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:91:38: replace + with - in broj_na_kraju_definicije",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:91:38: replace + with * in broj_na_kraju_definicije",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "koordinate/src/sustav.rs",
+          "funkcija": "broj_na_kraju_definicije",
+          "promjena": "koordinate/src/sustav.rs:92:39: delete ! in broj_na_kraju_definicije",
+          "ishod": "CaughtMutant"
+        }
+      ]
+    },
+    "geometrija": {
+      "ukupno": 37,
+      "uhvaceno": 35,
+      "prezivjelo": 0,
+      "bez_rezultata": 2,
+      "neprevodivo": 2,
+      "vrijeme_isteklo": 0,
+      "trajanje_s": 75.09103,
+      "mutacije": [
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "<impl std::fmt::Display for Greska>::fmt",
+          "promjena": "geometrija/src/mjere.rs:25:9: replace <impl std::fmt::Display for Greska>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:57:5: replace provjeri_tocku -> Result<(), Greska> with Ok(())",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:57:27: replace && with || in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:36: replace || with && in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:57:8: delete ! in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:19: replace > with == in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:19: replace > with < in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:19: replace > with >= in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:50: replace > with == in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:50: replace > with < in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri_tocku",
+          "promjena": "geometrija/src/mjere.rs:60:50: replace > with >= in provjeri_tocku",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_crtu",
+          "promjena": "geometrija/src/mjere.rs:72:5: replace mjeri_crtu -> Result<MjereCrte, Greska> with Ok(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "provjeri",
+          "promjena": "geometrija/src/mjere.rs:67:5: replace provjeri -> Result<(), Greska> with Ok(())",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "bez_zatvaranja",
+          "promjena": "geometrija/src/mjere.rs:86:5: replace bez_zatvaranja -> &[Tocka] with Vec::leak(Vec::new())",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "bez_zatvaranja",
+          "promjena": "geometrija/src/mjere.rs:86:5: replace bez_zatvaranja -> &[Tocka] with Vec::leak(vec![Default::default()])",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "bez_zatvaranja",
+          "promjena": "geometrija/src/mjere.rs:87:35: replace match guard tocke.first() == Some(zadnja) with true in bez_zatvaranja",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "bez_zatvaranja",
+          "promjena": "geometrija/src/mjere.rs:87:35: replace match guard tocke.first() == Some(zadnja) with false in bez_zatvaranja",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "bez_zatvaranja",
+          "promjena": "geometrija/src/mjere.rs:87:49: replace == with != in bez_zatvaranja",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((0.0, 0.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((0.0, 1.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((0.0, -1.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((1.0, 0.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((1.0, 1.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((1.0, -1.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((-1.0, 0.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((-1.0, 1.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:94:5: replace mjeri_prsten -> Result<(f64, f64), Greska> with Ok((-1.0, -1.0))",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:96:20: replace < with == in mjeri_prsten",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:96:20: replace < with > in mjeri_prsten",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:114:5: replace mjeri_lik -> Result<MjereLika, Greska> with Ok(Default::default())",
+          "ishod": "Unviable"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_prsten",
+          "promjena": "geometrija/src/mjere.rs:96:20: replace < with <= in mjeri_prsten",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:118:17: replace += with -= in mjeri_lik",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:118:17: replace += with *= in mjeri_lik",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:119:21: replace += with -= in mjeri_lik",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:119:21: replace += with *= in mjeri_lik",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:119:29: replace == with != in mjeri_lik",
+          "ishod": "CaughtMutant"
+        },
+        {
+          "datoteka": "geometrija/src/mjere.rs",
+          "funkcija": "mjeri_lik",
+          "promjena": "geometrija/src/mjere.rs:119:54: delete - in mjeri_lik",
+          "ishod": "CaughtMutant"
+        }
+      ]
+    }
+  },
+  "pokus_oslabljenog_testa": {
+    "ukupno": 37,
+    "uhvaceno": 34,
+    "prezivjelo": 1,
+    "neprevodivo": 2,
+    "izlazni_kod_xtask": 1,
+    "prezivjele": [
+      "src/mjere.rs:25:9: replace <impl std::fmt::Display for Greska>::fmt -> std::fmt::Result with Ok(Default::default())"
+    ]
+  },
+  "cijela_naredba": {
+    "izlazni_kod": 0,
+    "duplikacija": {
+      "metoda": "retci-10-v1",
+      "ponovljeno": 0,
+      "postotak": 0.0,
+      "ukupno": 1901
+    },
+    "paketi": {
+      "geometrija": {
+        "total_mutants": 37,
+        "missed": 0,
+        "caught": 35,
+        "timeout": 0,
+        "unviable": 2,
+        "success": 0,
+        "start_time": "2026-11-07T13:32:05.819419Z",
+        "end_time": "2026-11-07T13:33:11.236756Z"
+      },
+      "koordinate": {
+        "total_mutants": 45,
+        "missed": 0,
+        "caught": 40,
+        "timeout": 0,
+        "unviable": 5,
+        "success": 0,
+        "start_time": "2026-11-07T13:33:11.370208Z",
+        "end_time": "2026-11-07T13:34:15.609227Z"
+      }
+    }
+  },
+  "redovna_provjera": {
+    "izlazni_kod": 0,
+    "funkcije": 95,
+    "pokrivenost_podrucja": 0.9231541938724259,
+    "najveci_cc": 10,
+    "najveci_crap": 10.0
+  }
+}

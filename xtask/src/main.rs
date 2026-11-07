@@ -67,12 +67,26 @@ fn procitaj_argumente(
 fn izvrsi(z: Zahtjev) -> Result<(), String> {
     provjeri_naredbu(&z.naredba)?;
     let postavke = ucitaj_postavke(&z.korijen)?;
-    alati::dostupnost(&z.mapa, &z.cargo)?;
     let izvjestaji = mapa_izvjestaja(&z.korijen)?;
     fs::create_dir_all(&izvjestaji).map_err(|e| alati::greska_datoteke(&izvjestaji, e))?;
     let meta = mjerenje::metapodaci(&z.mapa, &z.cargo)?;
-    let mjerenje = prikupi(&z, &izvjestaji, &meta)?;
-    ocijeni(&z, &mjerenje, &postavke)
+    match z.naredba.as_str() {
+        "provjera-duboka" => {
+            xtask::duboka::pokreni(&z.mapa, &z.cargo, &izvjestaji, &meta, &postavke)
+        }
+        _ => redovna(&z, &izvjestaji, &meta, &postavke),
+    }
+}
+
+fn redovna(
+    z: &Zahtjev,
+    izvjestaji: &Path,
+    meta: &mjerenje::Metapodaci,
+    postavke: &Postavke,
+) -> Result<(), String> {
+    alati::dostupnost(&z.mapa, &z.cargo)?;
+    let mjerenje = prikupi(z, izvjestaji, meta)?;
+    ocijeni(z, &mjerenje, postavke)
 }
 
 fn mapa_izvjestaja(korijen: &Path) -> Result<PathBuf, String> {
@@ -281,7 +295,7 @@ fn ucitaj_postavke(korijen: &Path) -> Result<Postavke, String> {
 
 fn provjeri_naredbu(naredba: &str) -> Result<(), String> {
     match naredba {
-        "provjera-duboka" => Err(tekst("duboka", &[])),
+        "provjera-duboka" => Ok(()),
         "provjera" | "zapamti" => Ok(()),
         _ => Err(tekst("uporaba", &[])),
     }
