@@ -502,11 +502,12 @@ pub mod provjera {
             .request_adapter(&wgpu::RequestAdapterOptions::default())
             .await
             .map_err(|g| g.to_string())?;
-        let granice = adapter.limits();
         let (u, r) = adapter
             .request_device(&wgpu::DeviceDescriptor::default())
             .await
             .map_err(|g| g.to_string())?;
+        // Granice otvorene kartice, a ne adaptera: adapter smije dopustiti više nego kartica sa zadanim granicama.
+        let granice = u.limits();
         Ok((u, r, granice))
     }
 
