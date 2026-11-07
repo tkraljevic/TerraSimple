@@ -1,12 +1,14 @@
 # Plan rada
 
-Prijedlog od 6. 11. 2026., čeka potvrdu. Nacrt sučelja je u
+Prijedlog od 6. 11. 2026., potvrđen (Odluke (7. 11. 2026.)). Nacrt sučelja je u
 `dizajn/TerraSimple.figcraft`, a slova uz faze (A, B, C…) su njegovi zasloni.
 Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 
 ## Stanje
 
-Postoje dokumenti, nacrt, naredba `cargo xtask provjera` i osam proba u `probe/` (rezultati su u fazi 0). Rust 1.99.1
+Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
+naredba `cargo xtask provjera`, devet proba u `probe/` (rezultati su u fazi 0) i prvi paket
+programa, `koordinate`. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
@@ -77,14 +79,14 @@ mjerilo i na kraju se zapiše odluka. Ako neka padne, plan se mijenja prije faze
 | Pitanje | Prolazi ako |
 |---|---|
 | Može li `egui` izgledati kao nacrt? | Glavni prozor (A) izgleda kao nacrt, u obje teme, na sve tri platforme. |
-| Vuče li `walkers` kartu? | OpenFreeMap sa stilom i PMTiles Sektora B glatko se pomiču na običnom laptopu. |
+| Vuče li `walkers` kartu? | OpenFreeMap sa stilom i PMTiles Sektora B glatko se pomiču. Običan laptop nije uvjet (Odluke (7. 11. 2026.)). |
 | Radi li crtanje kako smo rekli? | Lijevi klik, povlačenje, desni klik i dvoklik rade i uz 10 000 vrhova, a povlačenje točke ne pomiče kartu. |
 | Radi li DGU WMS kao podloga? | DOF se vidi u mjerilu 1 : 4 500. |
 | Jesu li koordinate točne? | Kontrolne točke za 3765, 4326, 3857, 3907 i 3908 slažu se s QGIS-om unutar 1 mm. |
 | Čita li QGIS naš GeoPackage? | Slojevi, stupci i stil sloja otvaraju se u QGIS-u, a izmjena u QGIS-u vidi se kod nas. |
 | Može li stil jednog objekta u QGIS? | Objekt s vlastitim stilom i u QGIS-u izgleda isto. Ako ne, zapisujemo ograničenje. |
 | Čita li se pravi `myplaces.kml`? | Duboke mape, nazivi, opisi i stilovi uvoze se bez gubitka. Datoteka ne ide u repozitorij. |
-| Vuče li karta stvarne podatke? (predloženo 7. 11. 2026.) | 3 milijuna vrhova iz `myplaces.kml`, u 208 slojeva, glatko se pomiču i približavaju. Još nije rađeno. |
+| Vuče li karta stvarne podatke? (dodano 7. 11. 2026.) | 3 milijuna vrhova iz `myplaces.kml` glatko se pomiču i približavaju. |
 | Je li PDF u mjerilu? | A4 izmjeren na papiru odgovara mjerilu, a dijakritika je ispravna. A3 se provjerava bez papira, jer pisača za A3 nemamo. |
 | Može li GeoTIFF od 2,4 GB? | Otvara se bez čekanja i bez punjenja memorije. |
 
@@ -113,8 +115,8 @@ i duboka provjera još nisu napravljeni.
   - Memorija je najviše 212 MB.
   - Stil karte već postoji u svijetloj i tamnoj inačici. Natpisi su, kao i u goCOP-u,
     dio stila, pa su hrvatski nazivi tu samo ako ih pločice imaju.
-  - Nije provjereno: **običan laptop** (mjereno je na M4 Pro s 48 GB, pa ovo još ne
-    ispunjava mjerilo), Windows, Linux, pomicanje mišem, tamna tema karte, ispod zuma 11
+  - Nije provjereno: običan laptop (mjereno je na M4 Pro s 48 GB, a slabija računala nisu
+    uvjet, Odluke (7. 11. 2026.)), Windows, Linux, pomicanje mišem, tamna tema karte, ispod zuma 11
     i iznad 17. Vrijeme do prve slike nije izmjereno, jer je brojač pokazao samo
     donju granicu iz probe (0,5 s).
   - `walkers` ima i `with_projection`, a `walkers_extras` sloj za KML i GeoJSON. Oboje
@@ -309,7 +311,7 @@ i duboka provjera još nisu napravljeni.
     svakog uzima samo prvi prsten, pa bi QGIS iz tog KML-a izgubio 3 475 rupa. Program ih
     mora čitati sve, a u GeoPackage i KML pisati tako da ih QGIS vidi.
   - **Količina:** kartu smo probali s 10 000 vrhova, a stvarnih je 3 milijuna, 300 puta više.
-    To je nova proba u tablici i treba je napraviti prije faze 1.
+    Zato je dodana proba `probe/mnogo`.
   - **Isključene stavke:** 85 972 stavke imaju `visibility=0`, pa ih uvoz ne smije crtati.
   - **Slojevi:** podjela po vrsti geometrije daje 208 slojeva. Miješani `MultiGeometry` (točka
     i linija, 1 279 objekata) dijeli se na dva sloja. Stablo slojeva mora podnijeti toliko.
@@ -319,17 +321,49 @@ i duboka provjera još nisu napravljeni.
     `visibility`). Podaci su 7. 11. ostali znak po znak isti. Program stanje prikaza drži
     odvojeno, da otvaranje karte ne izgleda kao izmjena projekta.
 
+- **Mnogo vrhova (7. 11. 2026., `probe/mnogo`, wgpu 30, walkers 0.65):** na kartici prolazi, a
+  u prozoru je spoj potvrđen, ali **vrijeme okvira u prozoru nije izmjereno**. Stvarni
+  `myplaces.kml` crta se bez prozora, u 1920 × 1080 s 4× MSAA, na M4 Pro:
+
+  | Što se crta | Medijan | Najgore |
+  |---|---:|---:|
+  | Sve, s pojednostavljenjem, po mjerilima | 0,9–3,1 ms | 4,7 ms |
+  | Sve, bez pojednostavljenja | 11,2 ms | 13,9 ms |
+  | Samo uključeno u Google Earthu | 0,2 ms | 0,9 ms |
+
+  - **Način crtanja:** geometrija se jednom pripremi i drži na kartici, a pomicanje mijenja samo
+    jednu matricu. Kroz egui, kao u dosadašnjoj probi karte, ista bi količina samo za pripremu
+    crta trajala 65 ms u svakom okviru, s 19 milijuna trokuta i 491 MB, bez slanja i crtanja.
+    Karta u programu zato ne ide kroz `Plugin` s oblicima, nego preko `egui_wgpu::Callback`.
+    Moja ranija procjena od nekoliko sekundi po okviru bila je kriva.
+  - **Priprema:** čitanje 0,4 s i priprema 0,8 s na jednoj jakoj jezgri, a na štedljivim 2,3 i
+    3,9 s, pa ide u pozadinu. Memorija doseže 1,4 GB dok se pripremaju sve razine, a na kartici
+    je 321 MB. Samo uključeno traži 264 MB i 2 MB. `lyon` je ispunio sve likove.
+  - **Štedljive jezgre:** crtanje gotovo ne usporavaju, a najgori slučaj bez pojednostavljenja
+    je 16 ms. Kartica se ne može usporiti, pa to ne govori kako radi slabija kartica.
+  - **Spoj s kartom:** crtanje preko `walkersa` radi s podlogom, a točka se s `walkersovom`
+    poklapa unutar 0,4 piksela. Položaj bez prozora točan je do 1 piksela.
+  - **Greške probe:** dvostruko mjerilo u sjenčaru izgledalo je na slici dobro, a uhvatila ga je
+    tek provjera položaja u pikselima. Okviri u prozoru pokazali su 2 000 u sekundi jer je ekran
+    bio ugašen, pa se vjerojatno ništa nije iscrtavalo. To mjerenje ne vrijedi.
+  - Nije provjereno: **glatkoća u prozoru s upaljenim ekranom i pravim mišem**, slabija kartica,
+    Windows, Linux, natpisi, odabir objekta na karti i uređivanje jednog objekta među milijunima.
+
 ### Faza 1: karta i crtanje (4–6 tjedana)
 
 Zasloni A, B, C, D. Podloge OpenFreeMap i DGU, tražilica, crtanje točaka, linija i
 poligona, mjerenje, poništavanje, tamna tema. Model sloja od početka zna za vanjske
-izvore (samo za čitanje, čeka slanje, u sukobu).
+izvore (samo za čitanje, čeka slanje, u sukobu). Svaka radnja od početka je naredba, a
+sučelje poziva iste naredbe, jer je to temelj za MCP (vidi „Upravljanje preko MCP-a”).
 
 **Izdanje 0.0.1 alfa (Odluke (7. 11. 2026.)):** karta, crtanje i mjerenje iz ove faze,
 uz spremanje u GeoPackage i otvaranje u QGIS-u iz faze 2. Zato nacrtano ne živi samo u
 memoriji: osnovno spremanje dolazi odmah, jer program bez njega ne služi ničemu osim
 isprobavanja. Gruba procjena je 5–8 tjedana neprekidnog rada, izvedena iz trajanja faza,
-a ne izmjerena.
+a ne izmjerena. Rok nije važan, nego da program na kraju bude koristan.
+
+Redoslijed: `koordinate`, `geometrija` (mjere), `slojevi` (model i naredbe s poništavanjem),
+`karta` (crtanje na kartici iz `probe/mnogo`), `prozor`, a zatim spremanje u GeoPackage.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 
@@ -364,8 +398,45 @@ nakon karte.
 
 Testovi na sve tri platforme, instalacijski paketi, priručnik, popravci i izdanje 1.0.
 
+**Instalacija bez administratorskih ovlasti** (zahtjev, 7. 11. 2026.): program se instalira u
+korisničku mapu (Windows `%LOCALAPPDATA%\Programs`, macOS `~/Applications`, Linux
+`~/.local` ili AppImage), a isto vrijedi za nadogradnju i povezivanje vrste datoteke. Zato
+nema usluga sustava ni upisa izvan korisnikova dijela. Nije isprobano. Dvije stvari ne ovise
+o nama: tvrtka može pravilima zabraniti pokretanje iz korisničke mape, a nepotpisan program
+dobiva upozorenje pri pokretanju. Dopuštenje vatrozida za MCP preko mreže može na Windowsu
+tražiti administratora, a veza samo na ovo računalo ne traži.
+
 Ukupno 28–45 tjedana neprekidnog rada, odnosno oko 6,5–10,5 mjeseci. Procjena je vrlo
 nesigurna dok faza 0 ne odgovori na pitanja o karti i ispisu.
+
+## Upravljanje preko MCP-a
+
+Odluke (7. 11. 2026.): MCP je ugrađen u sučelje. **Sklopka u programu pokreće i gasi MCP
+poslužitelj**, a na njega se može spojiti bilo koji AI, i javni i privatni na vlastitom
+poslužitelju. Tako AI crta i upravlja programom.
+
+Prijedlog izvedbe, još nije isproban:
+
+- **Naredbe:** MCP je tanak sloj preko istih naredbi kojima se služi sučelje. Svaka izmjena
+  ide kroz isti popis za poništavanje, pa se AI-jev rad vraća kao i ručni.
+- **Veza:** HTTP, jer `stdin` i `stdout` ne mogu do drugog računala i jer se proces programa
+  pokreće rukom, a ne iz AI klijenta.
+- **Zadano:** sklopka je isključena pri svakom pokretanju, a uz nju se vidi adresa, je li
+  poslužitelj upaljen i tko je spojen.
+- **Doseg:** zadano samo ovo računalo. Mreža i drugi poslužitelji uključuju se izričito.
+  Veza izvan računala traži pristupni ključ i šifriranu vezu, jer MCP upravlja podacima.
+- **Prava:** samo čitanje ili i izmjene, po sloju. Brisanje i izvoz traže potvrdu u programu.
+- **Nepouzdan sadržaj:** naziv ili opis iz uvezenog KML-a može sadržavati tekst koji navodi AI
+  na radnju. Podatak se AI-ju predaje kao podatak, a prava vrijede bez obzira na to što traži.
+- **Privatnost:** što AI pročita, odlazi poslužitelju na kojem taj AI radi. Privatni model ostaje
+  kod tebe, a javni ne, pa program uz sklopku mora to jasno reći.
+
+Razgovor s AI-em unutar programa zasad se ne radi, a možda dođe u nekom kasnijem izdanju (Odluke
+(7. 11. 2026.)). To je zaseban posao: MCP poslužitelj samo prima, a razgovor bi morao sam zvati
+model.
+
+Otvoreno: nacrt sklopke i postavki u FigCraftu, što je prije koda. Vrijeme: naredbe su od faze 1,
+a sklopka nakon izdanja 0.0.1.
 
 ## Paketi
 
@@ -411,8 +482,7 @@ ništa u fazama.
 
 ## Što treba od korisnika
 
-1. Potvrda plana.
-2. Javna objava tek kad je ime provjereno i kad uz font Inter iz `probe/izgled/fonti`
+1. Javna objava tek kad je ime provjereno i kad uz font Inter iz `probe/izgled/fonti`
    stoji njegova licenca (OFL). Repozitorij je zasad privatan na GitHubu (7. 11. 2026.).
-3. Običan laptop, za probe karte i GeoTIFF-a.
-4. Kasnije odluka o potpisivanju programa za Windows i macOS.
+2. Glatkoća karte u prozoru, s upaljenim ekranom i pravim mišem.
+3. Kasnije odluka o potpisivanju programa za Windows i macOS.

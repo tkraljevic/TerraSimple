@@ -19,9 +19,9 @@ TerraSimple bi bio između njih: jednostavan kao Google Earth Pro, na
 računalu i bez interneta, a sve nacrtano odmah se otvara u QGIS-u, pa
 profesionalac nastavlja tamo gdje je običan korisnik stao.
 
-Stanje: dokumenti, nacrt sučelja, prijedlog plana, provjera kvalitete i osam proba u
-`probe/` (izgled, karta, crtanje, GeoPackage, koordinate, ispis, GeoTIFF, KML). Program nije
-započet.
+Stanje: dokumenti, nacrt sučelja, plan, provjera kvalitete i devet proba u `probe/` (izgled,
+karta, crtanje, GeoPackage, koordinate, ispis, GeoTIFF, KML, mnogo vrhova). Program je tek
+započet: postoji prvi paket, `koordinate`.
 
 Odluke (27. 10. 2026.): radni naziv je TerraSimple, bez „GIS” u imenu.
 Prije objave provjeriti žigove, domenu i GitHub.
@@ -30,5 +30,5 @@ Prije objave provjeriti žigove, domenu i GitHub.
 - [Primjedbe i veza s goCOP-om (27. 10. 2026.)](docs/primjedbe.md)
 - [Most prema goCOP-u preko plugina (27. 10. 2026.)](docs/gocop-plugin.md)
 - [Kvaliteta koda (6. 11. 2026.)](docs/kvaliteta.md)
-- [Plan rada, prijedlog (6. 11. 2026.)](docs/plan.md)
+- [Plan rada, potvrđen 7. 11. 2026.](docs/plan.md)
 - Nacrt sučelja: `dizajn/TerraSimple.figcraft`

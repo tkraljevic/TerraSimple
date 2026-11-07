@@ -1,0 +1,20 @@
+[package]
+name = "proba_mnogo"
+version = "0.0.0"
+edition = "2021"
+license = "EUPL-1.2"
+publish = false
+
+[dependencies]
+proba_kml = { path = "../kml" }
+wgpu = "30"
+pollster = "0.4"
+bytemuck = { version = "1", features = ["derive"] }
+lyon_tessellation = "1"
+epaint = "0.37"
+libc = "0.2"
+image = { version = "0.25", default-features = false, features = ["png"] }
+eframe = { version = "0.37.0", features = ["wgpu"] }
+walkers = { version = "0.65.0", features = ["vector", "mvt", "pmtiles"] }
+
+[workspace]
