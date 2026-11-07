@@ -7,8 +7,8 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 ## Stanje
 
 Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
-naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i prva dva paketa
-programa, `koordinate` i `geometrija`. Rust 1.99.1
+naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i prva tri paketa
+programa, `koordinate`, `geometrija` i `slojevi`. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
@@ -51,7 +51,7 @@ gotov C++ prikaz karte, teži za isporuku.
   geografsku širinu, jer je kod nas Mercator razvučen oko 1,4 puta.
 - **DGU WMS radi.** `https://geoportal.dgu.hr/wms` nudi slojeve DOF, HOK i TK25. U
   popisu su sustavi EPSG:3765, 3907, 3908, 4326, 3785 i 900913. U opisu usluge piše da
-  nema naknade ni ograničenja pristupa, a uvjete korištenja i cache još treba pročitati.
+  nema naknade ni ograničenja pristupa. Uvjeti su pročitani u [podloge.md](podloge.md).
 - **Popisu sustava WMS poslužitelja ne smije se slijepo vjerovati.** EPSG:3785, koji DGU
   navodi, vraća krivo mjesto, a EPSG:3857, koji ne navodi, vraća pravi Osijek. 900913
   daje istu sliku kao 3857. Zato uz svaki dodani WMS izvor treba provjera položaja, a
@@ -408,6 +408,22 @@ duljina crte te opseg i površina lika računaju se na elipsoidu WGS84, a uz sva
 - Nije provjereno: pravi miš, Windows, Linux, karta samo s DGU WMS-om u HTRS96/TM, brzina i oštrina
   rastegnute karte.
 
+**Rezultat paketa `slojevi` (7. 11. 2026.):** model mapa, slojeva i objekata te naredbe s poništavanjem
+i ponavljanjem. Sučelje i MCP šalju iste naredbe.
+
+- **Model:** koordinate su u WGS84 i nose visinu, sloj ima jednu vrstu geometrije i stanje izvora, a
+  zaključan sloj ne prima izmjene objekata. Poništavanje na zaključanom sloju javlja grešku i ne gubi
+  povijest. Mapa ne može u samu sebe, a skupina naredbi je jedan korak koji prođe sav ili nikako.
+- **Poništavanje ne kopira projekt.** Svaka promjena vraća promjenu koja je poništava.
+- **Količina:** s izmišljenih 87 105 objekata, oko 3 milijuna vrhova i 208 slojeva, uvoz kao jedan korak
+  traje 25 ms, poništavanje uvoza 12 ms, brisanje mape 0,02 ms, a memorija je 151 MB nakon uvoza i 235 MB
+  na kraju mjerenja, s poviješću. Čitanje datoteke i priprema za crtanje nisu uključeni.
+- **Provjera:** 40 nasumičnih nizova od po 500 pokušaja vraća se točno unatrag i unaprijed. Testovi su
+  uhvatili 29 od 30 namjernih grešaka, a poništavanje preimenovanja promaklo im je pa je dodan test koji
+  ga hvata.
+- **Još nije tu:** vidljivost i otvorene mape (stanje prikaza, koje se ne poništava), nepoznati stupci,
+  sustav sloja, popis izmijenjenog za spremanje i granica povijesti. Dolaze s `prozor` i GeoPackageom.
+
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 
 Zasloni A4, F, F2, G, J. Projekt je jedan GeoPackage, s mapama, novim slojem,
@@ -509,10 +525,10 @@ projekt (`.qgz`) i 3D. Globusa nema.
 
 ## Za kasnije, bez žurbe
 
-Pregled svih besplatnih podloga, npr. Esrijev ortofoto (korisnik, 6. 11. 2026.). Uz
-svaku treba pročitati uvjete: smije li se koristiti u programu, spremati u cache i
-ispisivati. Program ionako prima vlastite XYZ, WMS i WMTS izvore, pa ovo ne mijenja
-ništa u fazama.
+Pregled besplatnih podloga i njihovih uvjeta je u [podloge.md](podloge.md) (7. 11. 2026.). To je
+pregled uvjeta, a ne pravno mišljenje. OpenFreeMap i DGU ostaju ugrađeni, Esri i OpenTopoMap samo
+ako ih korisnik doda sam, a Google se ne koristi. Program mora slati svoj `User-Agent` i prikazivati
+propisani navod izvora na karti i na ispisu, što `walkers` ne radi sam.
 
 ## Polazišta koja proba može srušiti
 
@@ -529,3 +545,5 @@ ništa u fazama.
    stoji njegova licenca (OFL). Repozitorij je zasad privatan na GitHubu (7. 11. 2026.).
 2. Glatkoća karte u prozoru, s upaljenim ekranom i pravim mišem.
 3. Kasnije odluka o potpisivanju programa za Windows i macOS.
+4. Prije službene upotrebe u tijelu javne vlasti pitati DGU o uvjetima za WMS (vidi [podloge.md](podloge.md),
+   poglavlje 4). Pitanje još nije poslano.

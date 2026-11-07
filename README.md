@@ -21,7 +21,7 @@ profesionalac nastavlja tamo gdje je običan korisnik stao.
 
 Stanje: dokumenti, nacrt sučelja, plan, provjera kvalitete i deset proba u `probe/` (izgled,
 karta, crtanje, GeoPackage, koordinate, ispis, GeoTIFF, KML, mnogo vrhova, dodaci za `walkers`). Program je tek
-započet: postoje prva dva paketa, `koordinate` i `geometrija`.
+započet: postoje prva tri paketa, `koordinate`, `geometrija` i `slojevi`.
 
 Odluke (27. 10. 2026.): radni naziv je TerraSimple, bez „GIS” u imenu.
 Prije objave provjeriti žigove, domenu i GitHub.
@@ -31,6 +31,7 @@ Prije objave provjeriti žigove, domenu i GitHub.
 - [Most prema goCOP-u preko plugina (27. 10. 2026.)](docs/gocop-plugin.md)
 - [Kvaliteta koda (6. 11. 2026.)](docs/kvaliteta.md)
 - [Plan rada, potvrđen 7. 11. 2026.](docs/plan.md)
+- [Pregled podloga i uvjeta (7. 11. 2026.)](docs/podloge.md)
 - Nacrt sučelja: `dizajn/TerraSimple.figcraft`
 - Nacrt s ikonama u stilu satin glass (stil: Odluke (7. 11. 2026.)): `dizajn/TerraSimple-ikone-efekti.figcraft`
 - [Veličine i stanja ikona](resursi/ikone/sucelje/efekti/README.md) i [pregledi](dizajn/pregledi-ikona/README.md).
