@@ -136,8 +136,8 @@ i duboka provjera još nisu napravljeni.
     prva provjera bila preslaba. Zato kritični računi moraju imati stroge testove i
     usporedbu s neovisnim izračunom.
   - **Inercija:** karta nakon brzog povlačenja još klizi, pa klik odmah nakon toga može
-    promašiti. Prijedlog je da ne klizi dok traje crtanje (vidi rezultat probe `walkers-dodaci`
-    u fazi 1).
+    promašiti. Karta i dalje klizi, a klik je samo zaustavi (Odluke (7. 11. 2026.), vidi rezultat
+    probe `walkers-dodaci` u fazi 1).
   - **Lik koji siječe sam sebe:** program ga sad bez upozorenja prima, a QGIS takvu
     geometriju smatra neispravnom. Treba upozorenje.
   - **Samoprovjera mora biti stabilna:** prve inačice padale su nasumično jer su čekale u
@@ -392,9 +392,10 @@ duljina crte te opseg i površina lika računaju se na elipsoidu WGS84, a uz sva
   preračunavaju, pa OpenFreeMap i PMTiles tada ne rade. HTRS96/TM računa paket `koordinate`.
 - **`walkers_extras` se ne koristi za KML.** Gubi stilove, nazive i visine, prazna točka ruši program, a
   crta sve iznova na procesoru u svakom okviru. Ostaju naš čitač i crtanje iz `probe/mnogo`.
-- **Inercija:** prijedlog je da karta ne klizi dok traje crtanje. Poziv `center_at(detached)` mora biti u
-  svakom okviru prije `Map::show`. Tada karta u simulaciji staje točno na mišu, a poziv poslije
-  `Map::show` ostavlja skok od 54 px kod brzog povlačenja.
+- **Inercija (Odluke (7. 11. 2026.)):** karta klizi i dok traje crtanje, a klik dok klizi samo je
+  zaustavi i ne upisuje točku. Sljedeći klik upisuje točku. To još nije napravljeno ni isprobano s
+  pravim mišem. Mjerenje je pokazalo da poziv `center_at(detached)` zaustavlja kartu, a da poziv
+  poslije `Map::show` kod puštanja tipke ostavlja skok od 54 px, pa mora biti prije njega.
 - **Zum:** dopušteno je 0 do 26. Iznad zadnje razine podataka (14 kod OpenFreeMapa, 15 kod PMTilesa
   Sektora B) rastegne se niža razina, a bez pločice ne prikazuje se ništa. Pada nije bilo na 9 ispitanih
   zumova.

@@ -69,7 +69,9 @@ Simulirano je povlačenje stvarnim `egui` događajima, šest koraka po 25 i −1
 - Kod sporog povlačenja karta na kraju kasni za mišem 6 px. To je vjerojatno `egui`-jev prag za početak
   povlačenja, a zasebno nije provjereno.
 
-**Za paket `karta`:** prijedlog je da karta ne klizi dok traje crtanje, uz ovaj poziv.
+**Za paket `karta` (Odluke (7. 11. 2026.)):** karta klizi i dok traje crtanje, a klik dok klizi samo je
+zaustavi i ne upisuje točku. Proba je izmjerila gašenje klizanja u svakom okviru, a zaustavljanje klikom
+još nije napravljeno ni isprobano.
 
 ## 4. Zum izvan raspona 11 do 17
 
