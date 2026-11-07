@@ -1,5 +1,9 @@
 target/
+.quality/
 .DS_Store
+
+# Zapisi pokusa sadrže lokalne staze.
+xtask/dokazi/
 
 # Zadaci sadrže lokalne staze do privatnih karata, a repozitorij će biti javan.
 docs/zadaci/
