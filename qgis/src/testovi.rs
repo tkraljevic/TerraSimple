@@ -208,9 +208,10 @@ fn naredba_cuva_jedan_argument_s_razmacima_i_posebnim_znakovima() {
             paket_macos: mac,
         };
         let n = q.naredba(&f).unwrap();
+        // Na Windowsu canonicalize daje \\?\C:\…, a naredba taj prefiks skida.
         assert_eq!(
             n.argumenti.last().unwrap(),
-            f.canonicalize().unwrap().as_os_str()
+            crate::bez_dugog_prefiksa(f.canonicalize().unwrap()).as_os_str()
         );
         if mac {
             assert_eq!(n.program, PathBuf::from("/usr/bin/open"));
