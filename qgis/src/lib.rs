@@ -55,6 +55,48 @@ impl Qgis {
     pub fn otvori(&self, datoteka: &Path) -> Result<Child, Greska> {
         Ok(self.naredba(datoteka)?.pokreni()?)
     }
+
+    /// Samo priprema naredbu; ne pokreće program i ne otvara prozor.
+    ///
+    /// Projekt se otvara preko protokola `geopackage:<staza>?projectName=<projekt>`.
+    /// Na macOS-u s paketom aplikacije koristi se `/usr/bin/open -n -a <staza> --args --project <uri>`,
+    /// pri čemu `-n` osigurava otvaranje novog prozora čak i ako je QGIS već pokrenut.
+    /// Na ostalim platformama ili bez paketa koristi se `<program> --project <uri>`.
+    pub fn naredba_projekt(&self, datoteka: &Path, projekt: &str) -> Result<Naredba, Greska> {
+        provjeri_datoteku(datoteka)?;
+        if projekt.trim().is_empty() {
+            return Err("Naziv QGIS projekta ne smije biti prazan.".into());
+        }
+        let p = bez_dugog_prefiksa(datoteka.canonicalize()?);
+        let uri = uri_projekta(&p, projekt);
+        if self.paket_macos {
+            Ok(Naredba {
+                program: "/usr/bin/open".into(),
+                argumenti: vec![
+                    "-n".into(),
+                    "-a".into(),
+                    self.staza.as_os_str().into(),
+                    "--args".into(),
+                    "--project".into(),
+                    uri.into(),
+                ],
+            })
+        } else {
+            Ok(Naredba {
+                program: self.staza.clone(),
+                argumenti: vec!["--project".into(), uri.into()],
+            })
+        }
+    }
+
+    pub fn otvori_projekt(&self, datoteka: &Path, projekt: &str) -> Result<Child, Greska> {
+        Ok(self.naredba_projekt(datoteka, projekt)?.pokreni()?)
+    }
+}
+
+pub(crate) fn uri_projekta(p: &Path, projekt: &str) -> String {
+    let s = p.to_string_lossy().replace('\\', "/");
+    format!("geopackage:{s}?projectName={projekt}")
 }
 /// Windows uz `canonicalize` vraća stazu `\\?\C:\…`, koju programi poput QGIS-a ne očekuju.
 /// Prefiks se skida, a mrežna staza `\\?\UNC\poslužitelj\…` postaje `\\poslužitelj\…`.
@@ -71,13 +113,16 @@ fn bez_dugog_prefiksa(p: PathBuf) -> PathBuf {
 
 fn provjeri_datoteku(p: &Path) -> Result<(), Greska> {
     if !p.is_file() {
-        return Err("Datoteka za QGIS ne postoji ili nije obična datoteka.".into());
+        return Err(
+            "QGIS nije otvoren: datoteka projekta ne postoji. Spremi projekt i pokušaj ponovno."
+                .into(),
+        );
     }
     if !p
         .extension()
         .is_some_and(|e| e.eq_ignore_ascii_case("gpkg"))
     {
-        return Err("Odaberite datoteku GeoPackage s nastavkom .gpkg.".into());
+        return Err("QGIS nije otvoren: projekt nije spremljen kao GeoPackage. Spremi ga s nastavkom .gpkg.".into());
     }
     Ok(())
 }
@@ -114,7 +159,7 @@ pub fn pronadji_u(
 }
 fn odaberi(mut svi: Vec<Qgis>) -> Result<Qgis, Greska> {
     if svi.len() > 1 && svi.iter().any(|q| q.inacica.is_none()) {
-        return Err("Pronađeno je više QGIS programa, ali njihove inačice nije moguće usporediti. Zadajte stazu željenog QGIS-a.".into());
+        return Err("QGIS nije otvoren: na računalu je više QGIS-a, a ne zna se koji je noviji. Ostavi samo jedan pa pokušaj ponovno.".into());
     }
     svi.sort_by(|a, b| {
         a.inacica
@@ -122,8 +167,7 @@ fn odaberi(mut svi: Vec<Qgis>) -> Result<Qgis, Greska> {
             .then_with(|| b.staza.cmp(&a.staza))
     });
     svi.pop().ok_or_else(|| {
-        "QGIS nije pronađen. Instalirajte QGIS ili u postavkama zadajte stazu njegova programa."
-            .into()
+        "QGIS nije pronađen na ovom računalu. Instaliraj ga s qgis.org pa pokušaj ponovno.".into()
     })
 }
 fn izlaz_verzije(p: &Path) -> std::io::Result<Output> {

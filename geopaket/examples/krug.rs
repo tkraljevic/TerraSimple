@@ -1,6 +1,6 @@
 use geopaket::{Datoteka, Rezultat};
 use slojevi::*;
-fn dodaj(u: &mut Uredjivac, vrsta: VrstaGeometrije, g: Geometrija) -> Rezultat<()> {
+fn dodaj(u: &mut Uredjivac, vrsta: VrstaGeometrije, g: Geometrija) -> Rezultat<IdSloja> {
     let Some(Novo::Sloj(s)) = u.izvrsi(NaredbaStabla::DodajSloj {
         u: None,
         naziv: format!("{vrsta:?}"),
@@ -14,7 +14,7 @@ fn dodaj(u: &mut Uredjivac, vrsta: VrstaGeometrije, g: Geometrija) -> Rezultat<(
         naziv: "Izmišljeni objekt".into(),
         geometrija: g,
     })?;
-    Ok(())
+    Ok(s)
 }
 fn main() -> Rezultat<()> {
     let a: Vec<_> = std::env::args().collect();
@@ -37,7 +37,7 @@ fn main() -> Rezultat<()> {
                 VrstaGeometrije::Linija,
                 Geometrija::Linija(vec![v(18.68, 45.54), v(18.69, 45.55)]),
             )?;
-            dodaj(
+            let s_poligon = dodaj(
                 &mut u,
                 VrstaGeometrije::Poligon,
                 Geometrija::Poligon(vec![
@@ -45,6 +45,18 @@ fn main() -> Rezultat<()> {
                     vec![v(18.692, 45.542), v(18.694, 45.542), v(18.694, 45.544)],
                 ]),
             )?;
+            let Some(Novo::Mapa(m)) = u.izvrsi(NaredbaStabla::DodajMapu {
+                u: None,
+                naziv: "Područja".into(),
+            })?
+            else {
+                return Err("Nema mape.".into());
+            };
+            u.izvrsi(NaredbaStabla::Premjesti {
+                stavka: Stavka::Sloj(s_poligon),
+                u: Some(m),
+                polozaj: 0,
+            })?;
             Datoteka::otvori(p)?.spremi(u.projekt())?;
         }
         Some("citaj") => {

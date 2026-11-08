@@ -167,6 +167,7 @@ pub struct Aplikacija {
     pub katalog: KatalogPoruka,
     pub datoteka: PodaciDatoteke,
     pub birac: Box<dyn BiracDatoteka>,
+    pub qgis: Box<dyn crate::qgis_veza::PokretacQgisa>,
     pub aktivni_dijalog: Option<AktivniDijalog>,
     pub izbornik_datoteka_otvoren: bool,
     pub snimka: Option<PathBuf>,
@@ -227,6 +228,7 @@ impl Aplikacija {
             katalog,
             datoteka: PodaciDatoteke::nova(),
             birac: Box::new(SustavskiBirac),
+            qgis: Box::new(crate::qgis_veza::SustavskiQgis),
             aktivni_dijalog,
             izbornik_datoteka_otvoren: false,
             snimka: postavke.snimka,
@@ -475,7 +477,7 @@ impl Aplikacija {
         let odg_qgis = ui.interact(okvir_qgis, id_qgis, Sense::click());
         odg_qgis.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), &tekst_qgis));
         if odg_qgis.clicked() {
-            // Otvaranje u QGIS-u je planirano za integracijsko izdanje; zasad je gumb pripremljen.
+            self.otvori_u_qgisu();
         }
 
         if let Some(datoteka_status) = self.odredi_naziv_datoteke() {
@@ -888,6 +890,25 @@ impl Aplikacija {
             )
         {
             self.postavi_gresku_spremanja(poruka);
+        }
+    }
+
+    /// Gumb „Otvori u QGIS-u”: projekt se najprije sprema, jer QGIS čita datoteku, a ne ovaj prozor.
+    /// Nespremljen projekt traži mjesto za datoteku; ako korisnik odustane, ne događa se ništa.
+    pub fn otvori_u_qgisu(&mut self) {
+        match self.izvrsi_spremanje() {
+            Err(poruka) => return self.postavi_gresku_spremanja(poruka),
+            Ok(false) => return,
+            Ok(true) => {}
+        }
+        let Some(staza) = self.datoteka.staza.clone() else {
+            return;
+        };
+        if let Err(poruka) = self.qgis.otvori(&staza) {
+            self.aktivni_dijalog = Some(AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("greska-qgis-naslov"),
+                poruka,
+            });
         }
     }
 

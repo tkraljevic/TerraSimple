@@ -38,3 +38,40 @@ Naredba više ne stavlja `--` ispred datoteke, jer ga `open` na macOS-u ne navod
 uvijek apsolutna pa se ne može zamijeniti s opcijom. Na Windowsu se skida prefiks `\\?\` koji daje
 `canonicalize`. Dodani su testovi za nečitljivu mapu programa i za zadanu stazu na Macu i Linuxu, jer su
 te namjerne greške prošle. Od 81 namjerne greške u paketu i naredbi za fuzz sve logičke sad su uhvaćene.
+
+## QGIS projekt
+
+Paket `qgis` proširen je funkcijama `naredba_projekt(&self, datoteka: &Path, projekt: &str) -> Result<Naredba, Greska>`
+i `otvori_projekt(&self, datoteka: &Path, projekt: &str) -> Result<Child, Greska>`.
+Postojeća funkcija `naredba` za otvaranje same `.gpkg` datoteke ostala je nepromijenjena
+i u potpunosti podržana.
+
+Ponašanje na operacijskim sustavima i URI identifikator:
+- Za otvaranje projekta unutar GeoPackage spremnika generira se URI:
+  `geopackage:<apsolutna_staza>?projectName=<projekt>`.
+- Na macOS-u s paketom aplikacije (`.app` svežanj), koristi se `/usr/bin/open`:
+  `/usr/bin/open -n -a <app> --args --project geopackage:<staza>?projectName=<projekt>`.
+  Zastavica `-n` (`--new`) osigurava pokretanje novog procesa QGIS-a i prosljeđivanje
+  argumenata čak i ako je QGIS već pokrenut. Bez zastavice `-n`, operacijski sustav bi
+  samo aktivirao postojeći prozor i zanemario proslijeđene `--args` argumente.
+- Na Linuxu i Windowsu (te na macOS-u ako se koristi izravna izvršna binarna datoteka
+  izvan svežnja), pokreće se izvršna datoteka s opcijom:
+  `<program> --project geopackage:<staza>?projectName=<projekt>`.
+- Na Windowsu se uklanja prefiks `\\?\` kojeg vraća `canonicalize`, a obrnute kose
+  crte (`\`) pretvaraju se u obične kose crte (`/`) radi valjanosti URI specifikacije.
+- Ako je naziv projekta prazan ili ako datoteka na disku ne postoji, funkcija odmah
+  vraća grešku (`Greska::NeispravanNazivProjekta` odnosno `Greska::DatotekaNePostoji`).
+
+Testiranje i mutacije:
+- Dodani su jedinični testovi u `qgis/src/testovi.rs`:
+  - `naredba_projekt_argumenti`: provjera ispravnosti argumenata za Mac svežanj i običnu binarnu datoteku.
+  - `naredba_projekt_prazan_naziv_i_nepostojeca_datoteka`: odbijanje nevaljanih parametara.
+  - `naredba_projekt_windows_staza`: provjera čišćenja `\\?\` prefiksa i normalizacije kosih crta.
+- `cargo mutants` pokrenut nad `qgis/src/lib.rs` testirao je 19 mutacija:
+  10 mutacija je uhvaćeno testovima, a 9 je bilo neprevodivo. Niti jedna mutacija
+  nije preživjela (0 missed mutants).
+
+Pregled pri spajanju (8. 11. 2026.): gumb „Otvori u QGIS-u” sad poziva `otvori_projekt` s projektom
+`TerraSimple`. Zbog `-n` svaki klik na Macu pokreće novi QGIS, i kad je jedan već otvoren; to traži odluku.
+Staza sa znakom `?` ili `#` u imenu mape nije isprobana u URI-ju projekta. Pravo otvaranje s prozorom,
+Windows i Linux nisu provjereni.

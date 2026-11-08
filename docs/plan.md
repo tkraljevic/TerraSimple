@@ -529,6 +529,22 @@ pri otvaranju i spremanju javljaju se u dijalogu i ne gube projekt. Cijeli izvje
 - **QGIS:** paket pronalazi QGIS na tri sustava i otvara mu jednu datoteku, bez čekanja. Na ovom Macu našao je
   QGIS-LTR 3.44.15. Pravo otvaranje, Windows i Linux nisu isprobani, a gumb u prozoru još nije spojen.
 
+**Gumb „Otvori u QGIS-u” i QGIS projekt u datoteci (8. 11. 2026.):** izvještaji su u `geopaket/REZULTAT.md` i
+`qgis/REZULTAT.md`, odjeljak „QGIS projekt”.
+
+- **Što radi:** gumb sprema projekt i otvara ga u QGIS-u. Svako spremanje u GeoPackage upiše i QGIS projekt
+  „TerraSimple” s nazivima slojeva, mapama kao skupinama, redoslijedom iz stabla i stilovima. Projekti koje je
+  korisnik u QGIS-u spremio pod drugim imenom ostaju.
+- **Provjereno:** 89 provjera u QGIS-u bez prozora, s platnom karte, i GDAL-ov validator. Prve dvije probe s
+  pravim QGIS-om dale su praznu kartu pa samo podlogu (pogled, sustavi i prekratke oznake slojeva); ispravljeno i
+  pokriveno provjerom. Ključne namjerne greške su uhvaćene.
+  Ako se datoteka preimenuje izvan TerraSimplea, QGIS ne nađe slojeve dok je TerraSimple opet ne spremi. Isto se
+  događa s projektom koji sprema sam QGIS. Gumb uvijek najprije sprema.
+- **Traži odluku:** sustav projekta EPSG:3765 i podloga OpenStreetMap. Na Macu svaki klik pokreće novi QGIS,
+  i kad je jedan već otvoren. Stil promijenjen u QGIS-u ostaje u datoteci, ali ga sljedeće spremanje iz
+  TerraSimplea u projektu zamijeni svojim.
+- **Nije provjereno:** pravo otvaranje projekta s prozorom, Windows i Linux.
+
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 
 Zasloni A4, F, F2, G, J. Projekt je jedan GeoPackage, s mapama, novim slojem,

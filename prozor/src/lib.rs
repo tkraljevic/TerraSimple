@@ -13,6 +13,7 @@ pub mod novi_sloj;
 pub mod ploca;
 pub mod poruke;
 pub mod primjer;
+pub mod qgis_veza;
 pub mod sastavnice;
 pub mod stanje;
 pub mod tema;

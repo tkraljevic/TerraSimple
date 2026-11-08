@@ -19,7 +19,7 @@ struct Plan {
 fn broj(id: u64) -> Result<i64, Greska> {
     Ok(id.try_into()?)
 }
-fn tablica(p: &Projekt, id: IdSloja) -> String {
+pub(crate) fn tablica(p: &Projekt, id: IdSloja) -> String {
     p.zapisi()
         .slojevi
         .get(&id)
@@ -252,6 +252,18 @@ fn primijeni(
     b: &BTreeMap<IdSloja, citanje::SlojBaze>,
     plan: Plan,
 ) -> Result<(), Greska> {
+    primijeni_slojeve(c, prije, p, b, plan)?;
+    crate::qgis_projekt::spremi(c, p)?;
+    Ok(())
+}
+
+fn primijeni_slojeve(
+    c: &Connection,
+    prije: &Projekt,
+    p: &Projekt,
+    b: &BTreeMap<IdSloja, citanje::SlojBaze>,
+    plan: Plan,
+) -> Result<(), Greska> {
     pripremi_tablice(c, prije, p, b, &plan.novi, &plan.promijenjeni)?;
     dodaj_stupce(c, plan.dodatni)?;
     crate::dimenzije::primijeni(c, &plan.visine)?;
@@ -262,8 +274,7 @@ fn primijeni(
             .chain(plan.stablo)
             .chain(plan.metapodaci),
     )?;
-    obnovi_okidace(c, &plan.novi)?;
-    Ok(())
+    obnovi_okidace(c, &plan.novi)
 }
 fn pripremi_tablice(
     c: &Connection,

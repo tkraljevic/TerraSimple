@@ -666,3 +666,84 @@ fn spremi_kao_iz_novog_projekta_bez_postojeceg_gpkg() {
     assert_eq!(datoteka.staza.as_deref(), Some(staza.as_path()));
     assert!(!uredjivac.je_li_izmijenjen());
 }
+
+fn prozor_s_qgisom(
+    ime: &str,
+) -> (
+    Harness<'static, Aplikacija>,
+    LazniBirac,
+    crate::qgis_veza::LazniQgis,
+    PathBuf,
+) {
+    let mapa = PathBuf::from(".quality/test_ui_qgis");
+    let _ = std::fs::create_dir_all(&mapa);
+    let staza = mapa.join(format!("{ime}-{}.gpkg", std::process::id()));
+    let _ = std::fs::remove_file(&staza);
+    let mut app = Aplikacija::default();
+    let birac = LazniBirac::novi();
+    let qgis = crate::qgis_veza::LazniQgis::default();
+    app.postavi_birac(Box::new(birac.clone()));
+    app.qgis = Box::new(qgis.clone());
+    app.uredjivac
+        .izvrsi(NaredbaStabla::DodajSloj {
+            u: None,
+            naziv: "Bunari".into(),
+            vrsta: VrstaGeometrije::Tocka,
+        })
+        .expect("sloj");
+    let mut h = Harness::builder()
+        .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+        .with_step_dt(0.05)
+        .with_context_setup(Aplikacija::postavi_kontekst)
+        .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+    h.run_steps(3);
+    (h, birac, qgis, staza)
+}
+
+fn otvoreno(q: &crate::qgis_veza::LazniQgis) -> Vec<PathBuf> {
+    q.otvoreno.lock().map(|o| o.clone()).unwrap_or_default()
+}
+
+#[test]
+fn otvori_u_qgisu_najprije_sprema_pa_otvara_spremljenu_datoteku() {
+    let (mut h, birac, qgis, staza) = prozor_s_qgisom("sprema");
+    birac.postavi_spremanje(&staza);
+    h.get_by_label("Otvori u QGIS-u").click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert!(staza.is_file(), "projekt je spremljen prije otvaranja");
+    assert!(!h.state().uredjivac.je_li_izmijenjen());
+    assert_eq!(otvoreno(&qgis), vec![staza.clone()]);
+    // Drugi put datoteka već postoji, pa se ne pita kamo spremiti.
+    h.get_by_label("Otvori u QGIS-u").click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert_eq!(otvoreno(&qgis), vec![staza.clone(), staza.clone()]);
+    let _ = std::fs::remove_file(&staza);
+}
+
+#[test]
+fn odustajanje_od_spremanja_ne_otvara_qgis() {
+    let (mut h, _birac, qgis, _staza) = prozor_s_qgisom("odustaje");
+    h.get_by_label("Otvori u QGIS-u").click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert!(otvoreno(&qgis).is_empty());
+    assert!(h.state().aktivni_dijalog.is_none());
+}
+
+#[test]
+fn qgis_koji_se_ne_da_otvoriti_javlja_poruku() {
+    let (mut h, birac, qgis, staza) = prozor_s_qgisom("bez-qgisa");
+    birac.postavi_spremanje(&staza);
+    if let Ok(mut g) = qgis.greska.lock() {
+        *g = Some("QGIS nije pronađen na ovom računalu.".into());
+    }
+    h.get_by_label("Otvori u QGIS-u").click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert!(matches!(
+        h.state().aktivni_dijalog,
+        Some(AktivniDijalog::PorukaGreske { .. })
+    ));
+    let t = nacrtani_tekstovi(&h);
+    assert!(t.iter().any(|t| t == "QGIS se nije otvorio"), "{t:?}");
+    assert!(t.iter().any(|t| t.contains("QGIS nije pronađen")), "{t:?}");
+    let _ = std::fs::remove_file(&staza);
+}
