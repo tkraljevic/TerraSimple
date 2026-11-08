@@ -275,12 +275,24 @@ impl KartaProzora {
         }
     }
 
-    /// Kratka poruka crtanja iznad donjeg ruba karte, npr. kad lik ima premalo točaka.
-    pub fn crtaj_poruku(&mut self, ui: &egui::Ui, dno: Pos2, katalog: &KatalogPoruka, boje: &Boje) {
-        let Some(poruka) = self.karta.crtanje().poruka() else {
-            return;
+    /// Kratka poruka iznad donjeg ruba karte: greška crtanja, npr. premalo točaka, ili upozorenje da
+    /// novi objekt ne ide u odabrani sloj.
+    pub fn crtaj_poruku(
+        &mut self,
+        ui: &egui::Ui,
+        dno: Pos2,
+        projekt: &Projekt,
+        stanje: &StanjePrikaza,
+        katalog: &KatalogPoruka,
+        boje: &Boje,
+    ) {
+        let tekst = match self.karta.crtanje().poruka() {
+            Some(poruka) => tekst_poruke(katalog, poruka),
+            None => match poruka_drugog_sloja(projekt, stanje, katalog) {
+                Some(t) => t,
+                None => return,
+            },
         };
-        let tekst = tekst_poruke(katalog, poruka);
         let sirina = tekst.chars().count() as f32 * 6.6 + 28.0;
         let okvir = Rect::from_center_size(dno - vec2(0.0, 20.0), vec2(sirina, 30.0));
         zaobljeni_okvir(ui, okvir, boje.lebdeca, Some(boje.obrub), 10.0);
@@ -362,11 +374,14 @@ fn s_okolinom<R>(
     let naziv = |v: VrstaGeometrije| katalog.tekst(kljuc_novog_sloja(v));
     let opis = |m: &Mjere| opis_mjere(katalog, m);
     let duljina = |d: f64| mjera_duljine(d);
+    let naziv_objekta =
+        |v: VrstaGeometrije, redni: usize| katalog.s_rednim(kljuc_novog_objekta(v), redni);
     posao(&Okolina {
         vidljiv: &vidljiv,
         naziv_sloja: &naziv,
         opis_mjere: &opis,
         opis_duljine: &duljina,
+        naziv_objekta: &naziv_objekta,
     })
 }
 
@@ -417,6 +432,14 @@ const fn kljuc_novog_sloja(vrsta: VrstaGeometrije) -> &'static str {
     }
 }
 
+const fn kljuc_novog_objekta(vrsta: VrstaGeometrije) -> &'static str {
+    match vrsta {
+        VrstaGeometrije::Tocka => "objekt-tocka",
+        VrstaGeometrije::Linija => "objekt-linija",
+        VrstaGeometrije::Poligon => "objekt-poligon",
+    }
+}
+
 #[must_use]
 pub fn opis_mjere(katalog: &KatalogPoruka, m: &Mjere) -> String {
     match m {
@@ -429,6 +452,40 @@ pub fn opis_mjere(katalog: &KatalogPoruka, m: &Mjere) -> String {
                 ("opseg", mjera_duljine(l.opseg_m)),
             ],
         ),
+    }
+}
+
+/// Kad je u ploči odabran sloj druge vrste od alata, novi objekt ide u drugi sloj, pa to treba reći.
+#[must_use]
+pub fn poruka_drugog_sloja(
+    projekt: &Projekt,
+    stanje: &StanjePrikaza,
+    katalog: &KatalogPoruka,
+) -> Option<String> {
+    let vrsta_alata = stanje.alat.vrsta()?;
+    let sloj = match stanje.odabrano? {
+        Odabir::Sloj(s) | Odabir::Objekt(s, _) => projekt.sloj(s)?,
+        Odabir::Mapa(_) => return None,
+    };
+    if sloj.vrsta == vrsta_alata {
+        return None;
+    }
+    let vrsta = |v| katalog.tekst(kljuc_vrste_sloja(v));
+    Some(katalog.s_tekstovima(
+        "poruka-drugi-sloj",
+        &[
+            ("sloj", sloj.naziv.clone()),
+            ("vrsta_sloja", vrsta(sloj.vrsta)),
+            ("vrsta_alata", vrsta(vrsta_alata)),
+        ],
+    ))
+}
+
+const fn kljuc_vrste_sloja(vrsta: VrstaGeometrije) -> &'static str {
+    match vrsta {
+        VrstaGeometrije::Tocka => "vrsta-sloja-tocka",
+        VrstaGeometrije::Linija => "vrsta-sloja-linija",
+        VrstaGeometrije::Poligon => "vrsta-sloja-poligon",
     }
 }
 

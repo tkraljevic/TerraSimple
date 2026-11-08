@@ -18,6 +18,9 @@ fn naziv(_: VrstaGeometrije) -> String {
 fn opis(_: &Mjere) -> String {
     "mjera".into()
 }
+fn naziv_objekta(_: VrstaGeometrije, redni: usize) -> String {
+    format!("Objekt {redni}")
+}
 fn duljina(_: f64) -> String {
     "dio".into()
 }
@@ -27,6 +30,7 @@ const OK: Okolina<'static> = Okolina {
     naziv_sloja: &naziv,
     opis_mjere: &opis,
     opis_duljine: &duljina,
+    naziv_objekta: &naziv_objekta,
 };
 
 /// `egui` bez slova ne može složiti natpis, a program svoja slova ugrađuje tek u `prozor`-u.

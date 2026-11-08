@@ -5,7 +5,7 @@ use crate::sastavnice::{
     OpisGumbaIkone, OpisRetkaStabla, cip, gumb_ikona, gumb_obrub, redak_stabla, tekst_lijevo,
     zaobljeni_okvir,
 };
-use crate::stanje::{Odabir, StanjePrikaza};
+use crate::stanje::{NoviSloj, Odabir, StanjePrikaza};
 use crate::tema::{Boje, Razmaci, font_srednji};
 use eframe::egui::{self, Pos2, Rect, Role, Sense, WidgetInfo, pos2, vec2};
 use slojevi::{
@@ -231,26 +231,46 @@ pub fn dodaj_novu_mapu(
     Some(novi_id)
 }
 
+/// Otvara prozorčić Novi sloj. Vrsta se predlaže prema alatu, a mapa prema odabiru u ploči.
+pub fn otvori_novi_sloj(projekt: &Projekt, stanje: &mut StanjePrikaza, katalog: &KatalogPoruka) {
+    stanje.novi_sloj = Some(NoviSloj {
+        naziv: katalog.s_rednim("novi-sloj-naziv", stanje.redni_novog_sloja),
+        vrsta: stanje.alat.vrsta().unwrap_or(VrstaGeometrije::Poligon),
+        mapa: odredi_roditelja_za_novi_sloj(projekt, stanje.odabrano),
+        prazan_naziv: false,
+    });
+}
+
+/// Gumb „Napravi sloj”: sloj nastaje s nazivom, vrstom i mapom iz prozorčića i postaje odabran.
+pub fn napravi_novi_sloj(uredjivac: &mut Uredjivac, stanje: &mut StanjePrikaza) -> Option<IdSloja> {
+    let novi = stanje.novi_sloj.as_mut()?;
+    let naziv = novi.naziv.trim().to_owned();
+    if naziv.is_empty() {
+        novi.prazan_naziv = true;
+        return None;
+    }
+    let naredba = NaredbaStabla::DodajSloj {
+        u: novi.mapa,
+        naziv,
+        vrsta: novi.vrsta,
+    };
+    let Ok(Some(Novo::Sloj(novi_id))) = uredjivac.izvrsi(naredba) else {
+        return None;
+    };
+    stanje.novi_sloj = None;
+    stanje.redni_novog_sloja += 1;
+    stanje.odabrano = Some(Odabir::Sloj(novi_id));
+    Some(novi_id)
+}
+
+/// Novi sloj s predloženim vrijednostima, kao da je korisnik odmah kliknuo „Napravi sloj”.
 pub fn dodaj_novi_sloj(
     uredjivac: &mut Uredjivac,
     stanje: &mut StanjePrikaza,
     katalog: &KatalogPoruka,
 ) -> Option<IdSloja> {
-    let u = odredi_roditelja_za_novi_sloj(uredjivac.projekt(), stanje.odabrano);
-    let naziv = katalog.s_rednim("novi-sloj-naziv", stanje.redni_novog_sloja);
-    let Some(Novo::Sloj(novi_id)) = uredjivac
-        .izvrsi(NaredbaStabla::DodajSloj {
-            u,
-            naziv,
-            vrsta: VrstaGeometrije::Poligon,
-        })
-        .ok()?
-    else {
-        return None;
-    };
-    stanje.redni_novog_sloja += 1;
-    stanje.odabrano = Some(Odabir::Sloj(novi_id));
-    Some(novi_id)
+    otvori_novi_sloj(uredjivac.projekt(), stanje, katalog);
+    napravi_novi_sloj(uredjivac, stanje)
 }
 
 pub fn potvrdi_preimenovanje(uredjivac: &mut Uredjivac, stanje: &mut StanjePrikaza) -> bool {
@@ -505,7 +525,7 @@ fn crtaj_akcijske_gumbe_ploce(
     )
     .clicked()
     {
-        dodaj_novi_sloj(uredjivac, stanje, katalog);
+        otvori_novi_sloj(uredjivac.projekt(), stanje, katalog);
     }
 
     let okvir_uvezi = Rect::from_min_size(pos2(pocetak.x + 130.0, pocetak.y), vec2(112.0, 32.0));

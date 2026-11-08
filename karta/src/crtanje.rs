@@ -52,6 +52,8 @@ pub struct Okolina<'a> {
     pub opis_mjere: &'a dyn Fn(&Mjere) -> String,
     /// Duljina jednog dijela mjerenja, u metrima.
     pub opis_duljine: &'a dyn Fn(f64) -> String,
+    /// Naziv novog objekta, prema vrsti i rednom broju u sloju, npr. „Točka 3”.
+    pub naziv_objekta: &'a dyn Fn(VrstaGeometrije, usize) -> String,
 }
 
 /// Što ploča za mjerenje prikazuje dok mjerenje postoji.
@@ -570,6 +572,10 @@ impl Crtanje {
     ) {
         let cilj = self.prikladan_sloj(vrsta, u.projekt());
         let naziv = (ok.naziv_sloja)(vrsta);
+        let postojecih = cilj
+            .and_then(|s| u.projekt().sloj(s))
+            .map_or(0, |s| s.objekti.len());
+        let naziv_objekta = (ok.naziv_objekta)(vrsta, postojecih + 1);
         let ishod = u.skupina(|g| {
             let sloj = match cilj {
                 Some(s) => s,
@@ -577,7 +583,7 @@ impl Crtanje {
             };
             let naredba = NaredbaObjekta::Dodaj {
                 sloj,
-                naziv: String::new(),
+                naziv: naziv_objekta,
                 geometrija,
             };
             Ok((sloj, g.izvrsi(naredba)?))

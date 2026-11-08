@@ -475,6 +475,10 @@ temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka
   kao na papiru.
 - **Tipke:** Backspace i Escape dok crtanje traje pripadaju karti, a inače Backspace briše odabrano u
   ploči. Gumbi Približi, Udalji i Cijeli zaslon rade, a Sjever i Ispis još nemaju radnju.
+- **Novi sloj (8. 11. 2026., nakon probe mišem):** gumb je uvijek stvarao sloj za poligone, pa su nacrtane
+  točke i linije tiho završavale u drugom sloju, bez naziva. Sad otvara prozorčić po zaslonu F: naziv, vrsta
+  (predlaže se prema alatu) i mapa. Polja i koordinatni sustav iz nacrta još nisu tu. Novi objekt dobiva naziv
+  („Točka 3”), a kad odabrani sloj ne odgovara alatu, ispod karte piše u koji sloj ide novi objekt.
 - **Navod izvora** crta prozor, lijevo od ploče, jer bi ga ploča inače pokrila.
 - **Provjera:** 45 testova prozora, sa stvarnim klikovima na kartu. Od 145 namjernih grešaka preživjele
   su 33: 32 samo pomiču crtež na zaslonu, a jedna je granica nazivnika mjerila točno na 1. Snimke u svijetloj

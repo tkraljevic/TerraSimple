@@ -119,11 +119,13 @@ impl eframe::App for Prozor {
         let naziv = |v: VrstaGeometrije| format!("{v:?}");
         let opis = |m: &Mjere| opis_mjere(m);
         let duljina = |d: f64| metri(d);
+        let naziv_objekta = |v: VrstaGeometrije, redni: usize| format!("{v:?} {redni}");
         let ok = Okolina {
             vidljiv: &vidljiv,
             naziv_sloja: &naziv,
             opis_mjere: &opis,
             opis_duljine: &duljina,
+            naziv_objekta: &naziv_objekta,
         };
         if self.karta.crtanje().alat() == Alat::Mjeri {
             egui::Panel::top("mjerenje").show(ui, |ui| self.ploca_mjerenja(ui, &ok));
