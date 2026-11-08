@@ -418,39 +418,48 @@ fn ucitani_projekt_ide_u_kopiju_izvora_a_ne_u_praznu_bazu() {
     );
 }
 #[test]
-fn nepodrzani_objekt_ne_nestaje_uklanjanjem_sloja() {
+fn sloj_s_nepodrzanim_zapisom_broji_ga_i_brise_se_s_njim() {
     let (put, mut d, u, s, _) = pripremi("nepodrzani-brisanje");
+    let mapa = Stavka::Mapa(u.projekt().sloj(s).unwrap().roditelj.unwrap());
+    assert_eq!(u.projekt().nepodrzani_zapisi(Stavka::Sloj(s)), 0);
     d.spremi(u.projekt()).unwrap();
     let c = Connection::open(&put).unwrap();
     let mut krivulja = vec![b'G', b'P', 0, 1, 230, 16, 0, 0, 1, 9, 0, 0, 0];
     krivulja.extend(0_u32.to_le_bytes());
+    let tablica = format!("sloj_{}", s.0);
     c.execute(
-        &format!("INSERT INTO sloj_{}(fid,geom) VALUES(999,?1)", s.0),
+        &format!("INSERT INTO {tablica}(fid,geom) VALUES(999,?1)"),
         [krivulja.clone()],
     )
     .unwrap();
+    c.execute(
+        &format!("INSERT INTO {tablica}(fid,geom) VALUES(1000,NULL)"),
+        [],
+    )
+    .unwrap();
     let mut u = Uredjivac::iz_projekta(d.ucitaj().unwrap());
+    assert_eq!(u.projekt().nepodrzani_zapisi(Stavka::Sloj(s)), 2);
+    assert_eq!(u.projekt().nepodrzani_zapisi(mapa), 2);
+    let broj = |c: &Connection| {
+        c.query_row(&format!("SELECT count(*) FROM {tablica}"), [], |r| {
+            r.get::<_, i64>(0)
+        })
+    };
     u.izvrsi(NaredbaStabla::Obrisi {
         stavka: Stavka::Sloj(s),
     })
     .unwrap();
-    assert!(
-        d.spremi(u.projekt())
-            .unwrap_err()
-            .to_string()
-            .contains("nepodržanim")
-    );
+    assert_eq!(u.projekt().nepodrzani_zapisi(Stavka::Sloj(s)), 0);
+    assert_eq!(u.projekt().nepodrzani_zapisi(mapa), 0);
     u.ponisti().unwrap();
     d.spremi(u.projekt()).unwrap();
-    assert_eq!(
-        c.query_row(
-            &format!("SELECT geom FROM sloj_{} WHERE fid=999", s.0),
-            [],
-            |r| r.get::<_, Vec<u8>>(0)
-        )
-        .unwrap(),
-        krivulja
-    );
+    assert_eq!(broj(&c).unwrap(), 3, "poništeno brisanje ne dira zapise");
+    u.ponovi().unwrap();
+    d.spremi(u.projekt()).unwrap();
+    assert!(broj(&c).is_err(), "tablica sloja mora nestati");
+    let procitan = d.ucitaj().unwrap();
+    assert!(procitan.sloj(s).is_none());
+    assert_eq!(procitan.nepodrzani_zapisi(mapa), 0);
 }
 #[test]
 fn premjestanje_i_ponistavanje_cuvaju_fid_i_kad_se_brojevi_u_slojevima_preklapaju() {

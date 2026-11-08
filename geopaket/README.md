@@ -29,7 +29,9 @@ Pri dodavanju 2D objekta u sloj koji zahtijeva Z, ili obratno, deklaracija Z
 postaje opcionalna. Izvorni objekti ostaju isti i visina se ne izmišlja.
 Upis u sloj s obveznom M dimenzijom ili nepodržanom vrstom geometrije odbija se.
 NULL, prazne geometrije, krivulje i drugi nepodržani zapisi ostaju u bazi i navode
-se u `upozorenja`. Sloj s takvim zapisima ne može se obrisati kroz model.
+se u `upozorenja`. Njihov broj po sloju ili mapi daje `Projekt::nepodrzani_zapisi`,
+pa sučelje prije brisanja može upozoriti. Obrisan sloj pri spremanju gubi i njih
+(Odluke (8. 11. 2026.)).
 Uređivanje krivulja i višedijelnih geometrija nije uvedeno.
 
 Stil sloja ide u `layer_styles`, stil objekta u `stil_*`. Podržani su jednostavni

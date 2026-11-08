@@ -31,6 +31,8 @@ pub struct IzvorSloja {
     pub fid_stupac: String,
     pub geometrija_stupac: String,
     pub objekti: BTreeMap<IdObjekta, ZapisObjekta>,
+    /// Zapisi koje program čuva, ali ne prikazuje: krivulje, prazne i NULL geometrije.
+    pub nepodrzani: usize,
 }
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Zapisi {
@@ -45,6 +47,17 @@ pub struct IzmjeneSpremanja {
 impl Projekt {
     pub fn zapisi(&self) -> &Zapisi {
         &self.zapisi
+    }
+    /// Koliko zapisa koje program ne prikazuje nestaje s brisanjem ove stavke.
+    /// Sučelje po tome odlučuje treba li upozorenje prije brisanja.
+    pub fn nepodrzani_zapisi(&self, stavka: Stavka) -> usize {
+        match stavka {
+            Stavka::Sloj(s) if self.sloj(s).is_none() => 0,
+            Stavka::Sloj(s) => self.zapisi.slojevi.get(&s).map_or(0, |z| z.nepodrzani),
+            Stavka::Mapa(m) => self.mapa(m).map_or(0, |m| {
+                m.djeca.iter().map(|d| self.nepodrzani_zapisi(*d)).sum()
+            }),
+        }
     }
     /// Uvoz provjerava stablo i geometrije prije predaje uređivaču.
     pub fn iz_zapisa(

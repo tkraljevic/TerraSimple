@@ -296,9 +296,9 @@ fn obrisi_izbacene(
     b: &BTreeMap<IdSloja, citanje::SlojBaze>,
 ) -> Result<(), Greska> {
     for (s, _) in prije.slojevi().filter(|(id, _)| p.sloj(*id).is_none()) {
-        let iz = izvor(b, prije, s);
-        provjeri_uklanjanje(c, prije, &iz)?;
-        obrisi_sloj(c, &iz)?;
+        // Briše se cijela tablica, i sa zapisima koje program ne prikazuje.
+        // Upozorenje o njima daje sučelje prije brisanja (`Projekt::nepodrzani_zapisi`).
+        obrisi_sloj(c, &izvor(b, prije, s))?;
     }
     Ok(())
 }
@@ -646,23 +646,6 @@ fn pridruzi_nepoznate(
             return Err(format!("Nepoznati stupac {n} sukobljava se sa stupcem odredišnog sloja. Premještanje nije spremljeno.").into());
         }
         polja.push((n, u_sql(v)));
-    }
-    Ok(())
-}
-
-fn provjeri_uklanjanje(
-    c: &Connection,
-    prije: &Projekt,
-    b: &citanje::SlojBaze,
-) -> Result<(), Greska> {
-    let sloj = prije.sloj(b.id).ok_or("Sloj za uklanjanje ne postoji.")?;
-    let broj: i64 = c.query_row(
-        &format!("SELECT count(*) FROM {}", shema::navodnici(&b.tablica)),
-        [],
-        |r| r.get(0),
-    )?;
-    if broj > sloj.objekti.len() as i64 {
-        return Err("Sloj s nepodržanim ili praznim objektima ne može se ukloniti spremanjem. Izvorni zapisi ostaju netaknuti.".into());
     }
     Ok(())
 }

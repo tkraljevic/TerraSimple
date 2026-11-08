@@ -480,8 +480,11 @@ u `geopaket/PROSIRENJE.md`.
 - **Sporo na velikom:** s 87 105 objekata jedno spremanje traje oko 1 s, a memorija je oko 1 GB, jer se
   čuva cijela kopija projekta i uspoređuje objekt po objekt. Ubrzat će se preko brojeva inačica slojeva.
   Brojke je izmjerio izvođač paketa, a pri pregledu nisu ponovljene.
-- **Otvoreno:** sloj koji iz tuđe datoteke donese krivulje, prazne ili NULL geometrije zasad se ne može
-  obrisati. Fuzz čitača još nije uveden, iako ga `kvaliteta.md` traži od prvog čitača nepouzdanih datoteka.
+- **Brisanje sloja s neobičnim zapisima (Odluke (8. 11. 2026.)):** sloj koji iz tuđe datoteke donese
+  krivulje, prazne ili NULL geometrije smije se obrisati, a s njim nestaju i ti zapisi. Prozor prije brisanja
+  mora upozoriti koliko ih ima; to dolazi zajedno s naredbom Otvori.
+- **Otvoreno:** fuzz čitača još nije uveden, iako ga `kvaliteta.md` traži od prvog čitača nepouzdanih
+  datoteka. Nightly Rust i `cargo-fuzz` instalirani su 8. 11.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 

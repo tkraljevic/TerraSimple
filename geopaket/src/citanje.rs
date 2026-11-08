@@ -222,6 +222,8 @@ fn ucitaj_sloj(
         .unwrap_or_default();
     let stil = stil_sloja(c, b, zadani, upozorenja)?;
     let (objekti, zapisi) = objekti(c, b, ids, sljedeci, upozorenja)?;
+    // Zapis se čuva za svaki redak tablice, a objekt samo za onaj koji program zna prikazati.
+    let nepodrzani = zapisi.len() - objekti.len();
     let (sql, stupci, indeksi, okidaci) = opis_sheme(c, b)?;
     let s = Sloj {
         naziv: nod.map_or_else(|| b.naziv.clone(), |n| n.naziv.clone()),
@@ -245,6 +247,7 @@ fn ucitaj_sloj(
             fid_stupac: b.fid.clone(),
             geometrija_stupac: b.geom.clone(),
             objekti: zapisi,
+            nepodrzani,
         },
     ))
 }
