@@ -96,12 +96,12 @@ fn windows(p: &Path) -> Vec<Qgis> {
 pub(crate) fn zadani(p: &Path, platforma: Platforma) -> Result<Qgis, Greska> {
     let p = p
         .canonicalize()
-        .map_err(|_| "Zadana staza QGIS-a ne postoji. Odaberite njegov program.")?;
+        .map_err(|_| "Zadana staza QGIS-a ne postoji. Odaberi njegov program.")?;
     if platforma == Platforma::Mac && p.extension().is_some_and(|e| e == "app") {
         return mac(&p).ok_or_else(|| "Odabrani paket nema program QGIS.".into());
     }
     if !p.is_file() {
-        return Err("Odaberite izvršnu datoteku QGIS-a, a ne mapu.".into());
+        return Err("Odaberi izvršnu datoteku QGIS-a, a ne mapu.".into());
     }
     Ok(Qgis {
         staza: p,

@@ -5,6 +5,8 @@ mod dimenzije;
 mod fid;
 mod geometrija;
 mod pisanje;
+mod qgis_projekt;
+mod qgis_sustavi;
 mod shema;
 mod stil;
 use rusqlite::Connection;
@@ -13,6 +15,8 @@ use std::path::Path;
 pub type Greska = Box<dyn std::error::Error + Send + Sync>;
 pub type Rezultat<T> = Result<T, Greska>;
 
+/// Ime QGIS projekta koji se pri svakom spremanju zapiše u GeoPackage.
+pub use qgis_projekt::NAZIV_PROJEKTA;
 /// Isključivo za zasebne fuzz ciljeve; nije sučelje programa.
 #[cfg(feature = "fuzz")]
 #[doc(hidden)]

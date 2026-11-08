@@ -137,7 +137,7 @@ fn linux_usporedjuje_sve_staze_a_upit_je_zamjenjiv() {
         pronadji_u(&o, None, |_| izlaz("nepoznato", true))
             .unwrap_err()
             .to_string()
-            .contains("usporediti")
+            .contains("koji je noviji")
     );
     assert!(pronadji_u(&o, None, |_| izlaz("3.99.0", false)).is_err());
     assert!(pronadji_u(&o, None, |_| Err(io::ErrorKind::NotFound.into())).is_err());
@@ -148,7 +148,7 @@ fn nedostajuci_program_i_nevaljana_zadana_staza_imaju_poruku() {
     for p in [Platforma::Mac, Platforma::Windows, Platforma::Linux] {
         let o = m.okolina(p);
         let e = pronadji_u(&o, None, bez_upita).unwrap_err().to_string();
-        assert!(e.contains("nije pronađen") && e.contains("stazu"));
+        assert!(e.contains("nije pronađen") && e.contains("qgis.org"));
         assert!(pronadji_u(&o, Some(&m.0.join("nema")), bez_upita).is_err());
         assert!(pronadji_u(&o, Some(&m.0), bez_upita).is_err());
     }
@@ -235,6 +235,69 @@ fn naredba_cuva_jedan_argument_s_razmacima_i_posebnim_znakovima() {
     assert!(q.otvori(&f).is_err());
     assert!(izlaz_verzije(&q.staza).is_err());
     assert!(pronadji(Some(&m.0.join("nepostojeci-program"))).is_err());
+}
+
+#[test]
+fn naredba_projekt_ispravno_slaze_argumente() {
+    let m = Mapa::nova();
+    let f = m.datoteka("projekt & podaci.gpkg");
+    let ocekivana_staza = crate::bez_dugog_prefiksa(f.canonicalize().unwrap())
+        .to_string_lossy()
+        .replace('\\', "/");
+    let ocekivani_uri = format!("geopackage:{ocekivana_staza}?projectName=TerraSimple");
+
+    for mac in [false, true] {
+        let q = Qgis {
+            staza: m.0.join("QGIS & program"),
+            inacica: None,
+            paket_macos: mac,
+        };
+        let n = q.naredba_projekt(&f, "TerraSimple").unwrap();
+        if mac {
+            assert_eq!(n.program, PathBuf::from("/usr/bin/open"));
+            assert_eq!(
+                n.argumenti,
+                vec![
+                    OsString::from("-n"),
+                    OsString::from("-a"),
+                    q.staza.as_os_str().to_os_string(),
+                    OsString::from("--args"),
+                    OsString::from("--project"),
+                    OsString::from(&ocekivani_uri),
+                ]
+            );
+        } else {
+            assert_eq!(n.program, q.staza);
+            assert_eq!(
+                n.argumenti,
+                vec![OsString::from("--project"), OsString::from(&ocekivani_uri),]
+            );
+        }
+        assert!(q.naredba_projekt(&f, "").is_err());
+        assert!(q.naredba_projekt(&f, "   ").is_err());
+        assert!(q.naredba_projekt(&m.0, "TerraSimple").is_err());
+        assert!(
+            q.naredba_projekt(&m.datoteka("krivo.txt"), "TerraSimple")
+                .is_err()
+        );
+    }
+
+    let q = Qgis {
+        staza: m.0.join("nepostojeci-program"),
+        inacica: None,
+        paket_macos: false,
+    };
+    assert!(
+        q.otvori_projekt(&m.0.join("nema.gpkg"), "TerraSimple")
+            .is_err()
+    );
+    assert!(q.otvori_projekt(&f, "TerraSimple").is_err());
+
+    // Provjera zamjene obrnutih kosih crta za Windows staze
+    assert_eq!(
+        uri_projekta(Path::new(r"C:\Podaci\karta.gpkg"), "TerraSimple"),
+        "geopackage:C:/Podaci/karta.gpkg?projectName=TerraSimple"
+    );
 }
 #[test]
 fn sustav_i_varijable_ne_ovise_o_testnom_racunalu() {

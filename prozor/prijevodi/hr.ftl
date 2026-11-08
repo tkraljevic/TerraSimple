@@ -195,3 +195,5 @@ datoteka-status-spremljeno = { $naziv } · spremljeno { $vrijeme }
 datoteka-status-izmijenjeno = { $naziv } · nespremljeno
 datoteka-status-spremljeno-izmijenjeno = { $naziv } · spremljeno { $vrijeme } (nespremljeno)
 datoteka-novi-nespremljeno = Novi projekt · nespremljeno
+
+greska-qgis-naslov = QGIS se nije otvorio

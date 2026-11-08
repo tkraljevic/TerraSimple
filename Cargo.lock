@@ -1323,6 +1323,7 @@ dependencies = [
 name = "geopaket"
 version = "0.0.0"
 dependencies = [
+ "flate2",
  "geozero",
  "koordinate",
  "quick-xml 0.42.0",
@@ -3288,6 +3289,7 @@ dependencies = [
  "image",
  "karta",
  "koordinate",
+ "qgis",
  "rfd",
  "rusqlite",
  "serde",

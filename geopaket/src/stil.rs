@@ -153,7 +153,7 @@ fn svojstva(v: VrstaGeometrije, s: Stil) -> String {
         r#"<data_defined_properties><Option type="Map"><Option name="name" value="" type="QString"/><Option name="properties" type="Map">{p}</Option><Option name="type" value="collection" type="QString"/></Option></data_defined_properties>"#
     )
 }
-pub fn qml(v: VrstaGeometrije, s: Stil) -> String {
+pub fn renderer(v: VrstaGeometrije, s: Stil) -> String {
     let (tip, klasa, o) = match v {
         VrstaGeometrije::Tocka => (
             "marker",
@@ -178,6 +178,14 @@ pub fn qml(v: VrstaGeometrije, s: Stil) -> String {
                 + &opcija("outline_width", &s.debljina_mm.to_string()),
         ),
     };
+    format!(
+        r#"<renderer-v2 type="singleSymbol"><symbols><symbol name="0" type="{tip}"><layer class="{klasa}" enabled="1"><Option type="Map">{o}</Option>{}</layer></symbol></symbols></renderer-v2>"#,
+        svojstva(v, s)
+    )
+}
+
+pub fn qml(v: VrstaGeometrije, s: Stil) -> String {
+    let rend = renderer(v, s);
     let skriveni: String = STUPCI
         .iter()
         .map(|n| {
@@ -188,8 +196,7 @@ pub fn qml(v: VrstaGeometrije, s: Stil) -> String {
         })
         .collect();
     format!(
-        r#"<qgis version="3.44.0" styleCategories="Symbology|AttributeTable"><renderer-v2 type="singleSymbol"><symbols><symbol name="0" type="{tip}"><layer class="{klasa}" enabled="1"><Option type="Map">{o}</Option>{}</layer></symbol></symbols></renderer-v2><attributetableconfig><columns>{skriveni}</columns></attributetableconfig></qgis>"#,
-        svojstva(v, s)
+        r#"<qgis version="3.44.0" styleCategories="Symbology|AttributeTable">{rend}<attributetableconfig><columns>{skriveni}</columns></attributetableconfig></qgis>"#
     )
 }
 #[derive(Default)]

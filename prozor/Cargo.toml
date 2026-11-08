@@ -12,6 +12,7 @@ fluent-bundle = "0.16"
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 karta = { path = "../karta", version = "0.0.0" }
 koordinate = { path = "../koordinate", version = "0.0.0" }
+qgis = { path = "../qgis", version = "0.0.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 slojevi = { path = "../slojevi", version = "0.0.0" }
