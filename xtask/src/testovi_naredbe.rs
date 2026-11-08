@@ -44,7 +44,9 @@ fn cijeli_tijek_ne_skriva_pad_i_ne_pomice_referencu() {
     let greska = izvrsi(zahtjev("provjera")).unwrap_err();
     assert!(greska.contains("Nema referentnog"), "{greska}");
     izvrsi(zahtjev("zapamti")).unwrap();
+    fs::write(korijen.join("bez-nightly"), "").unwrap();
     izvrsi(zahtjev("provjera")).unwrap();
+    fs::remove_file(korijen.join("bez-nightly")).unwrap();
     let prije = fs::read(korijen.join("quality/baseline.json")).unwrap();
     fs::write(korijen.join("pad-testa"), "").unwrap();
     assert!(
@@ -134,6 +136,25 @@ fn duboka_povezuje_alat_iznimke_i_padove() {
         cargo: cargo.clone(),
     };
     izvrsi(zahtjev()).unwrap();
+    let fuzz_zahtjev = || Zahtjev {
+        naredba: "fuzz".into(),
+        mapa: korijen.clone(),
+        korijen: korijen.clone(),
+        cargo: cargo.clone(),
+    };
+    izvrsi(fuzz_zahtjev()).unwrap();
+    for cilj in ["geometrija", "qml", "datoteka"] {
+        assert!(korijen.join("fuzz/corpus").join(cilj).is_dir(), "{cilj}");
+        assert!(korijen.join("fuzz/artifacts").join(cilj).is_dir(), "{cilj}");
+    }
+    fs::write(korijen.join("bez-nightly"), "").unwrap();
+    izvrsi(zahtjev()).unwrap();
+    assert!(izvrsi(fuzz_zahtjev()).is_err());
+    fs::remove_file(korijen.join("bez-nightly")).unwrap();
+    fs::write(korijen.join("pad-fuzza"), "").unwrap();
+    assert!(izvrsi(fuzz_zahtjev()).unwrap_err().contains("Fuzz"));
+    assert!(izvrsi(zahtjev()).unwrap_err().contains("Fuzz"));
+    fs::remove_file(korijen.join("pad-fuzza")).unwrap();
     fs::write(korijen.join("ishod"), "MissedMutant").unwrap();
     fs::write(korijen.join("kod"), "2").unwrap();
     assert!(izvrsi(zahtjev()).unwrap_err().contains("replace a"));

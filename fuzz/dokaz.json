@@ -1,0 +1,10 @@
+{
+  "promjena": "U kopiji pravog QML čitača Event::Eof vraća true umjesto false.",
+  "uhvacen_zastoj": true,
+  "kod_pada": 1,
+  "kod_obnovljenog": 0,
+  "kopija_vracena_bajt_za_bajt": true,
+  "radni_izvor_nije_mijenjan": true,
+  "sha256_izvora": "e96500425793f2543c8ec9f9f1b312ac32122664a1b86e20ce0d94bac4fb52d6",
+  "zapisi": ".quality/dokaz-fuzza-ixk27ry_"
+}

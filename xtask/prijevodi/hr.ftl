@@ -1,7 +1,7 @@
 granica = Provjera { $vrsta } nije prošla na mjestu { $mjesto }: izmjereno je { $sada }, a granica je { $granica }.
 nevaljana-iznimka = Iznimka { $kljuc } nema sve obvezne podatke ili je ključ ponovljen.
 istekla-iznimka = Iznimka { $kljuc } istekla je { $rok }.
-uporaba = Pokrenite cargo xtask provjera, cargo xtask provjera-duboka ili cargo xtask zapamti, uz neobvezno --mapa <staza>.
+uporaba = Pokrenite cargo xtask provjera, cargo xtask provjera-duboka, cargo xtask fuzz ili cargo xtask zapamti, uz neobvezno --mapa <staza>.
 alat = Alat { $alat } nije dostupan ili se ne može pokrenuti. Instalirajte ga naredbom { $uputa }. Pojedinosti: { $greska }
 pad-alata = Provjera { $alat } nije prošla u mapi { $mapa }. Izlaz alata: { $izlaz }
 datoteka = Datoteka { $staza } ne može se pročitati ili zapisati: { $greska }
@@ -21,8 +21,12 @@ nepodrzan-makro = Funkcijski ili ugniježđeni makro na mjestu { $mjesto } nije 
 mutacija = Datoteka { $datoteka }, funkcija { $funkcija }: { $promjena }.
 mutacije-osnova = Testovi neizmijenjenog paketa nisu prošli. Mutacije nisu pouzdano izmjerene.
 mutacije-prazno = Nema kritičnih paketa ili potpunog mjerenja mutacija. Duboka provjera nije prošla.
-bez-fuzza = Fuzz nije pokrenut u ovoj provjeri.
+fuzz-trajanje = Trajanje fuzza mora biti cijeli broj od 1 do 86400 sekundi.
+fuzz-rezultat = Fuzz { $cilj }: obrađeno ulaza { $broj }, izlazni kod { $kod }.
+fuzz-pad = Fuzz { $cilj } nije prošao. Pogledajte dnevnik i sačuvani ulaz u fuzz/artifacts.
 duplikacija = Udio ponovljenih redaka iznosi { $udio } %. Prvo mjerenje samo izvještava.
 mutacija-neprevodiva = Mutacija se ne može prevesti i nije uhvaćena testom: { $opis }
 mutacije-alat = Alat za mutacije nije završio valjano: { $kod }.
 mutacija-pad = Mutacija nije prošla; ishod je { $ishod }: { $opis }
+
+fuzz-nedostupan = Fuzz nije pokrenut: nightly ili cargo-fuzz nisu dostupni. Ostale duboke provjere nastavljaju se na stabilnom Rustu.

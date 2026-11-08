@@ -13,6 +13,14 @@ use std::path::Path;
 pub type Greska = Box<dyn std::error::Error + Send + Sync>;
 pub type Rezultat<T> = Result<T, Greska>;
 
+/// Isključivo za zasebne fuzz ciljeve; nije sučelje programa.
+#[cfg(feature = "fuzz")]
+#[doc(hidden)]
+pub mod fuzz {
+    pub use crate::geometrija::procitaj as geometrija;
+    pub use crate::stil::procitaj as stil;
+}
+
 pub struct Datoteka {
     veza: Connection,
     prethodni: Projekt,

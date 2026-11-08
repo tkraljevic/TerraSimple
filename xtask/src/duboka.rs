@@ -154,7 +154,7 @@ pub fn pokreni(
     meta: &mjerenje::Metapodaci,
     postavke: &Postavke,
 ) -> Result<(), String> {
-    println!("{}", tekst("bez-fuzza", &[]));
+    crate::fuzz::kratko(mapa, cargo, izlaz)?;
     duplikacija(mapa, meta, izlaz)?;
     alati::pokreni(
         mapa,

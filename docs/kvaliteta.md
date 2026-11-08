@@ -136,7 +136,7 @@ je privatan, a kasnije može postati javan. U testne podatke ne ide ništa iz go
 | Ranjivosti i licence ovisnosti | `cargo-deny` | uvijek |
 | Mutacije | `cargo-mutants` | sporo, zasebno |
 | Ponovljeni kod | mali brojač u `xtask` (`retci-10-v1`) | sporo, zasebno |
-| Čitanje nepouzdanih datoteka | `cargo-fuzz`, još nije uveden | nakon prvog čitača nepouzdanih datoteka |
+| Čitanje nepouzdanih datoteka | `cargo +nightly fuzz`, tri cilja GeoPackagea | `cargo xtask fuzz`; kratko i u dubokoj provjeri |
 
 Go treba zasebnu provjeru istodobnog pristupa. Rust utrke podataka u sigurnom
 kodu odbija već pri prevođenju, pa je dovoljan `forbid(unsafe_code)`. Ako se
@@ -191,7 +191,21 @@ istog koda: drukčija imena i formatiranje mogu sakriti ponavljanje, a blok-kome
 i literali mogu ući u mjeru. O usporedbi budućih mjerenja treba odlučiti nakon pregleda
 prvog udjela; granica i referenca sada nisu promijenjene.
 
-Fuzz nije pokrenut niti uveden: još nema paketa koji čita nepouzdane datoteke.
+`cargo xtask fuzz` pokreće ciljeve `geometrija`, `qml` i `datoteka`, svaki zadano
+60 sekundi. `TERRASIMPLE_FUZZ_SEKUNDE` mijenja trajanje (1–86400 sekundi po cilju).
+Svaki ulaz ima granicu od 5 sekundi, ulaz najviše 262 144 bajta, a proces granicu
+RSS-a od 1024 MB. Upotrebljavaju se nightly i već instalirani cargo-fuzz; zadani
+Rust se ne mijenja. `provjera-duboka` prvo pokreće svaki cilj po 10 sekundi i pada
+ako fuzz padne, zapne, prekorači memoriju ili nema valjan završni broj ulaza.
+Redovna `provjera` ne pokreće fuzz i ne treba nightly. Ako nightly ili cargo-fuzz
+nedostaju, duboka provjera jasno zapisuje `nije-pokrenuto` i nastavlja ostale
+provjere na stabilnom Rustu, pa CI ne ovisi o nightlyju. Izričita naredba
+`cargo xtask fuzz` bez tih alata pada. Ništa se ne instalira automatski.
+
+`fuzz/` je zaseban radni prostor. Mali izmišljeni početni ulazi su u `fuzz/pocetni`,
+a rastući skup, sačuvani padovi i gradnje ne ulaze u git. Zapis svakog pokusa i
+`fuzz.json` nalaze se u njegovoj mapi `.quality`. Rezultati stvarnih dugih pokusa,
+popravci i dokaz namjernog kvara opisani su u `fuzz/REZULTAT.md`.
 
 `.github/workflows/kvaliteta.yml` priprema redovnu provjeru za svaki PR i slanje
 u `master`, na Windowsu, macOS-u i Linuxu. `duboka.yml` priprema tjedno i ručno

@@ -20,6 +20,15 @@ fn main() -> ExitCode {
         fs::write(izlaz.join("outcomes.json"), format!(r#"{{"end_time":"kraj","total_mutants":1,"outcomes":[{{"scenario":"Baseline","summary":"Success"}},{{"scenario":{{"Mutant":{{"name":"src/lib.rs:1: replace a with true","file":"src/lib.rs","function":null}}}},"summary":"{stanje}"}}]}}"#)).unwrap();
         return ExitCode::from(fs::read_to_string(mapa.join("kod")).unwrap_or("0".into()).parse::<u8>().unwrap());
     }
+    if a[0] == "+nightly" {
+        assert_eq!(env::var("RUSTUP_AUTO_INSTALL").unwrap(), "0");
+        if mapa.join("bez-nightly").exists() { return ExitCode::FAILURE; }
+        if a[1..] == ["fuzz", "--version"] { println!("cargo-fuzz 0.13.2"); return ExitCode::SUCCESS; }
+        assert_eq!(&a[1..3], &["fuzz", "run"]);
+        if mapa.join("pad-fuzza").exists() { return ExitCode::from(77); }
+        eprintln!("stat::number_of_executed_units: 123");
+        return ExitCode::SUCCESS;
+    }
     let ime = if mapa.join("kritican").exists() { "koordinate" } else { "primjer" };
     let mapa = mapa.to_string_lossy().replace('\\', "\\\\");
     if a[0] == "metadata" {

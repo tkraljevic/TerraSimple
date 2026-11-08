@@ -1,0 +1,29 @@
+[
+  {
+    "cilj": "geometrija",
+    "ulaza": 1620513,
+    "sekunde": 1801,
+    "vrh_rss_mb": 527,
+    "izlazni_kod": 0,
+    "zapis": ".quality/fuzz-geometrija-1800.log",
+    "sha256_zapisa": "8ea340f77d2353188286c541d2c4399cd601e03abade66ec50d71ff4f84b8150"
+  },
+  {
+    "cilj": "qml",
+    "ulaza": 2318973,
+    "sekunde": 1801,
+    "vrh_rss_mb": 528,
+    "izlazni_kod": 0,
+    "zapis": ".quality/fuzz-qml-1800.log",
+    "sha256_zapisa": "222bd8929c3630f2c128b22b4cc9637dc5c9abc105f775a2624f8793c607d533"
+  },
+  {
+    "cilj": "datoteka",
+    "ulaza": 132640,
+    "sekunde": 1801,
+    "vrh_rss_mb": 409,
+    "izlazni_kod": 0,
+    "zapis": ".quality/fuzz-datoteka-1800.log",
+    "sha256_zapisa": "225652341cd0a50699277b18f3247123bfe3cbdb259b6ef13689676b2ec3341e"
+  }
+]

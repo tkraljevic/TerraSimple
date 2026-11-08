@@ -72,6 +72,7 @@ fn izvrsi(z: Zahtjev) -> Result<(), String> {
     fs::create_dir_all(&izvjestaji).map_err(|e| alati::greska_datoteke(&izvjestaji, e))?;
     let meta = mjerenje::metapodaci(&z.mapa, &z.cargo)?;
     match z.naredba.as_str() {
+        "fuzz" => xtask::fuzz::iz_okoline(&z.mapa, &z.cargo, &izvjestaji),
         "provjera-duboka" => {
             xtask::duboka::pokreni(&z.mapa, &z.cargo, &izvjestaji, &meta, &postavke)
         }
@@ -295,9 +296,9 @@ fn ucitaj_postavke(korijen: &Path) -> Result<Postavke, String> {
 }
 
 fn provjeri_naredbu(naredba: &str) -> Result<(), String> {
-    match naredba {
-        "provjera-duboka" => Ok(()),
-        "provjera" | "zapamti" => Ok(()),
-        _ => Err(tekst("uporaba", &[])),
+    if ["provjera", "provjera-duboka", "fuzz", "zapamti"].contains(&naredba) {
+        Ok(())
+    } else {
+        Err(tekst("uporaba", &[]))
     }
 }

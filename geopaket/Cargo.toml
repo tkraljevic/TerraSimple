@@ -5,6 +5,9 @@ edition = "2024"
 license = "EUPL-1.2"
 publish = false
 
+[features]
+fuzz = []
+
 [dependencies]
 slojevi = { path = "../slojevi", version = "0.0.0" }
 koordinate = { path = "../koordinate", version = "0.0.0" }
