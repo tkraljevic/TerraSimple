@@ -1,0 +1,40 @@
+[package]
+name = "terrasimple-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+license = "EUPL-1.2"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+geopaket = { version = "0.0.0", path = "../geopaket", features = ["fuzz"] }
+koordinate = { version = "0.0.0", path = "../koordinate" }
+slojevi = { version = "0.0.0", path = "../slojevi" }
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "geometrija"
+path = "fuzz_targets/geometrija.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "qml"
+path = "fuzz_targets/qml.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "datoteka"
+path = "fuzz_targets/datoteka.rs"
+test = false
+doc = false
+bench = false
+

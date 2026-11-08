@@ -5,3 +5,5 @@ pub mod mjerenje;
 pub mod poruke;
 pub mod pravila;
 pub mod slozenost;
+
+pub mod fuzz;

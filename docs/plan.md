@@ -508,6 +508,15 @@ u `geopaket/PROSIRENJE.md`.
 - **Otvoreno:** fuzz čitača još nije uveden, iako ga `kvaliteta.md` traži od prvog čitača nepouzdanih
   datoteka. Nightly Rust i `cargo-fuzz` instalirani su 8. 11.
 
+**Fuzz čitača i paket `qgis` (8. 11. 2026.):** izvještaji su u `fuzz/REZULTAT.md` i `qgis/REZULTAT.md`.
+
+- **Fuzz:** tri cilja, geometrija, QML stil i cijela datoteka, po 30 minuta: ukupno 4 072 126 ulaza bez pada,
+  zastoja ili prekoračenja memorije. Namjerno pokvaren kraj čitanja stila fuzz uhvati za nekoliko sekundi.
+  `cargo xtask fuzz` treba nightly, a duboka provjera bez njega bilježi da fuzz nije pokrenut. Licenca NCSA
+  dopuštena je samo za libFuzzer.
+- **QGIS:** paket pronalazi QGIS na tri sustava i otvara mu jednu datoteku, bez čekanja. Na ovom Macu našao je
+  QGIS-LTR 3.44.15. Pravo otvaranje, Windows i Linux nisu isprobani, a gumb u prozoru još nije spojen.
+
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 
 Zasloni A4, F, F2, G, J. Projekt je jedan GeoPackage, s mapama, novim slojem,

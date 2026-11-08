@@ -8,6 +8,12 @@ allow = ["EUPL-1.2", "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC",
 confidence-threshold = 0.9
 unused-allowed-license = "allow"
 
+# libfuzzer-sys uključuje libFuzzer pod dopuštajućom licencom NCSA.
+# Iznimka vrijedi samo za ovu ovisnost zasebnog fuzz paketa.
+[[licenses.exceptions]]
+name = "libfuzzer-sys"
+allow = ["NCSA"]
+
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
