@@ -1,4 +1,5 @@
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
+use crate::karta_prozora::{KartaProzora, StatusKarte, tekst_mjerila, zaklon};
 use crate::ploca::{
     crtaj_plocu_slojeva, obrisi_odabrano, pokreni_preimenovanje_odabranog, potvrdi_preimenovanje,
 };
@@ -21,6 +22,8 @@ pub struct PostavkeAplikacije {
     pub tamna: bool,
     pub ploca_lijevo: bool,
     pub snimka: Option<PathBuf>,
+    /// Podloga s mreže. Pravi program je uključuje, a testovi rade bez mreže.
+    pub podloga_s_mreze: bool,
 }
 
 #[must_use]
@@ -80,9 +83,24 @@ impl StavkeStatusneTrake {
 pub fn odredi_stavke_statusne_trake(
     stanje: &StanjePrikaza,
     katalog: &KatalogPoruka,
+    karta: Option<&StatusKarte>,
 ) -> StavkeStatusneTrake {
     let sustav = katalog.tekst("status-sustav");
-    if stanje.prikazi_primjer {
+    if let Some(k) = karta {
+        StavkeStatusneTrake {
+            sustav,
+            koordinate: k
+                .koordinate
+                .map(|[istok, sjever]| katalog.status_koordinate(istok, sjever, 0)),
+            mjerilo: k.nazivnik.map(|n| tekst_mjerila(katalog, n)),
+            izvor_podloge: k.podloga.map(|p| match p {
+                karta::Podloga::OpenFreeMap { .. } => katalog.tekst("status-izvor"),
+                karta::Podloga::Dgu(_) => katalog.tekst("status-izvor-dgu"),
+            }),
+            // Stanje mreže program još ne prati, pa ga ne izmišlja.
+            mreza: None,
+        }
+    } else if stanje.prikazi_primjer {
         StavkeStatusneTrake {
             sustav,
             koordinate: Some(katalog.status_koordinate(655_120.0, 5_046_380.0, 0)),
@@ -110,13 +128,33 @@ pub fn naziv_datoteke_status(stanje: &StanjePrikaza, katalog: &KatalogPoruka) ->
     }
 }
 
+/// Okvir ploče Slojevi, isti kao u `crtaj_plocu_slojeva`.
+fn okvir_ploce(stanje: &StanjePrikaza, okvir_karte: Rect) -> Option<Rect> {
+    if !stanje.ploca_otvorena {
+        return None;
+    }
+    let x = if stanje.ploca_lijevo {
+        okvir_karte.min.x + Razmaci::RUB
+    } else {
+        okvir_karte.max.x - Razmaci::SIRINA_PLOCE - Razmaci::RUB
+    };
+    Some(Rect::from_min_size(
+        pos2(x, okvir_karte.min.y + Razmaci::RUB),
+        vec2(Razmaci::SIRINA_PLOCE, okvir_karte.height() - 24.0),
+    ))
+}
+
 pub struct Aplikacija {
     pub uredjivac: Uredjivac,
     pub stanje: StanjePrikaza,
+    pub karta: KartaProzora,
     pub ikone: SkladisteIkona,
     pub katalog: KatalogPoruka,
     pub snimka: Option<PathBuf>,
     pub okvir_brojac: u32,
+    /// Snimka čeka da stignu pločice podloge. Bez mreže nema što čekati.
+    pub cekanje_snimke: Duration,
+    pocetak: Instant,
     pub zadnje_vrijeme_okvira: Duration,
 }
 
@@ -134,16 +172,26 @@ impl Aplikacija {
         let katalog = KatalogPoruka::hrvatski();
         stanje.tema_tamna = postavke.tamna;
         stanje.ploca_lijevo = postavke.ploca_lijevo;
+        let mut karta = KartaProzora::nova(postavke.podloga_s_mreze);
         if postavke.primjer {
             izgradi_primjer_zaslona_a(&mut uredjivac, &mut stanje, &katalog);
+            // Izmišljeni likovi primjera su kod 16,0° E i 45,8° N.
+            karta.karta().idi_na(16.004, 45.802, 16.5);
         }
         Self {
             uredjivac,
             stanje,
+            karta,
             ikone: SkladisteIkona::novo(),
             katalog,
             snimka: postavke.snimka,
             okvir_brojac: 0,
+            cekanje_snimke: if postavke.podloga_s_mreze {
+                Duration::from_secs(8)
+            } else {
+                Duration::ZERO
+            },
+            pocetak: Instant::now(),
             zadnje_vrijeme_okvira: Duration::ZERO,
         }
     }
@@ -249,7 +297,7 @@ impl Aplikacija {
             self.obradi_cmd_precac(key, modifiers.shift);
         } else if key == Key::F2 {
             let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
-        } else if matches!(key, Key::Delete | Key::Backspace) {
+        } else if matches!(key, Key::Delete | Key::Backspace) && !self.karta.u_tijeku() {
             let _ = obrisi_odabrano(&mut self.uredjivac, &mut self.stanje);
         }
     }
@@ -408,6 +456,16 @@ impl Aplikacija {
 
     fn crtaj_podrucje_karte(&mut self, ui: &mut egui::Ui, okvir_karte: Rect, boje: &Boje) {
         ui.painter().rect_filled(okvir_karte, 0.0, boje.k_zemlja);
+        self.karta.prikazi(
+            ui,
+            okvir_karte,
+            &mut self.uredjivac,
+            &mut self.stanje,
+            &self.katalog,
+        );
+        if let Some(okvir_ploce) = okvir_ploce(&self.stanje, okvir_karte) {
+            zaklon(ui, okvir_ploce, "ploca_slojeva");
+        }
 
         let pomak_lijevo = if self.stanje.ploca_otvorena && self.stanje.ploca_lijevo {
             Razmaci::SIRINA_PLOCE + Razmaci::RUB
@@ -423,17 +481,34 @@ impl Aplikacija {
 
         self.crtaj_trazilicu(ui, pos2(lijevi_x, okvir_karte.min.y + 12.0), boje);
         self.crtaj_alatnu_traku(ui, pos2(lijevi_x, okvir_karte.min.y + 68.0), boje);
+        self.karta.crtaj_plocu_mjerenja(
+            ui,
+            pos2(lijevi_x + 76.0, okvir_karte.min.y + 68.0),
+            &mut self.uredjivac,
+            &mut self.stanje,
+            &self.katalog,
+            &mut self.ikone,
+            boje,
+        );
+        let sredina = (lijevi_x + desni_rub) / 2.0;
+        self.karta.crtaj_poruku(
+            ui,
+            pos2(sredina, okvir_karte.max.y - 12.0),
+            &self.katalog,
+            boje,
+        );
         self.crtaj_lebdece_gumbe(ui, pos2(desni_rub - 52.0, okvir_karte.min.y + 12.0), boje);
         self.crtaj_mjerilo_i_atribuciju(
             ui,
             pos2(lijevi_x, okvir_karte.max.y - 38.0),
-            pos2(desni_rub - 212.0, okvir_karte.max.y - 36.0),
+            pos2(desni_rub - 60.0, okvir_karte.max.y - 8.0),
             boje,
         );
     }
 
     fn crtaj_trazilicu(&mut self, ui: &egui::Ui, min: Pos2, boje: &Boje) {
         let trazilica = Rect::from_min_size(min, vec2(310.0, 40.0));
+        zaklon(ui, trazilica, "trazilica");
         zaobljeni_okvir(ui, trazilica, boje.lebdeca, Some(boje.obrub), 10.0);
         let ikona_okvir = Rect::from_center_size(
             pos2(trazilica.min.x + 21.0, trazilica.center().y),
@@ -458,6 +533,7 @@ impl Aplikacija {
 
     fn crtaj_alatnu_traku(&mut self, ui: &mut egui::Ui, min: Pos2, boje: &Boje) {
         let okvir_alata = Rect::from_min_size(min, vec2(68.0, 259.0));
+        zaklon(ui, okvir_alata, "alati");
         zaobljeni_okvir(ui, okvir_alata, boje.lebdeca, Some(boje.obrub), 12.0);
         let tamna = self.stanje.tema_tamna;
         for (indeks, alat) in Alat::SVI.into_iter().enumerate() {
@@ -482,8 +558,9 @@ impl Aplikacija {
         let tamna = self.stanje.tema_tamna;
 
         let k1 = Rect::from_min_size(pos2(kx, ky), vec2(40.0, 81.0));
+        zaklon(ui, k1, "lebdeci_k1");
         zaobljeni_okvir(ui, k1, boje.lebdeca, Some(boje.obrub), 10.0);
-        let _ = gumb_ikona(
+        let zaslon = gumb_ikona(
             ui,
             &mut self.ikone,
             &OpisGumbaIkone {
@@ -519,6 +596,7 @@ impl Aplikacija {
         );
 
         let k2 = Rect::from_min_size(pos2(kx, ky + 91.0), vec2(40.0, 40.0));
+        zaklon(ui, k2, "lebdeci_k2");
         zaobljeni_okvir(ui, k2, boje.lebdeca, Some(boje.obrub), 10.0);
         let _ = gumb_ikona(
             ui,
@@ -537,8 +615,9 @@ impl Aplikacija {
         );
 
         let k3 = Rect::from_min_size(pos2(kx, ky + 141.0), vec2(40.0, 81.0));
+        zaklon(ui, k3, "lebdeci_k3");
         zaobljeni_okvir(ui, k3, boje.lebdeca, Some(boje.obrub), 10.0);
-        let _ = gumb_ikona(
+        let plus = gumb_ikona(
             ui,
             &mut self.ikone,
             &OpisGumbaIkone {
@@ -557,7 +636,7 @@ impl Aplikacija {
             [pos2(kx + 6.0, ky + 181.0), pos2(kx + 34.0, ky + 181.0)],
             Stroke::new(1.0, boje.obrub),
         );
-        let _ = gumb_ikona(
+        let minus = gumb_ikona(
             ui,
             &mut self.ikone,
             &OpisGumbaIkone {
@@ -572,57 +651,28 @@ impl Aplikacija {
             tamna,
             boje,
         );
+        if plus.clicked() {
+            self.karta.priblizi();
+        }
+        if minus.clicked() {
+            self.karta.udalji();
+        }
+        if zaslon.clicked() {
+            let cijeli = ui.ctx().input(|i| i.viewport().fullscreen.unwrap_or(false));
+            ui.ctx()
+                .send_viewport_cmd(egui::ViewportCommand::Fullscreen(!cijeli));
+        }
     }
 
     fn crtaj_mjerilo_i_atribuciju(
         &self,
         ui: &egui::Ui,
         pozicija_mjerila: Pos2,
-        pozicija_atribucije: Pos2,
+        desno_dolje: Pos2,
         boje: &Boje,
     ) {
-        if !self.stanje.prikazi_primjer {
-            return;
-        }
-
-        let linija_y = pozicija_mjerila.y + 18.0;
-        let potez = Stroke::new(1.5, boje.tekst);
-        ui.painter().line_segment(
-            [
-                pos2(pozicija_mjerila.x, linija_y),
-                pos2(pozicija_mjerila.x + 80.0, linija_y),
-            ],
-            potez,
-        );
-        ui.painter().line_segment(
-            [
-                pos2(pozicija_mjerila.x, linija_y - 5.0),
-                pos2(pozicija_mjerila.x, linija_y),
-            ],
-            potez,
-        );
-        ui.painter().line_segment(
-            [
-                pos2(pozicija_mjerila.x + 80.0, linija_y - 5.0),
-                pos2(pozicija_mjerila.x + 80.0, linija_y),
-            ],
-            potez,
-        );
-        tekst_lijevo(
-            ui,
-            pos2(pozicija_mjerila.x, linija_y - 9.0),
-            &self.katalog.tekst("mjerilo-100m"),
-            font_srednji(11.0),
-            boje.tekst,
-        );
-
-        tekst_desno(
-            ui,
-            pos2(pozicija_atribucije.x + 200.0, pozicija_atribucije.y + 12.0),
-            &self.katalog.tekst("atribucija-osm"),
-            font_obicni(10.0),
-            boje.tekst_2,
-        );
+        self.karta.crtaj_traku_mjerila(ui, pozicija_mjerila, boje);
+        self.karta.crtaj_navod(ui, desno_dolje, boje);
     }
 
     fn crtaj_statusnu_traku(&mut self, ui: &mut egui::Ui, w: f32, h: f32, boje: &Boje) {
@@ -634,7 +684,9 @@ impl Aplikacija {
 
         let sy = vrh + Razmaci::VISINA_STATUSA * 0.5;
         let tamna = self.stanje.tema_tamna;
-        let stavke = odredi_stavke_statusne_trake(&self.stanje, &self.katalog);
+        let status_karte = self.karta.status();
+        let stavke =
+            odredi_stavke_statusne_trake(&self.stanje, &self.katalog, status_karte.as_ref());
 
         if let Some(koordinate) = &stavke.koordinate {
             tekst_lijevo(
@@ -703,6 +755,11 @@ impl Aplikacija {
             return;
         };
         self.okvir_brojac += 1;
+        let ceka = self.pocetak.elapsed() < self.cekanje_snimke;
+        if ceka {
+            // Brojač stoji, pa se snimka traži točno jednom, u drugom okviru nakon čekanja.
+            self.okvir_brojac = 1;
+        }
         if self.okvir_brojac == 2 {
             let ctx = ui.ctx().clone();
             ui.ctx().request_screenshot(move |slika| {
@@ -838,6 +895,7 @@ mod testovi {
                 tamna: true,
                 ploca_lijevo: true,
                 snimka: Some(PathBuf::from("a.png")),
+                podloga_s_mreze: false,
             }
         );
 
@@ -1006,7 +1064,7 @@ mod testovi {
         let app = Aplikacija::default();
         assert!(!app.stanje.prikazi_primjer);
 
-        let stavke = odredi_stavke_statusne_trake(&app.stanje, &app.katalog);
+        let stavke = odredi_stavke_statusne_trake(&app.stanje, &app.katalog, None);
         assert!(
             stavke.koordinate.is_none(),
             "prazan projekt ne smije imati koordinate"
@@ -1066,7 +1124,7 @@ mod testovi {
         });
         assert!(app.stanje.prikazi_primjer);
 
-        let stavke = odredi_stavke_statusne_trake(&app.stanje, &app.katalog);
+        let stavke = odredi_stavke_statusne_trake(&app.stanje, &app.katalog, None);
         assert_eq!(
             stavke.koordinate.as_deref(),
             Some("E 655 120   N 5 046 380")

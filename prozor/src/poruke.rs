@@ -47,6 +47,24 @@ impl KatalogPoruka {
         self.dohvati("broj-objekata", Some(&argumenti))
     }
 
+    /// Poruka s brojem, za oblike uz broj (1 dio, 2 dijela, 5 dijelova).
+    #[must_use]
+    pub fn s_brojem(&self, kljuc: &str, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("broj", broj);
+        self.dohvati(kljuc, Some(&argumenti))
+    }
+
+    /// Poruka s gotovim tekstovima, npr. već oblikovanim mjerama.
+    #[must_use]
+    pub fn s_tekstovima(&self, kljuc: &str, tekstovi: &[(&str, String)]) -> String {
+        let mut argumenti = FluentArgs::new();
+        for (ime, vrijednost) in tekstovi {
+            argumenti.set(*ime, vrijednost.clone());
+        }
+        self.dohvati(kljuc, Some(&argumenti))
+    }
+
     #[must_use]
     pub fn s_rednim(&self, kljuc: &str, redni: usize) -> String {
         let mut argumenti = FluentArgs::new();

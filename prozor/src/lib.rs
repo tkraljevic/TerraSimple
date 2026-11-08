@@ -4,6 +4,7 @@
 
 pub mod aplikacija;
 pub mod ikone;
+pub mod karta_prozora;
 pub mod ploca;
 pub mod poruke;
 pub mod primjer;
