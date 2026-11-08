@@ -7,8 +7,9 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 ## Stanje
 
 Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
-naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i prva četiri paketa
-programa, `koordinate`, `geometrija`, `slojevi` i `karta`. Rust 1.99.1
+naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i šest paketa
+programa, `koordinate`, `geometrija`, `slojevi`, `karta`, `prozor` i `geopaket`. Karta još nije spojena u
+prozor. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
@@ -450,6 +451,37 @@ Primjer se pokreće s `cargo run -p karta --example prozor`. Pravim mišem ispro
 - **Nije provjereno:** ručni rad na Windowsu i Linuxu (na njima se zasad vrte samo testovi na CI-ju), glatkoća u
   prozoru s upaljenim ekranom i rad na slabijem računalu. Upozorenje za lik koji siječe sam sebe još nije
   napravljeno.
+
+**Rezultat paketa `prozor` (8. 11. 2026., `egui` 0.37):** glavni prozor po zaslonu A, u svijetloj i tamnoj
+temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka. Cijeli izvještaj je u
+`prozor/REZULTAT.md`.
+
+- **Naredbe:** svaka izmjena stabla ide kroz naredbe iz paketa `slojevi`, pa se može poništiti.
+- **Prazan projekt** ne prikazuje izmišljene koordinate, mjerilo ni stanje mreže. Primjer iz nacrta
+  pokreće se zastavicom `--primjer`.
+- **Provjera:** 33 testa, od kojih neki čitaju i tekst nacrtan na karti. Od 279 namjernih grešaka 61 je
+  preživjela, i sve su u računu položaja i razmaka na zaslonu.
+- **Još nije tu:** karta u prozoru, Novi, Otvori i Spremi te radnja gumba „Otvori u QGIS-u”.
+
+**Rezultat paketa `geopaket` (8. 11. 2026., `rusqlite` 0.41, `geozero` 0.15, QGIS 3.44.15, GDAL 3.13):**
+projekt se sprema u GeoPackage i čita natrag. Cijeli izvještaj je u `geopaket/REZULTAT.md`, a zapis stabla
+u `geopaket/PROSIRENJE.md`.
+
+- **Što se sprema:** mape, redoslijed, stanja slojeva, nazivi, opisi, stilovi i visine. Slojevi su obične
+  tablice GeoPackagea, a stablo je registrirano proširenje. Novi slojevi su u EPSG:4326, a tuđi zadržavaju
+  svoj sustav.
+- **Tuđe se ne dira:** nepromijenjene geometrije ostaju bajt za bajt iste, a nepoznati stupci i tablice
+  ostaju sačuvani. Sprema se samo ono što se promijenilo, i to sve ili ništa.
+- **QGIS:** svih 50 provjera bez prozora prolazi, a GDAL-ov validator nema primjedbi. Krug je naše
+  spremanje, izmjena u QGIS-u, naše ponovno spremanje i ponovno otvaranje u QGIS-u.
+- **Namjerne greške:** od 609 ih je preživjelo 11, i nijedna nije rupa. Tri ne mijenjaju rezultat, a
+  sedam u paketu `slojevi` hvataju testovi paketa `geopaket`. Dvije stvaraju beskonačnu petlju u čitanju
+  stila, pa se računaju kao otkrivene. Provjera prolazi s 96,25 % na 660 funkcija.
+- **Sporo na velikom:** s 87 105 objekata jedno spremanje traje oko 1 s, a memorija je oko 1 GB, jer se
+  čuva cijela kopija projekta i uspoređuje objekt po objekt. Ubrzat će se preko brojeva inačica slojeva.
+  Brojke je izmjerio izvođač paketa, a pri pregledu nisu ponovljene.
+- **Otvoreno:** sloj koji iz tuđe datoteke donese krivulje, prazne ili NULL geometrije zasad se ne može
+  obrisati. Fuzz čitača još nije uveden, iako ga `kvaliteta.md` traži od prvog čitača nepouzdanih datoteka.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)
 
