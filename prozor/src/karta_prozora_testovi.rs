@@ -490,3 +490,93 @@ fn poruka_kaze_kad_novi_objekt_ne_ide_u_odabrani_sloj() {
         "objekt-poligon"
     );
 }
+
+#[test]
+fn otvoren_dijalog_zaklanja_kartu_i_tipke() {
+    use crate::dijalozi::{AktivniDijalog, NamjeraPotvrde};
+    let mut app = Aplikacija::default();
+    let s = novi_sloj(&mut app, VrstaGeometrije::Tocka);
+    app.stanje.odabrano = Some(Odabir::Sloj(s));
+    app.stanje.alat = Alat::Tocka;
+    app.aktivni_dijalog = Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi));
+    let mut h = prozor(app);
+    // Daleko od dijaloga u sredini, ali na karti.
+    klikni(&mut h, pos2(300.0, 760.0));
+    assert_eq!(broj_objekata(h.state()), 0, "klik pored dijaloga ne crta");
+    pritisni(&mut h, Key::Delete);
+    assert!(
+        h.state().uredjivac.projekt().sloj(s).is_some(),
+        "Delete ne briše sloj ispod dijaloga"
+    );
+    h.state_mut().aktivni_dijalog = None;
+    h.run_steps(2);
+    klikni(&mut h, pos2(300.0, 760.0));
+    assert_eq!(broj_objekata(h.state()), 1, "bez dijaloga klik opet crta");
+}
+
+#[test]
+fn obuhvat_projekta_daje_sredinu_i_zum() {
+    let mut app = Aplikacija::default();
+    assert_eq!(obuhvat(app.uredjivac.projekt()), None);
+    let s = novi_sloj(&mut app, VrstaGeometrije::Tocka);
+    let dodaj = |u: &mut Uredjivac, d: f64, sir: f64| {
+        u.izvrsi(NaredbaObjekta::Dodaj {
+            sloj: s,
+            naziv: "T".into(),
+            geometrija: Geometrija::Tocka(Vrh::novi(d, sir)),
+        })
+        .expect("točka");
+    };
+    dodaj(&mut app.uredjivac, 16.0, 45.0);
+    assert_eq!(obuhvat(app.uredjivac.projekt()), Some((16.0, 45.0, 16.0)));
+    dodaj(&mut app.uredjivac, 18.0, 46.0);
+    let (d, sir, z) = obuhvat(app.uredjivac.projekt()).expect("obuhvat");
+    assert_eq!((d, sir), (17.0, 45.5));
+    // Raspon 2° po dužini: 1200 / 2 = 600, log2 ≈ 9,2.
+    assert_eq!(z, 9.0);
+}
+
+#[test]
+fn novi_projekt_brise_odabir_karte_i_pomice_pogled_na_podatke() {
+    let mut app = Aplikacija::default();
+    let s = novi_sloj(&mut app, VrstaGeometrije::Linija);
+    let Ok(Some(Novo::Objekt(o))) = app.uredjivac.izvrsi(NaredbaObjekta::Dodaj {
+        sloj: s,
+        naziv: "Crta".into(),
+        geometrija: Geometrija::Linija(vec![Vrh::novi(17.0, 45.0), Vrh::novi(17.01, 45.01)]),
+    }) else {
+        panic!("objekt");
+    };
+    app.stanje.odabrano = Some(Odabir::Objekt(s, o));
+    let mut h = prozor(app);
+    assert_eq!(
+        h.state_mut().karta.karta().crtanje().odabran(),
+        Some((s, o))
+    );
+    let projekt = h.state().uredjivac.projekt().clone();
+    h.state_mut().karta.novi_projekt(&projekt);
+    assert_eq!(h.state_mut().karta.karta().crtanje().odabran(), None);
+    h.run_steps(2);
+    let pogled = h.state().karta.status().expect("pogled");
+    let [e, _] = pogled.koordinate.expect("koordinate");
+    // Sredina crte, 17,005° E, je oko 39 km istočno od središnjeg meridijana 16,5°.
+    assert!((e - 539_800.0).abs() < 1_000.0, "{e}");
+}
+
+#[test]
+fn klik_izvan_otvorenog_izbornika_datoteka_ga_samo_zatvara() {
+    let mut app = Aplikacija::default();
+    app.stanje.alat = Alat::Tocka;
+    let mut h = prozor(app);
+    h.get_by_label("Datoteka").click();
+    h.run_steps(2);
+    assert!(h.state().izbornik_datoteka_otvoren);
+    klikni(&mut h, sredina_karte());
+    assert!(
+        !h.state().izbornik_datoteka_otvoren,
+        "klik izvan zatvara izbornik"
+    );
+    assert_eq!(broj_objekata(h.state()), 0, "isti klik ne crta točku");
+    klikni(&mut h, sredina_karte());
+    assert_eq!(broj_objekata(h.state()), 1, "sljedeći klik crta");
+}

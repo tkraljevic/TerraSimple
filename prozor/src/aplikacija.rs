@@ -1,3 +1,11 @@
+use crate::datoteka::{
+    BiracDatoteka, PodaciDatoteke, SustavskiBirac, radnja_novi, radnja_otvori, radnja_spremi,
+    radnja_spremi_kao, tekst_statusa_datoteke,
+};
+use crate::dijalozi::{
+    AktivniDijalog, IshodDijaloga, NamjeraPotvrde, StavkaIzbornikaDatoteka, crtaj_aktivni_dijalog,
+    crtaj_padajuci_izbornik_datoteka,
+};
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::karta_prozora::{KartaProzora, StatusKarte, tekst_mjerila, zaklon};
 use crate::novi_sloj::crtaj_prozorcic_novog_sloja;
@@ -10,10 +18,10 @@ use crate::sastavnice::{
     OpisGumbaAlata, OpisGumbaIkone, gumb_alat, gumb_ikona, tekst_desno, tekst_lijevo,
     tekst_sredina, zaobljeni_okvir,
 };
-use crate::stanje::{Alat, StanjePrikaza};
+use crate::stanje::{Alat, Odabir, StanjePrikaza};
 use crate::tema::{Boje, Razmaci, font_obicni, font_srednji, fontovi, primijeni_stil};
 use eframe::egui::{self, Event, Key, Pos2, Rect, Role, Sense, Stroke, WidgetInfo, pos2, vec2};
-use slojevi::Uredjivac;
+use slojevi::{NaredbaStabla, Stavka, Uredjivac};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -25,6 +33,7 @@ pub struct PostavkeAplikacije {
     pub snimka: Option<PathBuf>,
     /// Podloga s mreže. Pravi program je uključuje, a testovi rade bez mreže.
     pub podloga_s_mreze: bool,
+    pub dijalog: Option<String>,
 }
 
 #[must_use]
@@ -36,19 +45,24 @@ where
     let mut postavke = PostavkeAplikacije::default();
     let mut iter = argumenti.into_iter();
     while let Some(arg) = iter.next() {
-        match arg.as_ref() {
-            "--primjer" => postavke.primjer = true,
-            "--tamna" => postavke.tamna = true,
-            "--lijevo" => postavke.ploca_lijevo = true,
-            "--snimka" => {
-                if let Some(putanja) = iter.next() {
-                    postavke.snimka = Some(PathBuf::from(putanja.as_ref()));
-                }
-            }
-            _ => {}
-        }
+        obradi_jedan_argument(&mut postavke, arg.as_ref(), &mut iter);
     }
     postavke
+}
+
+fn obradi_jedan_argument<S: AsRef<str>>(
+    postavke: &mut PostavkeAplikacije,
+    arg: &str,
+    iter: &mut impl Iterator<Item = S>,
+) {
+    match arg {
+        "--primjer" => postavke.primjer = true,
+        "--tamna" => postavke.tamna = true,
+        "--lijevo" => postavke.ploca_lijevo = true,
+        "--snimka" => postavke.snimka = iter.next().map(|p| PathBuf::from(p.as_ref())),
+        "--dijalog" => postavke.dijalog = iter.next().map(|n| n.as_ref().to_string()),
+        _ => {}
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -151,12 +165,17 @@ pub struct Aplikacija {
     pub karta: KartaProzora,
     pub ikone: SkladisteIkona,
     pub katalog: KatalogPoruka,
+    pub datoteka: PodaciDatoteke,
+    pub birac: Box<dyn BiracDatoteka>,
+    pub aktivni_dijalog: Option<AktivniDijalog>,
+    pub izbornik_datoteka_otvoren: bool,
     pub snimka: Option<PathBuf>,
     pub okvir_brojac: u32,
     /// Snimka čeka da stignu pločice podloge. Bez mreže nema što čekati.
     pub cekanje_snimke: Duration,
     pocetak: Instant,
     pub zadnje_vrijeme_okvira: Duration,
+    pub pocetak_rada: Instant,
 }
 
 impl Default for Aplikacija {
@@ -179,12 +198,37 @@ impl Aplikacija {
             // Izmišljeni likovi primjera su kod 16,0° E i 45,8° N.
             karta.karta().idi_na(16.004, 45.802, 16.5);
         }
+        let aktivni_dijalog = match postavke.dijalog.as_deref() {
+            Some("potvrda") => Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi)),
+            Some("greska") => Some(AktivniDijalog::PorukaGreske {
+                naslov: katalog.tekst("greska-spremanja-naslov"),
+                poruka: katalog.greska_spremanja("data_version promijenjen"),
+            }),
+            Some("upozorenje") => Some(AktivniDijalog::UpozorenjeBrisanja {
+                stavka: slojevi::Stavka::Sloj(slojevi::IdSloja(1)),
+                naziv: "Građevine".to_string(),
+                broj_nepodrzanih: 5,
+            }),
+            Some("upozorenja-otvaranja") => Some(AktivniDijalog::UpozorenjaOtvaranja {
+                upozorenja: vec![
+                    "Sloj „Katastar” sadrži krivulje koje nisu podržane".to_string(),
+                    "Sloj „Točke” sadrži nepodržane M koordinate".to_string(),
+                    "Sloj „Granice” sadrži nepoznati SRID 9999".to_string(),
+                ],
+                otvoren_popis: false,
+            }),
+            _ => None,
+        };
         Self {
             uredjivac,
             stanje,
             karta,
             ikone: SkladisteIkona::novo(),
             katalog,
+            datoteka: PodaciDatoteke::nova(),
+            birac: Box::new(SustavskiBirac),
+            aktivni_dijalog,
+            izbornik_datoteka_otvoren: false,
             snimka: postavke.snimka,
             okvir_brojac: 0,
             cekanje_snimke: if postavke.podloga_s_mreze {
@@ -194,7 +238,17 @@ impl Aplikacija {
             },
             pocetak: Instant::now(),
             zadnje_vrijeme_okvira: Duration::ZERO,
+            pocetak_rada: Instant::now(),
         }
+    }
+
+    pub fn postavi_birac(&mut self, birac: Box<dyn BiracDatoteka>) {
+        self.birac = birac;
+    }
+
+    #[must_use]
+    pub fn odredi_naziv_datoteke(&self) -> Option<String> {
+        tekst_statusa_datoteke(&self.stanje, &self.datoteka, &self.uredjivac, &self.katalog)
     }
 
     pub fn postavi_kontekst(ctx: &egui::Context) {
@@ -202,6 +256,16 @@ impl Aplikacija {
     }
 
     pub fn crtaj_sucelje(&mut self, ui: &mut egui::Ui) {
+        if self.snimka.is_none()
+            && ui.input(|i| i.viewport().close_requested())
+            && self.uredjivac.je_li_izmijenjen()
+        {
+            ui.ctx()
+                .send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            self.aktivni_dijalog = Some(AktivniDijalog::PotvrdaNespremljeno(
+                NamjeraPotvrde::ZatvoriProzor,
+            ));
+        }
         let pocetak = Instant::now();
         let boje = Boje::za_temu(self.stanje.tema_tamna);
         primijeni_stil(ui.ctx(), &boje, self.stanje.tema_tamna);
@@ -215,7 +279,8 @@ impl Aplikacija {
                 &mut self.ikone,
                 &boje,
             );
-        } else {
+        } else if self.aktivni_dijalog.is_none() {
+            // Dok dijalog čeka odgovor, Delete i prečaci ne smiju mijenjati projekt ispod njega.
             self.obradi_tipkovnicu(ui);
         }
 
@@ -239,6 +304,7 @@ impl Aplikacija {
             &boje,
         );
         self.crtaj_statusnu_traku(ui, w, h, &boje);
+        self.crtaj_slojeve_dijaloga(ui, &boje);
 
         self.zadnje_vrijeme_okvira = pocetak.elapsed();
     }
@@ -311,15 +377,23 @@ impl Aplikacija {
         } else if key == Key::F2 {
             let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
         } else if matches!(key, Key::Delete | Key::Backspace) && !self.karta.u_tijeku() {
-            let _ = obrisi_odabrano(&mut self.uredjivac, &mut self.stanje);
+            self.pokreni_brisanje();
         }
     }
 
     fn obradi_cmd_precac(&mut self, key: Key, shift: bool) {
-        if key == Key::Z && !shift {
-            let _ = self.uredjivac.ponisti();
-        } else if key == Key::Y || (key == Key::Z && shift) {
-            let _ = self.uredjivac.ponovi();
+        match (key, shift) {
+            (Key::Z, false) => {
+                let _ = self.uredjivac.ponisti();
+            }
+            (Key::Y, _) | (Key::Z, true) => {
+                let _ = self.uredjivac.ponovi();
+            }
+            (Key::N, false) => self.pokreni_radnju_datoteke(StavkaIzbornikaDatoteka::Novi),
+            (Key::O, false) => self.pokreni_radnju_datoteke(StavkaIzbornikaDatoteka::Otvori),
+            (Key::S, false) => self.pokreni_radnju_datoteke(StavkaIzbornikaDatoteka::Spremi),
+            (Key::S, true) => self.pokreni_radnju_datoteke(StavkaIzbornikaDatoteka::SpremiKao),
+            _ => {}
         }
     }
 
@@ -357,7 +431,15 @@ impl Aplikacija {
             let naziv = self.katalog.tekst(kljuc);
             let sirina = naziv.chars().count() as f32 * 7.2 + 14.0;
             tekst_lijevo(ui, pos2(x, 20.0), &naziv, font_obicni(13.0), boje.tekst_2);
-            if kljuc == "izbornik-slojevi" {
+            if kljuc == "izbornik-datoteka" {
+                let inter = Rect::from_min_size(pos2(x - 4.0, 6.0), vec2(sirina, 28.0));
+                let id = ui.make_persistent_id("izbornik_stavka_datoteka");
+                let odg = ui.interact(inter, id, Sense::click());
+                odg.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), &naziv));
+                if odg.clicked() {
+                    self.izbornik_datoteka_otvoren = !self.izbornik_datoteka_otvoren;
+                }
+            } else if kljuc == "izbornik-slojevi" {
                 let inter = Rect::from_min_size(pos2(x - 4.0, 6.0), vec2(sirina, 28.0));
                 let id = ui.make_persistent_id("izbornik_stavka_slojevi");
                 let odg = ui.interact(inter, id, Sense::click());
@@ -396,7 +478,7 @@ impl Aplikacija {
             // Otvaranje u QGIS-u je planirano za integracijsko izdanje; zasad je gumb pripremljen.
         }
 
-        if let Some(datoteka_status) = naziv_datoteke_status(&self.stanje, &self.katalog) {
+        if let Some(datoteka_status) = self.odredi_naziv_datoteke() {
             tekst_desno(
                 ui,
                 pos2(w - 276.0, 20.0),
@@ -765,10 +847,249 @@ impl Aplikacija {
         }
     }
 
+    pub fn pokreni_radnju_datoteke(&mut self, stavka: StavkaIzbornikaDatoteka) {
+        match stavka {
+            StavkaIzbornikaDatoteka::Novi => self.pokreni_novi(),
+            StavkaIzbornikaDatoteka::Otvori => self.pokreni_otvori(),
+            StavkaIzbornikaDatoteka::Spremi => {
+                if let Err(poruka) = self.izvrsi_spremanje() {
+                    self.postavi_gresku_spremanja(poruka);
+                }
+            }
+            StavkaIzbornikaDatoteka::SpremiKao => self.izvrsi_spremi_kao(),
+        }
+    }
+
+    fn pokreni_novi(&mut self) {
+        if self.uredjivac.je_li_izmijenjen() {
+            self.aktivni_dijalog = Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi));
+        } else {
+            radnja_novi(&mut self.uredjivac, &mut self.datoteka, &mut self.stanje);
+            self.karta.novi_projekt(self.uredjivac.projekt());
+        }
+    }
+
+    fn pokreni_otvori(&mut self) {
+        if self.uredjivac.je_li_izmijenjen() {
+            self.aktivni_dijalog =
+                Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Otvori));
+        } else {
+            self.izvrsi_otvaranje();
+        }
+    }
+
+    fn izvrsi_spremi_kao(&mut self) {
+        if let Some(staza) = self.birac.spremi_datoteku(None)
+            && let Err(poruka) = radnja_spremi_kao(
+                &mut self.uredjivac,
+                &mut self.datoteka,
+                &self.katalog,
+                staza,
+            )
+        {
+            self.postavi_gresku_spremanja(poruka);
+        }
+    }
+
+    fn postavi_gresku_spremanja(&mut self, poruka: String) {
+        self.aktivni_dijalog = Some(AktivniDijalog::PorukaGreske {
+            naslov: self.katalog.tekst("greska-spremanja-naslov"),
+            poruka,
+        });
+    }
+
+    fn izvrsi_otvaranje(&mut self) {
+        if let Some(staza) = self.birac.otvori_datoteku() {
+            match radnja_otvori(
+                &mut self.uredjivac,
+                &mut self.datoteka,
+                &mut self.stanje,
+                &self.katalog,
+                staza,
+            ) {
+                Ok(upozorenja) => {
+                    self.karta.novi_projekt(self.uredjivac.projekt());
+                    if !upozorenja.is_empty() {
+                        self.aktivni_dijalog = Some(AktivniDijalog::UpozorenjaOtvaranja {
+                            upozorenja,
+                            otvoren_popis: false,
+                        });
+                    }
+                }
+                Err(poruka) => {
+                    self.aktivni_dijalog = Some(AktivniDijalog::PorukaGreske {
+                        naslov: self.katalog.tekst("greska-otvaranja-naslov"),
+                        poruka,
+                    });
+                }
+            }
+        }
+    }
+
+    fn izvrsi_spremanje(&mut self) -> Result<bool, String> {
+        let spremljeno = radnja_spremi(&mut self.uredjivac, &mut self.datoteka, &self.katalog)?;
+        if !spremljeno {
+            if let Some(staza) = self.birac.spremi_datoteku(None) {
+                radnja_spremi_kao(
+                    &mut self.uredjivac,
+                    &mut self.datoteka,
+                    &self.katalog,
+                    staza,
+                )?;
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        } else {
+            Ok(true)
+        }
+    }
+
+    fn pokreni_brisanje(&mut self) {
+        let Some(cilj) = self.stanje.odabrano else {
+            return;
+        };
+        match cilj {
+            Odabir::Sloj(id) => {
+                let stavka = Stavka::Sloj(id);
+                let nepodrzani = self.uredjivac.projekt().nepodrzani_zapisi(stavka);
+                if nepodrzani > 0 {
+                    let naziv = self
+                        .uredjivac
+                        .projekt()
+                        .sloj(id)
+                        .map_or("".into(), |s| s.naziv.clone());
+                    self.aktivni_dijalog = Some(AktivniDijalog::UpozorenjeBrisanja {
+                        stavka,
+                        naziv,
+                        broj_nepodrzanih: nepodrzani,
+                    });
+                    return;
+                }
+            }
+            Odabir::Mapa(id) => {
+                let stavka = Stavka::Mapa(id);
+                let nepodrzani = self.uredjivac.projekt().nepodrzani_zapisi(stavka);
+                if nepodrzani > 0 {
+                    let naziv = self
+                        .uredjivac
+                        .projekt()
+                        .mapa(id)
+                        .map_or("".into(), |m| m.naziv.clone());
+                    self.aktivni_dijalog = Some(AktivniDijalog::UpozorenjeBrisanja {
+                        stavka,
+                        naziv,
+                        broj_nepodrzanih: nepodrzani,
+                    });
+                    return;
+                }
+            }
+            Odabir::Objekt(_, _) => {}
+        }
+        let _ = obrisi_odabrano(&mut self.uredjivac, &mut self.stanje);
+    }
+
+    fn crtaj_slojeve_dijaloga(&mut self, ui: &mut egui::Ui, boje: &Boje) {
+        if let Some(odabrana_stavka) = crtaj_padajuci_izbornik_datoteka(
+            ui,
+            &mut self.izbornik_datoteka_otvoren,
+            boje,
+            &self.katalog,
+        ) {
+            self.pokreni_radnju_datoteke(odabrana_stavka);
+        }
+
+        if let Some(mut dijalog) = self.aktivni_dijalog.take() {
+            let ishod = crtaj_aktivni_dijalog(ui, &mut dijalog, boje, &self.katalog);
+            match ishod {
+                Some(ishod) => self.obradi_ishod_dijaloga(ui, ishod, dijalog),
+                None => {
+                    self.aktivni_dijalog = Some(dijalog);
+                }
+            }
+        }
+    }
+
+    fn obradi_ishod_dijaloga(
+        &mut self,
+        ui: &mut egui::Ui,
+        ishod: IshodDijaloga,
+        mut dijalog: AktivniDijalog,
+    ) {
+        match ishod {
+            IshodDijaloga::PotvrdaSpremi(namjera) => {
+                self.obradi_potvrdu_spremi(ui, namjera, dijalog);
+            }
+            IshodDijaloga::PotvrdaNeSpremaj(namjera) => {
+                self.aktivni_dijalog = None;
+                self.nastavi_nakon_potvrde(ui, namjera);
+            }
+            IshodDijaloga::PotvrdaOdustani => self.aktivni_dijalog = None,
+            IshodDijaloga::ObrisiPotvrdjeno(stavka) => self.obradi_potvrdu_brisanja(stavka),
+            IshodDijaloga::ObrisiOdustani => self.aktivni_dijalog = None,
+            IshodDijaloga::UpozorenjaPreklopiPopis => {
+                if let AktivniDijalog::UpozorenjaOtvaranja {
+                    ref mut otvoren_popis,
+                    ..
+                } = dijalog
+                {
+                    *otvoren_popis = !*otvoren_popis;
+                }
+                self.aktivni_dijalog = Some(dijalog);
+            }
+            IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
+        }
+    }
+
+    fn obradi_potvrdu_spremi(
+        &mut self,
+        ui: &mut egui::Ui,
+        namjera: NamjeraPotvrde,
+        dijalog: AktivniDijalog,
+    ) {
+        match self.izvrsi_spremanje() {
+            Ok(true) => {
+                self.aktivni_dijalog = None;
+                self.nastavi_nakon_potvrde(ui, namjera);
+            }
+            Ok(false) => {
+                self.aktivni_dijalog = Some(dijalog);
+            }
+            Err(poruka) => {
+                self.postavi_gresku_spremanja(poruka);
+            }
+        }
+    }
+
+    fn obradi_potvrdu_brisanja(&mut self, stavka: Stavka) {
+        let _ = self.uredjivac.izvrsi(NaredbaStabla::Obrisi { stavka });
+        self.stanje.odabrano = None;
+        self.aktivni_dijalog = None;
+    }
+
+    fn nastavi_nakon_potvrde(&mut self, ui: &mut egui::Ui, namjera: NamjeraPotvrde) {
+        match namjera {
+            NamjeraPotvrde::Novi => {
+                radnja_novi(&mut self.uredjivac, &mut self.datoteka, &mut self.stanje);
+                self.karta.novi_projekt(self.uredjivac.projekt());
+            }
+            NamjeraPotvrde::Otvori => {
+                self.izvrsi_otvaranje();
+            }
+            NamjeraPotvrde::ZatvoriProzor => {
+                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+            }
+        }
+    }
+
     fn obradi_snimanje_zaslona(&mut self, ui: &egui::Ui) {
         let Some(putanja) = self.snimka.clone() else {
             return;
         };
+        if self.pocetak_rada.elapsed() > Duration::from_secs(60) {
+            eprintln!("Isteklo vrijeme za stvaranje snimke zaslona (60 s)");
+            std::process::exit(1);
+        }
         self.okvir_brojac += 1;
         let ceka = self.pocetak.elapsed() < self.cekanje_snimke;
         if ceka {
@@ -776,10 +1097,9 @@ impl Aplikacija {
             self.okvir_brojac = 1;
         }
         if self.okvir_brojac == 2 {
-            let ctx = ui.ctx().clone();
             ui.ctx().request_screenshot(move |slika| {
                 spremi_sliku_zaslona(&slika, &putanja);
-                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                std::process::exit(0);
             });
         }
         ui.ctx().request_repaint();
@@ -911,6 +1231,7 @@ mod testovi {
                 ploca_lijevo: true,
                 snimka: Some(PathBuf::from("a.png")),
                 podloga_s_mreze: false,
+                dijalog: None,
             }
         );
 

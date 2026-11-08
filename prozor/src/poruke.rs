@@ -80,6 +80,89 @@ impl KatalogPoruka {
         self.dohvati("status-koordinate", Some(&argumenti))
     }
 
+    #[must_use]
+    pub fn broj_nepodrzanih_zapisa(&self, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("broj", broj);
+        self.dohvati("broj-nepodrzanih-zapisa", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn upozorenje_brisanja_sloja(&self, naziv: &str, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        let broj_tekst = self.broj_nepodrzanih_zapisa(broj);
+        argumenti.set("naziv", naziv);
+        argumenti.set("broj_zapisa", broj_tekst);
+        self.dohvati("brisanje-upozorenje-sloj", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn upozorenje_brisanja_mape(&self, naziv: &str, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        let broj_tekst = self.broj_nepodrzanih_zapisa(broj);
+        argumenti.set("naziv", naziv);
+        argumenti.set("broj_zapisa", broj_tekst);
+        self.dohvati("brisanje-upozorenje-mapa", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn upozorenja_otvaranja_poruka(&self, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("broj", broj);
+        self.dohvati("upozorenja-broj", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn pokazi_popis_upozorenja(&self, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("broj", broj);
+        self.dohvati("upozorenja-pokazi-popis", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn status_datoteke_spremljeno(&self, naziv: &str, vrijeme: &str) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("naziv", naziv);
+        argumenti.set("vrijeme", vrijeme);
+        self.dohvati("datoteka-status-spremljeno", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn status_datoteke_izmijenjeno(&self, naziv: &str) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("naziv", naziv);
+        self.dohvati("datoteka-status-izmijenjeno", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn status_datoteke_spremljeno_izmijenjeno(&self, naziv: &str, vrijeme: &str) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("naziv", naziv);
+        argumenti.set("vrijeme", vrijeme);
+        self.dohvati("datoteka-status-spremljeno-izmijenjeno", Some(&argumenti))
+    }
+
+    #[must_use]
+    pub fn greska_spremanja(&self, detalji: &str) -> String {
+        if detalji.contains("promijenjena")
+            || detalji.contains("data_version")
+            || detalji.contains("verzija")
+        {
+            self.tekst("greska-sukob-promjena")
+        } else {
+            let mut argumenti = FluentArgs::new();
+            argumenti.set("detalji", detalji);
+            self.dohvati("greska-spremanja-opcenito", Some(&argumenti))
+        }
+    }
+
+    #[must_use]
+    pub fn greska_otvaranja(&self, detalji: &str) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("detalji", detalji);
+        self.dohvati("greska-otvaranja-opcenito", Some(&argumenti))
+    }
+
     fn dohvati(&self, kljuc: &str, argumenti: Option<&FluentArgs<'_>>) -> String {
         let poruka = self
             .sveznik
@@ -223,5 +306,59 @@ mod testovi {
         );
         assert_eq!(katalog.s_rednim("novi-sloj-naziv", 3), "Sloj 3");
         assert_eq!(katalog.tekst("naslov-aplikacije"), "TerraSimple");
+    }
+
+    #[test]
+    fn oblikovanje_poruka_za_datoteku_i_brisanje() {
+        let katalog = KatalogPoruka::hrvatski();
+        assert_eq!(katalog.broj_nepodrzanih_zapisa(1), "1 zapis");
+        assert_eq!(katalog.broj_nepodrzanih_zapisa(2), "2 zapisa");
+        assert_eq!(katalog.broj_nepodrzanih_zapisa(5), "5 zapisa");
+        assert_eq!(
+            katalog.upozorenje_brisanja_sloja("Parcele", 5),
+            "Sloj „Parcele” ima 5 zapisa koje program ne prikazuje, npr. krivulje ili prazne geometrije. Kad spremiš projekt, nestat će i oni."
+        );
+        assert_eq!(
+            katalog.upozorenje_brisanja_mape("Uvezeno", 1),
+            "Mapa „Uvezeno” ima 1 zapis koje program ne prikazuje, npr. krivulje ili prazne geometrije. Kad spremiš projekt, nestat će i oni."
+        );
+        assert_eq!(
+            katalog.upozorenja_otvaranja_poruka(1),
+            "Pri otvaranju je zabilježeno 1 upozorenje."
+        );
+        assert_eq!(
+            katalog.upozorenja_otvaranja_poruka(3),
+            "Pri otvaranju su zabilježena 3 upozorenja."
+        );
+        assert_eq!(
+            katalog.upozorenja_otvaranja_poruka(5),
+            "Pri otvaranju je zabilježeno 5 upozorenja."
+        );
+        assert_eq!(
+            katalog.status_datoteke_spremljeno("teren.gpkg", "14:20"),
+            "teren.gpkg · spremljeno 14:20"
+        );
+        assert_eq!(
+            katalog.status_datoteke_izmijenjeno("teren.gpkg"),
+            "teren.gpkg · nespremljeno"
+        );
+        assert_eq!(
+            katalog.status_datoteke_spremljeno_izmijenjeno("teren.gpkg", "14:20"),
+            "teren.gpkg · spremljeno 14:20 (nespremljeno)"
+        );
+        assert_eq!(
+            katalog.greska_spremanja("promijenjena u drugom programu"),
+            "Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno."
+        );
+        assert!(
+            katalog
+                .greska_spremanja("disk je pun")
+                .contains("disk je pun")
+        );
+        assert!(
+            katalog
+                .greska_otvaranja("kriva datoteka")
+                .contains("kriva datoteka")
+        );
     }
 }

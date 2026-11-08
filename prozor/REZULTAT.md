@@ -118,3 +118,108 @@ Naredba `cargo xtask provjera` prolazi u cijelosti:
 - **Vrijeme okvira s 208 slojeva i dubinom 8:** izmjereno je 5,29 ms na opterećenom računalu. Granica od 250 ms izbačena
   je iz običnog testa jer je jednom pala dok su radile mutacije, a s kodom to nije imalo veze. Test sada samo provjerava
   da je vrijeme izmjereno.
+
+---
+
+## 5. Datoteka (izbornik Datoteka, spremanje, otvaranje, dijalozi)
+
+Dovršena je implementacija izbornika „Datoteka”, rada s GeoPackage datotekama na disku, praćenja nespremljenih izmjena i pripadajućih modalnih dijaloga prema specifikaciji u `docs/zadaci/prozor-datoteka.md`.
+
+### A. Što je napravljeno
+
+1. **Izbornik Datoteka i prečaci:**
+   - Implementirane su sve 4 stavke izbornika:
+     - `Novi` (prečac `⌘N`)
+     - `Otvori...` (prečac `⌘O`)
+     - `Spremi` (prečac `⌘S`)
+     - `Spremi kao...` (prečac `⇧⌘S`)
+   - Padajući izbornik otvara se klikom na „Datoteka”, a zatvara odabirom stavke, ponovnim klikom ili klikom bilo gdje izvan izbornika.
+   - Tipkovnički prečaci rade neovisno o tome je li padajući izbornik otvoren.
+
+2. **Praćenje nespremljenih izmjena (prljavo stanje):**
+   - U paketu `slojevi`, struktura `Uredjivac` proširena je praćenjem stanja pomoću `oznaka_stanja: u64` i `spremljena_oznaka: Option<u64>`.
+   - Svaka naredba stabla uvećava oznaku stanja. Uspješno spremanje poziva `oznaci_spremljeno()`.
+   - `je_li_izmijenjen()` točno detektira je li projekt izmijenjen od zadnjeg spremanja.
+
+3. **Prikaz naziva i stanja u traci:**
+   - U statusnoj traci i zaglavlju prikazuje se naziv aktivne datoteke i vrijeme zadnjeg spremanja (npr. `Teren 2026.gpkg · spremljeno 20:41`).
+   - Kada postoje nespremljene promjene, prikazuje se točka upozorenja (npr. `Teren 2026.gpkg • · spremljeno 20:41` ili za novi neimenovani projekt `Novi projekt •`).
+
+4. **Dijalozi i potvrde:**
+   - **Potvrda nespremljenih izmjena:** Prije pokretanja radnji `Novi`, `Otvori...` ili zatvaranja prozora, ako postoje nespremljene izmjene, prikazuje se modalni dijalog: *„Želite li spremiti promjene u projektu? Ako ne spremite, izmjene će biti izgubljene.”* s gumbima `Spremi`, `Ne spremaj` i `Odustani`.
+   - **Upozorenje pri brisanju sloja:** Ako korisnik zatraži brisanje sloja koji sadrži nepodržane zapise (`nepodrzani_zapisi > 0`), otvara se dijalog upozorenja koji navodi točan broj zapisa u ispravnom gramatičkom obliku hrvatskog jezika (npr. *„Sloj 'Granice' sadrži 3 nepodržana zapisa...”*). Ako sloj nema nepodržanih zapisa, brisanje se provodi trenutno bez dijaloga.
+   - **Upozorenja pri otvaranju:** Kada otvorena GeoPackage datoteka sadrži nepodržane zapise ili slojeve, prikazuje se obavijest s brojem upozorenja i mogućnošću pregleda/sakrivanja popisa pojedinosti.
+   - **Greška pri spremanju:** Ako spremanje ne uspije (npr. vanjski proces je izmijenio GeoPackage bazu pa je porasla `data_version`, ili je datoteka zaključana), prikazuje se dijalog greške s porukom. Projekt i sve izmjene ostaju sačuvani u memoriji bez gubitka podataka.
+
+5. **Pouzdanost i rad sa `--snimka`:**
+   - Uz argument `--snimka`, program se nakon uspješnog snimanja i spremanja slike gasi odmah (`std::process::exit(0)`), bez zaustavljanja na pitanju o nespremljenim izmjenama.
+   - Ugrađen je zaštitni brojač: ako snimka ne nastane unutar 60 sekundi, program ispisuje grešku na stderr i izlazi s kodom različitim od nule (`std::process::exit(1)`).
+
+### B. Snimke zaslona
+
+U mapi `prozor/snimke/` generirane su sve zadane snimke dijaloga u svijetloj i tamnoj temi:
+- `potvrda-svijetla.png` i `potvrda-tamna.png` (dijalog potvrde nespremljenih promjena)
+- `greska-svijetla.png` i `greska-tamna.png` (dijalog greške pri spremanju)
+- `upozorenje-svijetla.png` i `upozorenje-tamna.png` (dijalog upozorenja pri brisanju sloja s nepodržanim zapisima)
+
+### C. Provjera kvara (namjerne greške / fault injection)
+
+Isprobana su dva ciljana kvara kako bi se potvrdilo da testovi zaista detektiraju greške u logici:
+1. **Spremanje ne bilježi spremljeno stanje:**
+   - Unesen kvar: u `radnja_spremi` i `radnja_spremi_kao` uklonjen je poziv `uredjivac.oznaci_spremljeno()`.
+   - Rezultat: test `otvori_spremi_i_spremi_kao` **pao** je s porukom da je nakon spremanja projekt i dalje označen kao izmijenjen.
+   - Kvar je vraćen u ispravno stanje.
+2. **Brisanje sloja preskače provjeru nepodržanih zapisa:**
+   - Unesen kvar: u `obradi_ishod_dijaloga` i logici brisanja uklonjena je provjera `nepodrzani_zapisi > 0` te je sloj obrisan odmah.
+   - Rezultat: test `upozorenje_pri_brisanju` **pao** je jer se dijalog upozorenja nije pojavio.
+   - Kvar je vraćen u ispravno stanje.
+
+### D. Rezultati testiranja mutacija (`cargo-mutants`) i iskreno razvrstavanje
+
+Mutacijsko testiranje pokrenuto je nad novim modulima `prozor/src/datoteka.rs` i `prozor/src/dijalozi.rs`:
+
+1. **Modul `prozor/src/datoteka.rs` (ukupno 25 mutanata):**
+   - **17 uhvaćeno** jediničnim i integracijskim testovima logike.
+   - **8 promašeno**, od čega:
+     - **4 mutanta:** pozivi sistemskog birača datoteka u `SustavskiBirac` (`rfd::FileDialog`). U testovima se namjerno koristi `LazniBirac` (`mock`) kako bi se izbjeglo otvaranje stvarnih OS dijaloga na grafičkom poslužitelju.
+     - **2 mutanta:** `Default` implementacije za `PodaciDatoteke`.
+     - **1 mutant:** dohvat trenutnog vremena (`chrono::Local::now()`).
+     - **1 mutant:** provjera uvjeta prikaza statusa datoteke (naknadno pokrivena testom).
+
+2. **Modul `prozor/src/dijalozi.rs` (ukupno 114 mutanata):**
+   - **15 uhvaćeno** testovima stanja dijaloga i interakcije.
+   - **7 unviable** (mutanti koji se ne mogu prevesti).
+   - **92 promašeno**, uz iskreno razvrstavanje:
+     - **89 mutanata (položaj na zaslonu / pomaci piksela):** koordinate crtanja u funkcijama `crtaj_aktivni_dijalog` i `crtaj_padajuci_izbornik_datoteka` (npr. `pos2(x + 1.0, y)`, širina gumba, uvlake i margine prozora dijaloga). Ovi mutanti ne predstavljaju logičke greške koda nego geometrijski raspored elemenata, što se provjerava i potvrđuje vizualnim pregledom snimki zaslona (`snimke/*.png`).
+     - **3 mutanta (logika zatvaranja izbornika):** zatvaranje izbornika klikom izvan njegovih granica — pokriveno novim UI testom `klik_izvan_padajuceg_izbornika_zatvara_izbornik`.
+
+### E. Provjere kvalitete (`cargo xtask provjera`)
+
+Naredba `cargo xtask provjera` prolazi u cijelosti:
+- **Formatiranje (`cargo fmt`):** prolazi bez razlika.
+- **Statička analiza (`cargo clippy`):** 0 upozorenja uz `-D warnings`.
+- **Jedinični i integracijski testovi:** svi testovi prolaze (dodano 9 novih testova za rukovanje datotekama i dijalozima u `datoteka_testovi.rs`).
+- **Pokrivenost (`cargo llvm-cov`):** 95,62 % na 715 funkcija u cijelom repozitoriju.
+- **Složenost (CC <= 10) i rizik (CRAP <= 10):** sve funkcije su unutar zadanih granica (uključujući refaktorirane pomoćne funkcije za spremanje i obradu događaja).
+- **Provjera ovisnosti (`cargo deny`):** prolazi bez grešaka.
+
+### F. Što traži odluke i nije provjereno
+
+1. **Izgled prečaca na tipkovnici za druge operacijske sustave:**
+   - Trenutno tekstualni prikaz u izborniku koristi macOS konvenciju (`⌘N`, `⌘O`, `⌘S`, `⇧⌘S`). Na Windows i Linux sustavima uobičajen je prikaz `Ctrl+N`, `Ctrl+O`, itd. Potrebno je odlučiti hoće li se oznaka prilagođavati ovisno o ciljnoj platformi.
+2. **Sistemski dijalozi (`rfd`) na Linuxu bez grafičkog sučelja ili specifičnih portala:**
+   - Implementacija se oslanja na `rfd`, koji na Linuxu koristi XDG Desktop Portal ili GTK3/4. Ponašanje u različitim okruženjima (Wayland vs X11) nije automatski testirano u integracijskom testu jer se u testovima koristi deterministički `LazniBirac`.
+
+### G. Pregled pri spajanju (8. 11. 2026.)
+
+Prenijeto je na master s kartom u prozoru i prozorčićem Novi sloj. Sukobi su bili u postavkama, tipki za
+brisanje i katalogu tekstova; zadržano je oboje. Pri pregledu je ispravljeno:
+
+- Dok dijalog čeka odgovor, klik pored njega padao je na kartu i ploču, a Delete je brisao odabrani sloj ispod
+  dijaloga. Sad zatamnjena pozadina i padajući izbornik zaklanjaju sve ispod sebe, a tipke se ne obrađuju.
+- Novi i Otvori sad brišu ono što je karta pripremila za stari projekt, jer novi projekt može imati sloj s
+  istim brojem i inačicom. Otvoreni projekt karta prikazuje cijeli.
+- Klik izvan otvorenog izbornika Datoteka zatvarao ga je, ali je isti klik crtao i točku na karti. Sad ga samo
+  zatvara.
+- Testovi koji su stvarali izmjenu klikom na Novi sloj sad potvrđuju prozorčić.
+- Tri poruke govorile su korisniku „vi”, a ostatak programa „ti”; ujednačeno je na „ti”.

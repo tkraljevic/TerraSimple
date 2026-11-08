@@ -92,3 +92,44 @@ fn ucitani_brojevi_se_ne_ponavljaju_a_ponistavanje_ostaje_promjena() {
     assert_eq!(u.projekt().izmjene_od(&spremljeno).obrisi.len(), 1);
     assert_eq!(u.projekt(), &p);
 }
+
+#[test]
+fn oznaka_stanja_prati_spremanje_ponistavanje_i_ponavljanje() {
+    let p = Projekt::iz_zapisa(
+        vec![Stavka::Sloj(IdSloja(8))],
+        BTreeMap::new(),
+        BTreeMap::from([(IdSloja(8), prazni_sloj())]),
+        Zapisi::default(),
+    )
+    .unwrap();
+    let mut u = Uredjivac::iz_projekta(p);
+    assert!(!u.je_li_izmijenjen());
+    assert_eq!(u.oznaka_stanja(), 0);
+
+    u.izvrsi(NaredbaObjekta::Dodaj {
+        sloj: IdSloja(8),
+        naziv: "T1".into(),
+        geometrija: Geometrija::Tocka(Vrh::novi(18., 45.)),
+    })
+    .unwrap();
+    assert!(u.je_li_izmijenjen());
+    assert_ne!(u.oznaka_stanja(), 0);
+
+    u.oznaci_spremljeno();
+    assert!(!u.je_li_izmijenjen());
+
+    u.ponisti().unwrap();
+    assert!(u.je_li_izmijenjen());
+
+    u.ponovi().unwrap();
+    assert!(!u.je_li_izmijenjen());
+
+    u.ponisti().unwrap();
+    u.izvrsi(NaredbaObjekta::Dodaj {
+        sloj: IdSloja(8),
+        naziv: "T2".into(),
+        geometrija: Geometrija::Tocka(Vrh::novi(19., 46.)),
+    })
+    .unwrap();
+    assert!(u.je_li_izmijenjen());
+}

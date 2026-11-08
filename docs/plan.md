@@ -508,6 +508,18 @@ u `geopaket/PROSIRENJE.md`.
 - **Otvoreno:** fuzz čitača još nije uveden, iako ga `kvaliteta.md` traži od prvog čitača nepouzdanih
   datoteka. Nightly Rust i `cargo-fuzz` instalirani su 8. 11.
 
+**Izbornik Datoteka (8. 11. 2026.):** Novi, Otvori, Spremi i Spremi kao, s prečacima i sustavskim prozorom za
+izbor datoteke (`rfd`, na Linuxu preko XDG portala). Novi, Otvori i zatvaranje pitaju za nespremljene izmjene, a
+uz naziv datoteke vidi se kad ih ima. Brisanje sloja ili mape s neobičnim zapisima najprije upozorava. Greške
+pri otvaranju i spremanju javljaju se u dijalogu i ne gube projekt. Cijeli izvještaj je u `prozor/REZULTAT.md`.
+
+- **Nespremljene izmjene** prati `Uredjivac`: svaki korak povijesti ima oznaku, pa poništavanje do spremljenog
+  stanja opet znači „spremljeno”.
+- **Pri spajanju ispravljeno:** klik i Delete prolazili su kroz otvoren dijalog na kartu i ploču, a nakon Otvori
+  karta je mogla crtati slojeve starog projekta. Otvoreni projekt sad se prikazuje cijeli.
+- **Nije provjereno:** pravi prozor za izbor datoteke na sva tri sustava, Windows i Linux. Oznake prečaca su
+  „Ctrl+…” i na macOS-u; treba odlučiti hoće li Mac pokazivati ⌘.
+
 **Fuzz čitača i paket `qgis` (8. 11. 2026.):** izvještaji su u `fuzz/REZULTAT.md` i `qgis/REZULTAT.md`.
 
 - **Fuzz:** tri cilja, geometrija, QML stil i cijela datoteka, po 30 minuta: ukupno 4 072 126 ulaza bez pada,
