@@ -1,0 +1,10 @@
+{
+  "provjera": "Gubitak visine u stvarnom čitaču geometrije",
+  "datoteka": "geopaket/src/geometrija.rs",
+  "promjena": "Prijenos visine zamijenjen je s None.",
+  "izlazni_kod": 101,
+  "test_je_pao": true,
+  "izvorni_kod_vracen": true,
+  "obnovljeni_test_prosao": true,
+  "sha256_obnovljenog_koda": "322bd4c45a64ab7d9251ae8687866485ede5c03d7edadd065d55dc77d87135b4"
+}

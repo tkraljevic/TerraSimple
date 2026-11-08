@@ -1,0 +1,383 @@
+{
+  "redovna": {
+    "prosla": true,
+    "funkcija_ukupno": 359,
+    "pokrivenost_podrucja": 0.9690365248759958,
+    "testova_proslo": 153,
+    "zanemarenih_podprocesnih_testova": 1,
+    "geopaket_funkcija": 186,
+    "geopaket_najveci_cc": 7,
+    "geopaket_najveci_crap": 7.0,
+    "geopaket_najniza_pokrivenost_funkcije": 0.9523809523809523
+  },
+  "mjerenje": {
+    "citanje_s": 4.588234208,
+    "jedan_objekt_s": 1.081991041,
+    "jedan_objekt_transakcija_s": 0.004068042,
+    "memorija_nakon_citanja_b": 1008467968,
+    "memorija_nakon_spremanja_b": 554582016,
+    "memorija_pripremljeno_b": 159596544,
+    "objekata": 87105,
+    "slojeva": 208,
+    "spremanje_s": 10.704003333,
+    "transakcija_pocetna_s": 6.535809458,
+    "vrhova": 3048675,
+    "uvjeti": "macOS arm64, release, taskpolicy -b, izmišljene linije od 35 vrhova; računalo je istodobno izvršavalo druge poslove",
+    "jedna_izmjena": "opis jednog postojećeg objekta",
+    "metoda_transakcije": "SQL upisi i COMMIT nakon BEGIN IMMEDIATE i provjere data_version; čekanje zaključavanja nije uključeno.",
+    "najveci_rss_b": 1022689280,
+    "najveci_otisak_b": 757630008
+  },
+  "qgis": {
+    "verzija": "3.44.15-Solothurn",
+    "gdal": "3.13.3",
+    "bez_prozora": true,
+    "provjere": [
+      {
+        "provjera": "GDAL validator: nas.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS otvara sloj_1",
+        "prosla": true
+      },
+      {
+        "provjera": "Z ostaje sloj_1",
+        "prosla": true
+      },
+      {
+        "provjera": "stil se otvara sloj_1",
+        "prosla": true
+      },
+      {
+        "provjera": "skriveni stilovi sloj_1",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS otvara sloj_3",
+        "prosla": true
+      },
+      {
+        "provjera": "Z ostaje sloj_3",
+        "prosla": true
+      },
+      {
+        "provjera": "stil se otvara sloj_3",
+        "prosla": true
+      },
+      {
+        "provjera": "skriveni stilovi sloj_3",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS otvara sloj_5",
+        "prosla": true
+      },
+      {
+        "provjera": "Z ostaje sloj_5",
+        "prosla": true
+      },
+      {
+        "provjera": "stil se otvara sloj_5",
+        "prosla": true
+      },
+      {
+        "provjera": "skriveni stilovi sloj_5",
+        "prosla": true
+      },
+      {
+        "provjera": "gpkg_ts tablice nisu slojevi",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS sprema izmjene",
+        "prosla": true
+      },
+      {
+        "provjera": "naš čitač vidi naziv",
+        "prosla": true
+      },
+      {
+        "provjera": "NULL je prijavljen",
+        "prosla": true
+      },
+      {
+        "provjera": "naš čitač vidi QGIS stil",
+        "prosla": true
+      },
+      {
+        "provjera": "naš čitač vidi pomak vrha",
+        "prosla": true
+      },
+      {
+        "provjera": "tuđi stupac i svi izvorni zapisi ostaju",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS ponovno otvara",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS stil ostaje nakon našeg spremanja",
+        "prosla": true
+      },
+      {
+        "provjera": "GDAL validator: nas.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS piše svoj paket",
+        "prosla": true
+      },
+      {
+        "provjera": "naš čitač otvara QGIS sustav i Z",
+        "prosla": true
+      },
+      {
+        "provjera": "neizmijenjeno nema kruga preračuna",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS otvara naš upis u svoju datoteku",
+        "prosla": true
+      },
+      {
+        "provjera": "GDAL validator: qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "opcionalna Z dimenzija qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "izvorni bajtovi nakon dodavanja qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "identitet stranog sloja ostaje qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "visina dodanog objekta qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS otvara miješane dimenzije qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "GDAL validator: qgis.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS piše 2D sloj",
+        "prosla": true
+      },
+      {
+        "provjera": "opcionalna Z dimenzija ravnina.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "izvorni bajtovi nakon dodavanja ravnina.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "identitet stranog sloja ostaje ravnina.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "visina dodanog objekta ravnina.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS otvara miješane dimenzije ravnina.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "GDAL validator: ravnina.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS piše HDKS",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS zapis je pod 100000",
+        "prosla": true
+      },
+      {
+        "provjera": "čitanje QGIS-ova 100000",
+        "prosla": true
+      },
+      {
+        "provjera": "GDAL validator: hdks.gpkg",
+        "prosla": true
+      },
+      {
+        "provjera": "QGIS piše CompoundCurve",
+        "prosla": true
+      },
+      {
+        "provjera": "krivulja je prijavljena kao nepodržana",
+        "prosla": true
+      },
+      {
+        "provjera": "novi upis u nepodržani sloj je odbijen",
+        "prosla": true
+      },
+      {
+        "provjera": "krivulja ostaje bajt za bajt",
+        "prosla": true
+      },
+      {
+        "provjera": "GDAL validator: krivulja.gpkg",
+        "prosla": true
+      }
+    ]
+  },
+  "duboka": {
+    "prosla": false,
+    "stanje": "Cijelo mjerenje završeno i nije prošlo. Dopune testova mjerene su zasebno; produkcijski kod nakon punog mjerenja nije mijenjan.",
+    "duplikacija": {
+      "metoda": "retci-10-v1",
+      "ponovljeno": 0,
+      "postotak": 0.0,
+      "ukupno": 6930
+    },
+    "paketi": {
+      "geopaket": {
+        "total_mutants": 531,
+        "caught": 420,
+        "missed": 5,
+        "timeout": 2,
+        "unviable": 104,
+        "start_time": "2026-11-07T20:04:19.173522Z",
+        "end_time": "2026-11-07T21:25:57.931157Z",
+        "nalazi": [
+          {
+            "ishod": "MissedMutant",
+            "promjena": "geopaket/src/geometrija.rs:249:9: replace | with ^ in funkcije"
+          },
+          {
+            "ishod": "MissedMutant",
+            "promjena": "geopaket/src/geometrija.rs:248:9: replace | with ^ in funkcije"
+          },
+          {
+            "ishod": "MissedMutant",
+            "promjena": "geopaket/src/pisanje.rs:877:39: replace && with || in nedostaje_stablo"
+          },
+          {
+            "ishod": "MissedMutant",
+            "promjena": "geopaket/src/pisanje.rs:877:31: replace == with != in nedostaje_stablo"
+          },
+          {
+            "ishod": "MissedMutant",
+            "promjena": "geopaket/src/pisanje.rs:877:63: replace == with != in nedostaje_stablo"
+          },
+          {
+            "ishod": "Timeout",
+            "promjena": "geopaket/src/stil.rs:233:5: replace dogadaj -> Result<bool, Greska> with Ok(true)"
+          },
+          {
+            "ishod": "Timeout",
+            "promjena": "geopaket/src/stil.rs:237:9: delete match arm Event::Eof in dogadaj"
+          }
+        ]
+      },
+      "koordinate": {
+        "total_mutants": 45,
+        "caught": 40,
+        "missed": 0,
+        "timeout": 0,
+        "unviable": 5,
+        "start_time": "2026-11-07T21:25:58.097534Z",
+        "end_time": "2026-11-07T21:26:59.981765Z",
+        "nalazi": []
+      },
+      "geometrija": {
+        "total_mutants": 37,
+        "caught": 35,
+        "missed": 0,
+        "timeout": 0,
+        "unviable": 2,
+        "start_time": "2026-11-07T21:27:00.125847Z",
+        "end_time": "2026-11-07T21:27:49.892341Z",
+        "nalazi": []
+      }
+    },
+    "preostali_nalazi": "Dvije ekvivalentne zamjene bitnih zastavica nemaju iznimku. Puno mjerenje nakon dopuna testova nije ponovljeno; dva izvorna isteka vremena zasebni izravni test sada hvata tvrdnjom."
+  },
+  "dopune_mutacija": [
+    {
+      "razlog": "Spremanje novog projekta više puta bez ponovnog učitavanja i očuvanje fid-a nakon brisanja i poništavanja.",
+      "odabir": "replace povijest ",
+      "ukupno": 1,
+      "uhvaceno": 1,
+      "prezivjelo": 0,
+      "istek": 0,
+      "neprevodivo": 0,
+      "test": "novi_projekt_sprema_vise_izmjena_bez_ponovnog_ucitavanja",
+      "produkcijski_kod_mijenjan": false
+    },
+    {
+      "razlog": "Izravan test završetka XML dokumenta završava tvrdnjom i za mutacije koje cijeli čitač drže u petlji.",
+      "odabir": "Zamjena dogadaj s Ok(true) i brisanje grane Event::Eof.",
+      "test": "stil::zavrsetak_citanja::kraj_dokumenta_zaustavlja_citanje_bez_promjene_stabla",
+      "ukupno": 2,
+      "uhvaceno": 2,
+      "prezivjelo": 0,
+      "istek": 0,
+      "neprevodivo": 0,
+      "produkcijski_kod_mijenjan": false,
+      "cijela_zbirka_testova": false,
+      "nalazi": [
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/stil.rs:233:5: replace dogadaj -> Result<bool, Greska> with Ok(true)"
+        },
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/stil.rs:237:9: delete match arm Event::Eof in dogadaj"
+        }
+      ]
+    },
+    {
+      "razlog": "Provjera identiteta i tablice u istom retku te izbjegavanje ponovnog upisa neizmijenjenog stabla.",
+      "odabir": "nedostaje_stablo",
+      "ukupno": 6,
+      "uhvaceno": 6,
+      "prezivjelo": 0,
+      "istek": 0,
+      "neprevodivo": 0,
+      "test": "pisanje::provjera_novih_upisa::stablo_veze_identitet_i_tablicu_u_istom_retku",
+      "produkcijski_kod_mijenjan": false,
+      "cijela_zbirka_testova": true,
+      "nalazi": [
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/pisanje.rs:870:5: replace nedostaje_stablo -> Result<bool, Greska> with Ok(true)"
+        },
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/pisanje.rs:876:13: delete ! in nedostaje_stablo"
+        },
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/pisanje.rs:870:5: replace nedostaje_stablo -> Result<bool, Greska> with Ok(false)"
+        },
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/pisanje.rs:877:39: replace && with || in nedostaje_stablo"
+        },
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/pisanje.rs:877:31: replace == with != in nedostaje_stablo"
+        },
+        {
+          "ishod": "CaughtMutant",
+          "promjena": "geopaket/src/pisanje.rs:877:63: replace == with != in nedostaje_stablo"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[package]
+name = "geopaket"
+version = "0.0.0"
+edition = "2024"
+license = "EUPL-1.2"
+publish = false
+
+[dependencies]
+slojevi = { path = "../slojevi", version = "0.0.0" }
+koordinate = { path = "../koordinate", version = "0.0.0" }
+rusqlite = { version = "0.41", features = ["bundled", "functions", "backup"] }
+geozero = { version = "0.15", default-features = false, features = ["with-wkb"] }
+quick-xml = "0.42"
+serde_json = "1"
+
+[dev-dependencies]
+# U testovima se stvarni SQLite pozivi odbijaju redom, radi provjere rollbacka.
+rusqlite = { version = "0.41", features = ["hooks"] }

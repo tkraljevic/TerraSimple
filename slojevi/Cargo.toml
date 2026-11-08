@@ -7,3 +7,4 @@ publish = false
 
 [dependencies]
 geometrija = { path = "../geometrija", version = "0.0.0" }
+koordinate = { path = "../koordinate", version = "0.0.0" }

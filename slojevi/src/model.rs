@@ -183,6 +183,7 @@ pub struct Sloj {
 /// Cijeli sadržaj projekta. Mijenja se samo kroz `Uredjivac`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Projekt {
+    pub(crate) zapisi: crate::zapis::Zapisi,
     pub(crate) korijen: Vec<Stavka>,
     pub(crate) mape: BTreeMap<IdMape, Mapa>,
     pub(crate) slojevi: BTreeMap<IdSloja, Sloj>,
