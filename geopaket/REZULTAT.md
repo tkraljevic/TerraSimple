@@ -88,7 +88,8 @@ ostaju isti i visina se ne izmišlja. Prije popravka taj je slučaj stvarno odbi
 GDAL validator; nakon popravka oba smjera prolaze.
 
 Krivulje se prijavljuju i čuvaju. Njihovo uređivanje traži odluku. Brisanje sloja
-s nepodržanim ili praznim zapisima i upis u sloj s obveznom M dimenzijom odbijaju
+s nepodržanim ili praznim zapisima dopušteno je uz upozorenje u sučelju (Odluke
+(8. 11. 2026.)), a upis u sloj s obveznom M dimenzijom odbija
 se. Obnova obrisanog sloja vraća shemu, fid, sustav, korisničke indekse i okidače,
 a izvedeni prostorni indeks uklanja. Podržana QML svojstva i ograničenje zamjenskih
 vrijednosti `coalesce` opisani su u README-u. Proizvoljna QGIS simbologija nije
