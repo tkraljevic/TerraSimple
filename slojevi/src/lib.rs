@@ -20,3 +20,6 @@ pub use model::{
 pub use naredba::{IzmjenaObjekta, Naredba, NaredbaObjekta, NaredbaStabla, Novo};
 pub use stil::{Boja, OblikZnaka, Stil, StilObjekta};
 pub use uredjivac::{Skupina, Uredjivac};
+
+mod zapis;
+pub use zapis::{IzmjeneSpremanja, IzvorSloja, Vrijednost, ZapisObjekta, Zapisi};

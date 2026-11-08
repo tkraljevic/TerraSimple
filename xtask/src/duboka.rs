@@ -100,10 +100,13 @@ fn potpun(m: &Ishod) -> bool {
 fn paket(mapa: &Path, cargo: &str, ime: &str, izlaz: &Path, p: &Postavke) -> Result<(), String> {
     fs::create_dir_all(izlaz).map_err(|e| alati::greska_datoteke(izlaz, e))?;
     let rezultat = std::process::Command::new(cargo)
+        .env("CARGO_TARGET_DIR", "target")
         .current_dir(mapa)
         .args([
             "mutants",
             "--no-config",
+            "--gitignore",
+            "true",
             "--package",
             ime,
             "--output",
