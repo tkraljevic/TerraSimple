@@ -8,8 +8,8 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 
 Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
 naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i šest paketa
-programa, `koordinate`, `geometrija`, `slojevi`, `karta`, `prozor` i `geopaket`. Karta još nije spojena u
-prozor. Rust 1.99.1
+programa, `koordinate`, `geometrija`, `slojevi`, `karta`, `prozor` i `geopaket`. Karta je spojena u prozor, a
+prozor još ne otvara ni ne sprema datoteke. Rust 1.99.1
 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
 `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
 provjerene su samo po podacima s crates.io i njihovim uputama.
@@ -461,7 +461,25 @@ temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka
   pokreće se zastavicom `--primjer`.
 - **Provjera:** 33 testa, od kojih neki čitaju i tekst nacrtan na karti. Od 279 namjernih grešaka 61 je
   preživjela, i sve su u računu položaja i razmaka na zaslonu.
-- **Još nije tu:** karta u prozoru, Novi, Otvori i Spremi te radnja gumba „Otvori u QGIS-u”.
+- **Još nije tu:** Novi, Otvori i Spremi te radnja gumba „Otvori u QGIS-u”.
+
+**Karta u prozoru (8. 11. 2026.):** karta s podlogom ispunjava sredinu prozora, ispod ploča i gumba.
+
+- **Usklađeno s pločom:** alat iz trake alata, odabrani objekt u oba smjera, nove točke i crte idu u
+  odabrani sloj, a crtaju se samo slojevi koji su uključeni zajedno sa svim mapama iznad sebe. Podloga
+  slijedi čipove Karta i DGU ortofoto, a karta OpenFreeMap slijedi tamnu temu.
+- **Mjerenje:** ploča po zaslonu D, desno od alata: Udaljenost ili Površina, mjera, broj dijelova,
+  Spremi kao liniju ili poligon, Očisti i zatvaranje.
+- **Mjerilo i koordinate:** traka mjerila i statusna traka računaju se iz stvarnog zuma, a koordinate
+  pod mišem pokazuju se u HTRS96/TM. Nazivnik mjerila uzima 96 točaka po inču, pa na zaslonu nije točan
+  kao na papiru.
+- **Tipke:** Backspace i Escape dok crtanje traje pripadaju karti, a inače Backspace briše odabrano u
+  ploči. Gumbi Približi, Udalji i Cijeli zaslon rade, a Sjever i Ispis još nemaju radnju.
+- **Navod izvora** crta prozor, lijevo od ploče, jer bi ga ploča inače pokrila.
+- **Provjera:** 45 testova prozora, sa stvarnim klikovima na kartu. Od 145 namjernih grešaka preživjele
+  su 33: 32 samo pomiču crtež na zaslonu, a jedna je granica nazivnika mjerila točno na 1. Snimke u svijetloj
+  i tamnoj temi pregledane su s pravom podlogom.
+- **Nije provjereno:** pravi miš, Windows i Linux te tražilica, koja još ne traži.
 
 **Rezultat paketa `geopaket` (8. 11. 2026., `rusqlite` 0.41, `geozero` 0.15, QGIS 3.44.15, GDAL 3.13):**
 projekt se sprema u GeoPackage i čita natrag. Cijeli izvještaj je u `geopaket/REZULTAT.md`, a zapis stabla

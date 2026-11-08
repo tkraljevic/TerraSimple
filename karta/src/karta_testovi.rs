@@ -50,6 +50,7 @@ struct Proba {
     vrijeme: f64,
     /// Oblici zadnjeg okvira, da se vidi je li išta nacrtano.
     oblika: usize,
+    tekstovi: Vec<String>,
 }
 
 impl Proba {
@@ -63,6 +64,7 @@ impl Proba {
             u: Uredjivac::novi(),
             vrijeme: 0.0,
             oblika: 0,
+            tekstovi: Vec::new(),
         };
         p.okvir(vec![Event::PointerMoved(pos2(1.0, 1.0))]);
         p
@@ -84,6 +86,14 @@ impl Proba {
         });
         izlaz.textures_delta.clear();
         self.oblika = izlaz.shapes.len();
+        self.tekstovi = izlaz
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::Shape::Text(t) => Some(t.galley.text().to_owned()),
+                _ => None,
+            })
+            .collect();
     }
 
     fn tipka(&mut self, m: Pos2, gumb: PointerButton, pritisnuta: bool) {
@@ -447,4 +457,21 @@ fn linija_se_nastavlja_pravim_klikovima_a_povlacenje_kraja_i_dalje_pomice_tocku(
     p.povuci(B, 5, Vec2::new(0.0, 10.0));
     assert_eq!(p.zadnji_vrhova(), 2, "povlačenje samo pomiče točku");
     assert_eq!(p.karta.crtanje().alat(), Alat::Odaberi);
+}
+
+#[test]
+fn navod_podloge_karta_crta_samo_dok_ga_prozor_ne_preuzme() {
+    let mut p = Proba::nova(Alat::Odaberi);
+    let podloga = Podloga::OpenFreeMap { tamna: false };
+    // Bez pločica s mreže: podloga je samo zapisana, a izvor ostaje prazan.
+    p.karta.podloga = Some(podloga);
+    p.okvir(Vec::new());
+    assert!(
+        p.tekstovi.iter().any(|t| t == podloga.navod()),
+        "{:?}",
+        p.tekstovi
+    );
+    p.karta.crtaj_navod(false);
+    p.okvir(Vec::new());
+    assert!(!p.tekstovi.iter().any(|t| t == podloga.navod()));
 }

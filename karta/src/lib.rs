@@ -16,5 +16,5 @@ mod priprema;
 
 pub use crtac::{provjera, ugradi};
 pub use crtanje::{Alat, Crtanje, Mjerenje, Okolina, Poruka, Pretvorba};
-pub use karta::Karta;
+pub use karta::{Karta, Pogled};
 pub use podloga::{ListDgu, Podloga};

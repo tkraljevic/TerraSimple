@@ -95,3 +95,32 @@ primjer-obilazak-tocka = Obilazak { $redni }
 primjer-nasipi = nasipi
 primjer-oznaka-kml = KML
 primjer-oznaka-gpkg = GPKG
+
+# Karta u prozoru
+sloj-tocke = Točke
+sloj-linije = Linije
+sloj-poligoni = Poligoni
+mjera-lika = { $povrsina }, opseg { $opseg }
+mjerenje-udaljenost = Udaljenost
+mjerenje-povrsina = Površina
+mjerenje-pocetak = Klikni na kartu za prvu točku.
+mjerenje-dijelova =
+    { $broj ->
+        [one] Ukupno, { $broj } dio. Računato na elipsoidu WGS84.
+        [few] Ukupno, { $broj } dijela. Računato na elipsoidu WGS84.
+       *[other] Ukupno, { $broj } dijelova. Računato na elipsoidu WGS84.
+    }
+mjerenje-spremi-liniju = Spremi kao liniju
+mjerenje-spremi-poligon = Spremi kao poligon
+mjerenje-ocisti = Očisti
+mjerenje-zatvori = Zatvori mjerenje
+status-mjerilo = 1 : { $nazivnik }
+status-izvor-dgu = DGU ortofoto
+poruka-premalo =
+    { $broj ->
+        [one] Za završetak treba bar { $broj } točka.
+        [few] Za završetak treba bar { $broj } točke.
+       *[other] Za završetak treba bar { $broj } točaka.
+    }
+poruka-ne-moze-brisati = Točka nije obrisana: objekt bez nje ne bi bio valjan.
+poruka-naredba = Izmjena nije napravljena: { $razlog }.

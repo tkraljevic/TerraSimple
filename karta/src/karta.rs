@@ -24,6 +24,16 @@ impl Pretvorba for Projector<'_> {
     }
 }
 
+/// Što se vidi na karti, za mjerilo i koordinate u prozoru.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Pogled {
+    /// Metara na tlu po točki ekrana, u sredini karte.
+    pub metara_po_tocki: f64,
+    pub sredina: Vrh,
+    /// Mjesto ispod miša, kad je miš na karti.
+    pub mis: Option<Vrh>,
+}
+
 /// Pripremljen sloj, s onim što je vrijedilo kad je pripremljen.
 struct Pripremljen {
     inacica: u64,
@@ -40,6 +50,8 @@ pub struct Karta {
     pripremljeni: BTreeMap<IdSloja, Pripremljen>,
     /// Klik dok karta klizi samo je zaustavlja (Odluke (7. 11. 2026.)).
     guta_klik: bool,
+    navod: bool,
+    pogled: Option<Pogled>,
 }
 
 impl Karta {
@@ -61,7 +73,26 @@ impl Karta {
             crtanje: Crtanje::default(),
             pripremljeni: BTreeMap::new(),
             guta_klik: false,
+            navod: true,
+            pogled: None,
         }
+    }
+
+    /// Prozor sam crta navod izvora kad mu dio karte pokriva ploča.
+    pub fn crtaj_navod(&mut self, da: bool) {
+        self.navod = da;
+    }
+
+    /// Pomiče pogled na mjesto i zum, npr. na obuhvat otvorenog projekta.
+    pub fn idi_na(&mut self, duzina: f64, sirina: f64, zum: f64) {
+        self.memorija.center_at(lon_lat(duzina, sirina));
+        // Zum izvan raspona walkers odbija, a karta tada ostaje na staroj razini.
+        let _ = self.memorija.set_zoom(zum);
+    }
+
+    /// Pogled iz zadnjeg prikaza karte.
+    pub fn pogled(&self) -> Option<Pogled> {
+        self.pogled
     }
 
     pub fn crtanje(&mut self) -> &mut Crtanje {
@@ -91,7 +122,8 @@ impl Karta {
             DragPanButtons::empty()
         };
         let (crtanje, guta) = (&mut self.crtanje, &mut self.guta_klik);
-        let podloga = self.podloga;
+        let podloga = self.podloga.filter(|_| self.navod);
+        let pogled = &mut self.pogled;
         let izvor: Option<&mut dyn Tiles> = match self.izvor.as_mut() {
             Some(i) => Some(i.as_mut()),
             None => None,
@@ -112,6 +144,11 @@ impl Karta {
                 mis(ui, odgovor, projektor, crtanje, guta, u, ok);
                 crtanje.osvjezi_hvatista(u.projekt(), projektor);
                 let polozaj = ui.input(|i| i.pointer.latest_pos());
+                *pogled = Some(izmjeri_pogled(
+                    odgovor,
+                    projektor,
+                    ui.input(|i| i.pointer.hover_pos()),
+                ));
                 crtez_na_karti::nacrtaj(ui.painter(), crtanje, u.projekt(), projektor, polozaj, ok);
                 if let Some(p) = podloga {
                     crtez_na_karti::nacrtaj_navod(ui.painter(), odgovor.rect, p.navod());
@@ -183,6 +220,19 @@ impl Karta {
             }
         }
         Arc::new(izlaz)
+    }
+}
+
+fn izmjeri_pogled(odgovor: &Response, p: &Projector<'_>, mis: Option<Pos2>) -> Pogled {
+    let k = kamera(odgovor, p);
+    let sredina = p.na_kartu(odgovor.rect.center());
+    Pogled {
+        // Mercator rasteže prema polovima, pa je na tlu manje metara nego u ravnini karte.
+        metara_po_tocki: k.metara_po_px * sredina.sirina.to_radians().cos(),
+        sredina,
+        mis: mis
+            .filter(|m| odgovor.rect.contains(*m))
+            .map(|m| p.na_kartu(m)),
     }
 }
 

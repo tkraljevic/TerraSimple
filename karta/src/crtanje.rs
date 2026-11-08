@@ -275,6 +275,16 @@ impl Crtanje {
         self.odabran
     }
 
+    /// Odabir iz ploče Slojevi, da karta istakne isti objekt.
+    pub fn postavi_odabrani(&mut self, objekt: Option<(IdSloja, IdObjekta)>) {
+        self.odabran = objekt;
+    }
+
+    /// Crta li se ili mjeri upravo nešto. Tada Backspace i Escape pripadaju karti.
+    pub fn u_tijeku(&self) -> bool {
+        self.crtez.as_ref().is_some_and(|c| !c.gotov) || self.vuce.is_some()
+    }
+
     /// U koji sloj ide novi objekt te vrste. Ako ga nema, nastaje novi.
     pub fn postavi_aktivni_sloj(&mut self, vrsta: VrstaGeometrije, sloj: IdSloja) {
         self.aktivni.retain(|(v, _)| *v != vrsta);
