@@ -3,6 +3,10 @@
 #![forbid(unsafe_code)]
 
 pub mod aplikacija;
+pub mod datoteka;
+#[cfg(test)]
+mod datoteka_testovi;
+pub mod dijalozi;
 pub mod ikone;
 pub mod karta_prozora;
 pub mod novi_sloj;

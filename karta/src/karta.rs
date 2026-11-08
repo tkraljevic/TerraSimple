@@ -83,6 +83,13 @@ impl Karta {
         self.navod = da;
     }
 
+    /// Novi ili otvoreni projekt: pripremljeni slojevi i crtež starog projekta se zaboravljaju, jer
+    /// novi projekt može imati sloj s istim brojem i inačicom.
+    pub fn novi_projekt(&mut self) {
+        self.pripremljeni.clear();
+        self.crtanje = Crtanje::default();
+    }
+
     /// Pomiče pogled na mjesto i zum, npr. na obuhvat otvorenog projekta.
     pub fn idi_na(&mut self, duzina: f64, sirina: f64, zum: f64) {
         self.memorija.center_at(lon_lat(duzina, sirina));

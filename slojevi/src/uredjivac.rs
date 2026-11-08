@@ -13,13 +13,22 @@ use std::collections::BTreeMap;
 /// Jedan korak poništavanja. Ima više promjena kad je napravljen skupinom.
 type Korak = Vec<Promjena>;
 
+/// Jedan korak poništavanja s oznakom stanja.
+#[derive(Debug)]
+struct KorakPovijesti {
+    promjene: Korak,
+    oznaka: u64,
+}
+
 /// Drži projekt i povijest, a brojevi se ne ponavljaju ni nakon poništavanja.
 #[derive(Debug, Default)]
 pub struct Uredjivac {
     projekt: Projekt,
-    natrag: Vec<Korak>,
-    naprijed: Vec<Korak>,
+    natrag: Vec<KorakPovijesti>,
+    naprijed: Vec<KorakPovijesti>,
     sljedeci_id: u64,
+    sljedeca_oznaka: u64,
+    spremljena_oznaka: u64,
     inacice: Inacice,
 }
 
@@ -138,7 +147,11 @@ impl Uredjivac {
                 if !obratno.is_empty() {
                     let mut korak = obratno;
                     korak.reverse();
-                    self.natrag.push(korak);
+                    self.sljedeca_oznaka += 1;
+                    self.natrag.push(KorakPovijesti {
+                        promjene: korak,
+                        oznaka: self.sljedeca_oznaka,
+                    });
                     self.naprijed.clear();
                 }
                 Ok(rezultat)
@@ -149,6 +162,23 @@ impl Uredjivac {
                 Err(greska)
             }
         }
+    }
+
+    /// Oznaka trenutnog stanja u povijesti. 0 označava početno stanje bez izmjena.
+    #[must_use]
+    pub fn oznaka_stanja(&self) -> u64 {
+        self.natrag.last().map_or(0, |k| k.oznaka)
+    }
+
+    /// Označava trenutno stanje projekta kao spremljeno.
+    pub fn oznaci_spremljeno(&mut self) {
+        self.spremljena_oznaka = self.oznaka_stanja();
+    }
+
+    /// Vraća je li projekt izmijenjen u odnosu na zadnje spremljeno stanje.
+    #[must_use]
+    pub fn je_li_izmijenjen(&self) -> bool {
+        self.oznaka_stanja() != self.spremljena_oznaka
     }
 
     /// Vraća je li bilo što poništiti. Ako je sloj u međuvremenu zaključan, povijest ostaje netaknuta.
@@ -172,23 +202,29 @@ impl Uredjivac {
 
     fn prebaci(
         p: &mut Projekt,
-        iz: &mut Vec<Korak>,
-        u: &mut Vec<Korak>,
+        iz: &mut Vec<KorakPovijesti>,
+        u: &mut Vec<KorakPovijesti>,
         inacice: &mut Inacice,
     ) -> Result<bool, Greska> {
         let Some(korak) = iz.last() else {
             return Ok(false);
         };
         korak
+            .promjene
             .iter()
             .try_for_each(|promjena| promjena.dopustena(p))?;
         let Some(korak) = iz.pop() else {
             return Ok(false);
         };
         korak
+            .promjene
             .iter()
             .for_each(|promjena| inacice.zabiljezi(promjena));
-        u.push(primijeni_redom(p, korak)?);
+        let obratno = primijeni_redom(p, korak.promjene)?;
+        u.push(KorakPovijesti {
+            promjene: obratno,
+            oznaka: korak.oznaka,
+        });
         Ok(true)
     }
 

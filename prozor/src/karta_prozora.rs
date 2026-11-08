@@ -11,7 +11,7 @@ use crate::tema::{Boje, font_obicni, font_srednji};
 use eframe::egui::{self, Pos2, Rect, Role, Sense, Stroke, WidgetInfo, pos2, vec2};
 use karta::{Karta, ListDgu, Okolina, Podloga, Pogled, Poruka};
 use koordinate::{Pretvornik, Sustav};
-use slojevi::{IdObjekta, IdSloja, Mjere, Projekt, Uredjivac, VrstaGeometrije};
+use slojevi::{Geometrija, IdObjekta, IdSloja, Mjere, Projekt, Uredjivac, VrstaGeometrije};
 use std::collections::BTreeSet;
 
 /// Sredina Hrvatske i zum na kojem se vidi cijela, dok projekt nema ništa.
@@ -65,6 +65,15 @@ impl KartaProzora {
     /// Crta li se ili mjeri upravo nešto. Tada Backspace pripada karti, a ne ploči.
     pub fn u_tijeku(&mut self) -> bool {
         self.karta.crtanje().u_tijeku()
+    }
+
+    /// Novi ili otvoreni projekt. Karta zaboravlja stari projekt i prikazuje sve objekte novoga.
+    pub fn novi_projekt(&mut self, projekt: &Projekt) {
+        self.karta.novi_projekt();
+        self.zadnji_odabir = None;
+        if let Some((duzina, sirina, zum)) = obuhvat(projekt) {
+            self.karta.idi_na(duzina, sirina, zum);
+        }
     }
 
     pub fn priblizi(&mut self) {
@@ -383,6 +392,38 @@ fn s_okolinom<R>(
         opis_duljine: &duljina,
         naziv_objekta: &naziv_objekta,
     })
+}
+
+/// Sredina i zum na kojem se vide svi objekti projekta. Zum je približan: karta široka oko tisuću
+/// točaka, s malo ruba. Bez objekata nema obuhvata.
+#[must_use]
+pub fn obuhvat(projekt: &Projekt) -> Option<(f64, f64, f64)> {
+    let mut granice: Option<[f64; 4]> = None;
+    let vrhovi = projekt
+        .slojevi()
+        .flat_map(|(_, s)| s.objekti.values())
+        .flat_map(|o| match &o.geometrija {
+            Geometrija::Tocka(v) => vec![*v],
+            Geometrija::Linija(v) => v.clone(),
+            Geometrija::Poligon(p) => p.iter().flatten().copied().collect(),
+        });
+    for v in vrhovi {
+        let g = granice.get_or_insert([v.duzina, v.sirina, v.duzina, v.sirina]);
+        *g = [
+            g[0].min(v.duzina),
+            g[1].min(v.sirina),
+            g[2].max(v.duzina),
+            g[3].max(v.sirina),
+        ];
+    }
+    let [z, j, i, s] = granice?;
+    let raspon = (i - z).max((s - j) * 1.5);
+    let zum = if raspon > 0.0 {
+        (1200.0 / raspon).log2().floor().clamp(3.0, 17.0)
+    } else {
+        16.0
+    };
+    Some(((z + i) / 2.0, (j + s) / 2.0, zum))
 }
 
 /// Sloj se crta kad su uključeni i on i sve mape iznad njega.

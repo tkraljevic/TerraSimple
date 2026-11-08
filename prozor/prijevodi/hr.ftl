@@ -145,3 +145,53 @@ vrsta-sloja-tocka = točke
 vrsta-sloja-linija = linije
 vrsta-sloja-poligon = poligone
 poruka-drugi-sloj = Sloj „{ $sloj }” sadrži { $vrsta_sloja }, pa novi objekt ide u sloj za { $vrsta_alata }.
+
+izbornik-datoteka-novi = Novi
+izbornik-datoteka-otvori = Otvori…
+izbornik-datoteka-spremi = Spremi
+izbornik-datoteka-spremi-kao = Spremi kao…
+precac-novi = Ctrl+N
+precac-otvori = Ctrl+O
+precac-spremi = Ctrl+S
+precac-spremi-kao = Shift+Ctrl+S
+
+potvrda-naslov = Nespremljene izmjene
+potvrda-poruka = Želiš li spremiti izmjene u projektu prije nastavka?
+potvrda-gumb-spremi = Spremi
+potvrda-gumb-ne-spremaj = Ne spremaj
+potvrda-gumb-odustani = Odustani
+
+brisanje-upozorenje-sloj = Sloj „{ $naziv }” ima { $broj_zapisa } koje program ne prikazuje, npr. krivulje ili prazne geometrije. Kad spremiš projekt, nestat će i oni.
+brisanje-upozorenje-mapa = Mapa „{ $naziv }” ima { $broj_zapisa } koje program ne prikazuje, npr. krivulje ili prazne geometrije. Kad spremiš projekt, nestat će i oni.
+broj-nepodrzanih-zapisa =
+    { $broj ->
+        [one] { $broj } zapis
+        [few] { $broj } zapisa
+       *[other] { $broj } zapisa
+    }
+brisanje-gumb-obrisi-sloj = Obriši sloj
+brisanje-gumb-obrisi-mapu = Obriši mapu
+brisanje-gumb-odustani = Odustani
+
+greska-otvaranja-naslov = Greška pri otvaranju
+greska-spremanja-naslov = Greška pri spremanju
+greska-gumb-u-redu = U redu
+greska-sukob-promjena = Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno.
+greska-spremanja-opcenito = Projekt nije spremljen: { $detalji }. Pokušaj ponovno ili spremi pod drugim nazivom.
+greska-otvaranja-opcenito = Projekt nije otvoren: { $detalji }. Provjeri je li datoteka ispravan GeoPackage.
+
+upozorenja-naslov = Upozorenja pri otvaranju
+upozorenja-broj =
+    { $broj ->
+        [one] Pri otvaranju je zabilježeno { $broj } upozorenje.
+        [few] Pri otvaranju su zabilježena { $broj } upozorenja.
+       *[other] Pri otvaranju je zabilježeno { $broj } upozorenja.
+    }
+upozorenja-pokazi-popis = Prikaži popis ({ $broj })
+upozorenja-sakrij-popis = Sakrij popis
+upozorenja-gumb-u-redu = U redu
+
+datoteka-status-spremljeno = { $naziv } · spremljeno { $vrijeme }
+datoteka-status-izmijenjeno = { $naziv } · nespremljeno
+datoteka-status-spremljeno-izmijenjeno = { $naziv } · spremljeno { $vrijeme } (nespremljeno)
+datoteka-novi-nespremljeno = Novi projekt · nespremljeno
