@@ -1,4 +1,4 @@
-use slojevi::{IdMape, IdObjekta, IdSloja};
+use slojevi::{IdMape, IdObjekta, IdSloja, VrstaGeometrije};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -30,6 +30,17 @@ impl Alat {
         }
     }
 
+    /// Vrsta objekta koji alat crta. Odaberi i Mjeri ne crtaju objekte.
+    #[must_use]
+    pub const fn vrsta(self) -> Option<VrstaGeometrije> {
+        match self {
+            Self::Tocka => Some(VrstaGeometrije::Tocka),
+            Self::Linija => Some(VrstaGeometrije::Linija),
+            Self::Poligon => Some(VrstaGeometrije::Poligon),
+            Self::Odaberi | Self::Mjeri => None,
+        }
+    }
+
     #[must_use]
     pub const fn kljuc_poruke(self) -> &'static str {
         match self {
@@ -49,6 +60,16 @@ pub enum Odabir {
     Objekt(IdSloja, IdObjekta),
 }
 
+/// Prozorčić Novi sloj po zaslonu F: naziv, vrsta i mapa.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NoviSloj {
+    pub naziv: String,
+    pub vrsta: VrstaGeometrije,
+    pub mapa: Option<IdMape>,
+    /// Korisnik je pokušao napraviti sloj bez naziva.
+    pub prazan_naziv: bool,
+}
+
 pub struct StanjePrikaza {
     zatvorene_mape: BTreeSet<IdMape>,
     otvoreni_slojevi: BTreeSet<IdSloja>,
@@ -61,6 +82,7 @@ pub struct StanjePrikaza {
     pub ikone_slojeva: BTreeMap<IdSloja, (String, String)>,
     pub odabrano: Option<Odabir>,
     pub preimenovanje: Option<(Odabir, String)>,
+    pub novi_sloj: Option<NoviSloj>,
     pub alat: Alat,
     pub podloga: usize,
     pub ploca_lijevo: bool,
@@ -93,6 +115,7 @@ impl StanjePrikaza {
             ikone_slojeva: BTreeMap::new(),
             odabrano: None,
             preimenovanje: None,
+            novi_sloj: None,
             alat: Alat::Odaberi,
             podloga: 0,
             ploca_lijevo: false,

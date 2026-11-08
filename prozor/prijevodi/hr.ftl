@@ -124,3 +124,24 @@ poruka-premalo =
     }
 poruka-ne-moze-brisati = Točka nije obrisana: objekt bez nje ne bi bio valjan.
 poruka-naredba = Izmjena nije napravljena: { $razlog }.
+
+# Novi sloj (zaslon F) i nazivi novih objekata
+novi-sloj-naslov = Novi sloj
+novi-sloj-polje-naziv = Naziv
+novi-sloj-vrsta = Što će sloj sadržavati
+novi-sloj-tocke = Točke
+novi-sloj-linije = Linije
+novi-sloj-poligone = Poligone
+novi-sloj-mapa = U mapu
+novi-sloj-bez-mape = Na vrh, bez mape
+novi-sloj-napomena = Sloj drži samo jednu vrstu, pa točke, linije i poligoni idu svaki u svoj sloj. Vrsta se poslije ne mijenja.
+novi-sloj-prazan-naziv = Upiši naziv sloja.
+gumb-odustani = Odustani
+gumb-napravi-sloj = Napravi sloj
+objekt-tocka = Točka { $redni }
+objekt-linija = Linija { $redni }
+objekt-poligon = Poligon { $redni }
+vrsta-sloja-tocka = točke
+vrsta-sloja-linija = linije
+vrsta-sloja-poligon = poligone
+poruka-drugi-sloj = Sloj „{ $sloj }” sadrži { $vrsta_sloja }, pa novi objekt ide u sloj za { $vrsta_alata }.

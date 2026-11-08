@@ -32,6 +32,9 @@ fn opis(_: &Mjere) -> String {
     String::new()
 }
 
+fn naziv_objekta(_: VrstaGeometrije, redni: usize) -> String {
+    format!("Objekt {redni}")
+}
 fn duljina(_: f64) -> String {
     String::new()
 }
@@ -41,6 +44,7 @@ const OK: Okolina<'static> = Okolina {
     naziv_sloja: &naziv,
     opis_mjere: &opis,
     opis_duljine: &duljina,
+    naziv_objekta: &naziv_objekta,
 };
 
 struct Stol {

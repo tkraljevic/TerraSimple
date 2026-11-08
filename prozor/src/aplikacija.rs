@@ -1,5 +1,6 @@
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::karta_prozora::{KartaProzora, StatusKarte, tekst_mjerila, zaklon};
+use crate::novi_sloj::crtaj_prozorcic_novog_sloja;
 use crate::ploca::{
     crtaj_plocu_slojeva, obrisi_odabrano, pokreni_preimenovanje_odabranog, potvrdi_preimenovanje,
 };
@@ -204,7 +205,19 @@ impl Aplikacija {
         let pocetak = Instant::now();
         let boje = Boje::za_temu(self.stanje.tema_tamna);
         primijeni_stil(ui.ctx(), &boje, self.stanje.tema_tamna);
-        self.obradi_tipkovnicu(ui);
+        if self.stanje.novi_sloj.is_some() {
+            // Prozorčić se crta prvi, da polje za naziv dobije Backspace prije karte i ploče.
+            crtaj_prozorcic_novog_sloja(
+                ui,
+                &mut self.uredjivac,
+                &mut self.stanje,
+                &self.katalog,
+                &mut self.ikone,
+                &boje,
+            );
+        } else {
+            self.obradi_tipkovnicu(ui);
+        }
 
         let dostupan = ui.ctx().content_rect();
         let w = dostupan.width().max(640.0);
@@ -494,6 +507,8 @@ impl Aplikacija {
         self.karta.crtaj_poruku(
             ui,
             pos2(sredina, okvir_karte.max.y - 12.0),
+            self.uredjivac.projekt(),
+            &self.stanje,
             &self.katalog,
             boje,
         );
@@ -917,6 +932,8 @@ mod testovi {
             .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
 
         harness.get_by_label("Novi sloj").click();
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        harness.get_by_label("Napravi sloj").click();
         cekaj_smirenje(&mut harness, Duration::from_millis(500));
 
         harness.key_press(Key::F2);

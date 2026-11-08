@@ -215,6 +215,11 @@ fn alat_tocka_iz_trake_dodaje_tocku_klikom_na_kartu_a_ponisti_je_brise() {
         .next()
         .expect("sloj");
     assert_eq!(sloj.naziv, "Točke", "novi sloj dobiva naziv iz kataloga");
+    let objekt = sloj.objekti.values().next().expect("objekt");
+    assert_eq!(
+        objekt.naziv, "Točka 1",
+        "novi objekt dobiva naziv s rednim brojem"
+    );
     // Klik na praznu ploču Slojevi ne smije pasti na kartu ispod nje.
     klikni(&mut h, pos2(Razmaci::SIRINA_PROZORA - 200.0, 470.0));
     // Ni klik na traku alata, ispod zadnjeg gumba.
@@ -433,4 +438,55 @@ fn nova_tocka_ide_u_sloj_odabran_u_ploci() {
             .map(|s| s.objekti.len())
     };
     assert_eq!((broj(a), broj(b)), (Some(2), Some(1)));
+}
+
+#[test]
+fn poruka_kaze_kad_novi_objekt_ne_ide_u_odabrani_sloj() {
+    let mut app = Aplikacija::default();
+    let s = novi_sloj(&mut app, VrstaGeometrije::Poligon);
+    let k = KatalogPoruka::hrvatski();
+    let mut st = StanjePrikaza::novo();
+    let p = app.uredjivac.projekt();
+    st.alat = Alat::Tocka;
+    assert_eq!(
+        poruka_drugog_sloja(p, &st, &k),
+        None,
+        "bez odabira nema poruke"
+    );
+    st.odabrano = Some(Odabir::Sloj(s));
+    assert_eq!(
+        poruka_drugog_sloja(p, &st, &k).as_deref(),
+        Some("Sloj „Pokus” sadrži poligone, pa novi objekt ide u sloj za točke.")
+    );
+    st.alat = Alat::Linija;
+    assert!(poruka_drugog_sloja(p, &st, &k).is_some_and(|t| t.ends_with("za linije.")));
+    st.alat = Alat::Poligon;
+    assert_eq!(poruka_drugog_sloja(p, &st, &k), None, "ista vrsta");
+    for alat in [Alat::Odaberi, Alat::Mjeri] {
+        st.alat = alat;
+        assert_eq!(poruka_drugog_sloja(p, &st, &k), None);
+    }
+    st.alat = Alat::Tocka;
+    st.odabrano = Some(Odabir::Objekt(s, IdObjekta(7)));
+    assert!(
+        poruka_drugog_sloja(p, &st, &k).is_some(),
+        "odabran objekt u sloju"
+    );
+    let mut h = prozor(app);
+    h.state_mut().stanje.alat = Alat::Tocka;
+    h.state_mut().stanje.odabrano = Some(Odabir::Sloj(s));
+    h.run_steps(2);
+    assert!(
+        tekstovi(&h)
+            .iter()
+            .any(|t| t.starts_with("Sloj „Pokus” sadrži poligone"))
+    );
+    assert_eq!(
+        kljuc_novog_objekta(VrstaGeometrije::Linija),
+        "objekt-linija"
+    );
+    assert_eq!(
+        kljuc_novog_objekta(VrstaGeometrije::Poligon),
+        "objekt-poligon"
+    );
 }
