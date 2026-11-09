@@ -24,12 +24,13 @@ Program se priprema za prvo izdanje, 0.0.1 alfa. Gotovih paketa za preuzimanje j
   klik briše. Svaka izmjena može se poništiti.
 - **Mjerenje:** udaljenost i površina na elipsoidu WGS84, kao u QGIS-u. Izmjereno se može spremiti kao
   linija ili poligon.
+- **Tražilica:** koordinate u stupnjevima i u HTRS96/TM te slojevi i objekti po nazivu.
 - **Spremanje:** projekt je jedna GeoPackage datoteka. Tuđi slojevi i stupci u njoj ostaju netaknuti.
 - **QGIS:** gumb „Otvori u QGIS-u” sprema projekt i otvara ga u QGIS-u, s nazivima slojeva, mapama i
   stilovima. Stil namješten u QGIS-u ostaje dok ga ne promijeniš u TerraSimpleu. Ako je QGIS u međuvremenu
   promijenio datoteku, TerraSimple je ne pregazi, a Spremi kao sprema tvoj crtež u novu datoteku.
 
-Još ne radi: tražilica, ispis, KML i ostali formati, polja u slojevima i podloge iz vlastitih datoteka. Dolaze
+Još ne radi: ispis, KML i ostali formati, polja u slojevima i podloge iz vlastitih datoteka. Dolaze
 redom, po [planu rada](docs/plan.md).
 
 ## Pokretanje iz izvornog koda

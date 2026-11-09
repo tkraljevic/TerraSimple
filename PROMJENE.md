@@ -20,6 +20,16 @@ Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
   poligone.
 - Svaka izmjena može se poništiti i ponoviti.
 
+### Tražilica
+
+- Polje „Traži koordinate ili naziv” (⌘F na Macu, Ctrl+F drugdje) čita koordinate u stupnjevima s točkom ili
+  zarezom, u stupnjevima, minutama i sekundama i u HTRS96/TM, te nalazi slojeve i objekte po nazivu, i bez
+  kvačica.
+- Odabrana koordinata dobije privremenu crvenu oznaku na karti, koja se ne sprema. Objekt se odabere, karta
+  ga pokaže cijelog, a mape iznad njega se otvore.
+- Slovo S uz I ili Z znači sjever, a uz E ili W jug. Za upis izvan raspona tražilica kaže što ne valja, npr.
+  „Minute moraju biti manje od 60.”
+
 ### Mjerenje
 
 - Udaljenost i površina računaju se na elipsoidu WGS84, kao u QGIS-u.
@@ -39,7 +49,7 @@ Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
 
 ### Poznata ograničenja
 
-- Tražilica, ispis, KML i ostali formati još ne rade.
+- Ispis, KML i ostali formati još ne rade. Tražilica ne zna HDKS ni adrese.
 - Gumbi Sjever, Ispis, Uvezi sloj, Učitaj datoteku i Dodaj WMS još nemaju radnju.
 - Na Macu svaki klik na „Otvori u QGIS-u” pokreće novi QGIS, i kad je jedan već otvoren.
 - Poruka nakon sukoba s QGIS-om još kaže da datoteku treba otvoriti ponovno, a ne nudi Spremi kao.

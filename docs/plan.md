@@ -11,8 +11,8 @@ Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 
 `qgis`. Crta, mjeri, sprema u GeoPackage i otvara projekt u QGIS-u. Što je ušlo u izdanje, piše u
 [PROMJENE.md](../PROMJENE.md).
 
-Do izdanja 0.0.1 ostaju tražilica koordinata i vlastitih objekata, paketi za preuzimanje na tri sustava,
-upozorenje za lik koji siječe sam sebe, prozor „O programu” s inačicom i proba od početka do kraja s pravim
+Tražilica i paketi za preuzimanje spojeni su 9. 11. 2026.; tijek paketa na GitHubu još nije pokrenut. Do
+izdanja 0.0.1 ostaju upozorenje za lik koji siječe sam sebe, prozor „O programu” s inačicom i proba od početka do kraja s pravim
 QGIS-om. Uz to, po odlukama od 9. 11. 2026.: poruka nakon sukoba s QGIS-om koja nudi Spremi kao i skriven
 gumb Ispis. Odluke su u odjeljku „Gumb Otvori u QGIS-u” niže.
 
@@ -490,7 +490,8 @@ temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka
 - **Provjera:** 45 testova prozora, sa stvarnim klikovima na kartu. Od 145 namjernih grešaka preživjele
   su 33: 32 samo pomiču crtež na zaslonu, a jedna je granica nazivnika mjerila točno na 1. Snimke u svijetloj
   i tamnoj temi pregledane su s pravom podlogom.
-- **Nije provjereno:** pravi miš, Windows i Linux te tražilica, koja još ne traži.
+- **Nije provjereno:** pravi miš, Windows i Linux. Tražilica radi od 9. 11. 2026.; rezultati su u
+  `prozor/REZULTAT.md` i `koordinate/REZULTAT.md`.
 
 **Rezultat paketa `geopaket` (8. 11. 2026., `rusqlite` 0.41, `geozero` 0.15, QGIS 3.44.15, GDAL 3.13):**
 projekt se sprema u GeoPackage i čita natrag. Cijeli izvještaj je u `geopaket/REZULTAT.md`, a zapis stabla
