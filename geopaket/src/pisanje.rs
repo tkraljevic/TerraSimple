@@ -98,9 +98,7 @@ fn postojeci(c: &Connection, p: &Projekt) -> Result<BTreeMap<IdSloja, citanje::S
 pub(crate) fn provjeri_verziju(c: &Connection, verzija: i64) -> Result<(), Greska> {
     let trenutna: i64 = c.query_row("PRAGMA data_version", [], |r| r.get(0))?;
     if trenutna != verzija {
-        return Err(
-            "Datoteku je promijenila druga aplikacija. Ponovno je učitajte prije spremanja.".into(),
-        );
+        return Err(Box::new(crate::DatotekaPromijenjena));
     }
     Ok(())
 }

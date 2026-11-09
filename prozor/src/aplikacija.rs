@@ -203,7 +203,7 @@ impl Aplikacija {
             Some("potvrda") => Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi)),
             Some("greska") => Some(AktivniDijalog::PorukaGreske {
                 naslov: katalog.tekst("greska-spremanja-naslov"),
-                poruka: katalog.greska_spremanja("data_version promijenjen"),
+                poruka: katalog.greska_spremanja(&geopaket::DatotekaPromijenjena),
             }),
             Some("upozorenje") => Some(AktivniDijalog::UpozorenjeBrisanja {
                 stavka: slojevi::Stavka::Sloj(slojevi::IdSloja(1)),

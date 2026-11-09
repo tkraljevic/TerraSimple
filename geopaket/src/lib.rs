@@ -15,6 +15,19 @@ use std::path::Path;
 pub type Greska = Box<dyn std::error::Error + Send + Sync>;
 pub type Rezultat<T> = Result<T, Greska>;
 
+/// Datoteku je od učitavanja promijenio drugi program, npr. QGIS. Spremanje se odbija, jer
+/// bi pregazilo njegove izmjene. Prozor je prepoznaje po vrsti, ne po tekstu.
+#[derive(Debug)]
+pub struct DatotekaPromijenjena;
+
+impl std::fmt::Display for DatotekaPromijenjena {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Datoteku je u međuvremenu promijenio drugi program.")
+    }
+}
+
+impl std::error::Error for DatotekaPromijenjena {}
+
 /// Ime QGIS projekta koji se pri svakom spremanju zapiše u GeoPackage.
 pub use qgis_projekt::NAZIV_PROJEKTA;
 /// Isključivo za zasebne fuzz ciljeve; nije sučelje programa.

@@ -196,8 +196,7 @@ pub fn radnja_spremi(
     };
 
     if datoteka.gpkg.is_none() {
-        let gpkg = geopaket::Datoteka::otvori(staza)
-            .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
+        let gpkg = geopaket::Datoteka::otvori(staza).map_err(|e| katalog.greska_spremanja(&*e))?;
         datoteka.gpkg = Some(gpkg);
     }
 
@@ -206,7 +205,7 @@ pub fn radnja_spremi(
     };
 
     gpkg.spremi(uredjivac.projekt())
-        .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
+        .map_err(|e| katalog.greska_spremanja(&*e))?;
     uredjivac.oznaci_spremljeno();
     datoteka.zadnje_spremanje = Some(trenutno_vrijeme());
     Ok(true)
@@ -253,12 +252,10 @@ fn spremi_kopiju_gpkg(
     katalog: &KatalogPoruka,
 ) -> Result<geopaket::Datoteka, String> {
     gpkg.spremi_kao(nova_staza, uredjivac.projekt())
-        .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
-    let mut nova_d = geopaket::Datoteka::otvori(nova_staza)
-        .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
-    let _ = nova_d
-        .ucitaj()
-        .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
+        .map_err(|e| katalog.greska_spremanja(&*e))?;
+    let mut nova_d =
+        geopaket::Datoteka::otvori(nova_staza).map_err(|e| katalog.greska_spremanja(&*e))?;
+    let _ = nova_d.ucitaj().map_err(|e| katalog.greska_spremanja(&*e))?;
     Ok(nova_d)
 }
 
@@ -267,11 +264,11 @@ fn stvori_novi_gpkg(
     uredjivac: &Uredjivac,
     katalog: &KatalogPoruka,
 ) -> Result<geopaket::Datoteka, String> {
-    let mut nova_d = geopaket::Datoteka::otvori(nova_staza)
-        .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
+    let mut nova_d =
+        geopaket::Datoteka::otvori(nova_staza).map_err(|e| katalog.greska_spremanja(&*e))?;
     nova_d
         .spremi(uredjivac.projekt())
-        .map_err(|e| katalog.greska_spremanja(&e.to_string()))?;
+        .map_err(|e| katalog.greska_spremanja(&*e))?;
     Ok(nova_d)
 }
 

@@ -122,11 +122,11 @@ fn vanjska_izmjena_je_sukob_a_ne_prepisivanje() {
     let c = Connection::open(put("sukob")).unwrap();
     c.execute(&format!("UPDATE sloj_{} SET naziv='QGIS'", s.0), [])
         .unwrap();
-    assert!(
-        d.spremi(&p)
-            .unwrap_err()
-            .to_string()
-            .contains("druga aplikacija")
+    let greska = d.spremi(&p).unwrap_err();
+    assert!(greska.is::<geopaket::DatotekaPromijenjena>());
+    assert_eq!(
+        greska.to_string(),
+        "Datoteku je u međuvremenu promijenio drugi program."
     );
     assert_eq!(
         d.ucitaj()
