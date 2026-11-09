@@ -188,6 +188,9 @@ impl Default for Aplikacija {
 }
 
 /// Prozorčić koji se otvori sam, za snimke i pregled izgleda (`--dijalog <naziv>`).
+/// Stavke gornjeg izbornika koje nešto rade; ostale su zasad samo natpis.
+const STAVKE_S_RADNJOM: [&str; 3] = ["izbornik-datoteka", "izbornik-slojevi", "izbornik-pomoc"];
+
 pub(crate) fn dijalog_za_pregled(
     naziv: Option<&str>,
     katalog: &KatalogPoruka,
@@ -199,6 +202,7 @@ pub(crate) fn dijalog_za_pregled(
             poruka: katalog.greska_spremanja(&std::io::Error::other("disk je pun")),
         }),
         Some("sukob") => Some(AktivniDijalog::SukobSpremanja),
+        Some("o-programu") => Some(AktivniDijalog::OProgramu),
         Some("upozorenje") => Some(AktivniDijalog::UpozorenjeBrisanja {
             stavka: slojevi::Stavka::Sloj(slojevi::IdSloja(1)),
             naziv: "Građevine".to_string(),
@@ -461,24 +465,24 @@ impl Aplikacija {
             let naziv = self.katalog.tekst(kljuc);
             let sirina = naziv.chars().count() as f32 * 7.2 + 14.0;
             tekst_lijevo(ui, pos2(x, 20.0), &naziv, font_obicni(13.0), boje.tekst_2);
-            if kljuc == "izbornik-datoteka" {
+            if STAVKE_S_RADNJOM.contains(&kljuc) {
                 let inter = Rect::from_min_size(pos2(x - 4.0, 6.0), vec2(sirina, 28.0));
-                let id = ui.make_persistent_id("izbornik_stavka_datoteka");
-                let odg = ui.interact(inter, id, Sense::click());
+                let odg = ui.interact(inter, ui.make_persistent_id(kljuc), Sense::click());
                 odg.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), &naziv));
                 if odg.clicked() {
-                    self.izbornik_datoteka_otvoren = !self.izbornik_datoteka_otvoren;
-                }
-            } else if kljuc == "izbornik-slojevi" {
-                let inter = Rect::from_min_size(pos2(x - 4.0, 6.0), vec2(sirina, 28.0));
-                let id = ui.make_persistent_id("izbornik_stavka_slojevi");
-                let odg = ui.interact(inter, id, Sense::click());
-                odg.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), &naziv));
-                if odg.clicked() {
-                    self.stanje.ploca_otvorena = !self.stanje.ploca_otvorena;
+                    self.otvori_stavku_izbornika(kljuc);
                 }
             }
             x += sirina;
+        }
+    }
+
+    /// Pomoć zasad ima samo jednu stavku, pa odmah otvara „O programu”.
+    pub(crate) fn otvori_stavku_izbornika(&mut self, kljuc: &str) {
+        match kljuc {
+            "izbornik-datoteka" => self.izbornik_datoteka_otvoren = !self.izbornik_datoteka_otvoren,
+            "izbornik-slojevi" => self.stanje.ploca_otvorena = !self.stanje.ploca_otvorena,
+            _ => self.aktivni_dijalog = Some(AktivniDijalog::OProgramu),
         }
     }
 
@@ -576,7 +580,9 @@ impl Aplikacija {
             aktivno: false,
             labela: &self.katalog.tekst("gumb-pomoc"),
         };
-        let _ = gumb_ikona(ui, &mut self.ikone, &opis_pomoc, tamna, boje);
+        if gumb_ikona(ui, &mut self.ikone, &opis_pomoc, tamna, boje).clicked() {
+            self.aktivni_dijalog = Some(AktivniDijalog::OProgramu);
+        }
     }
 
     fn crtaj_podrucje_karte(&mut self, ui: &mut egui::Ui, okvir_karte: Rect, boje: &Boje) {

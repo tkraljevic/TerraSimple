@@ -77,5 +77,6 @@ nastavi dalje ako može.
 
 ## 8. Na kraju
 
-1. Pomoć › O programu: inačica, licenca i izvor karte.
+1. Klikni Pomoć u izborniku, pa gumb ? gore desno. Oboje otvara „O programu”: TerraSimple 0.0.1 alfa,
+   licenca EUPL-1.2, izvori karte, slova i ikone. Zatvori ga gumbom Zatvori.
 2. Zapiši na kojem je sustavu i računalu proba rađena, i što nije prošlo.

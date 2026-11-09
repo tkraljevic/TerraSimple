@@ -42,6 +42,8 @@ pub enum AktivniDijalog {
     },
     /// Spremanje je odbijeno jer je datoteku promijenio drugi program; nudi se Spremi kao.
     SukobSpremanja,
+    /// Inačica, licenca i izvori karte.
+    OProgramu,
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -219,7 +221,67 @@ pub fn crtaj_aktivni_dijalog(
             otvoren_popis,
         } => crtaj_upozorenja_otvaranja(ui, dostupan, upozorenja, otvoren_popis, boje, katalog),
         AktivniDijalog::SukobSpremanja => crtaj_sukob_spremanja(ui, dostupan, boje, katalog),
+        AktivniDijalog::OProgramu => crtaj_o_programu(ui, dostupan, boje, katalog),
     }
+}
+
+/// Retci prozorčića „O programu”, redom.
+#[must_use]
+pub fn retci_o_programu(katalog: &KatalogPoruka) -> [String; 4] {
+    [
+        katalog.tekst("o-programu-opis"),
+        katalog.tekst("o-programu-licenca"),
+        katalog.tekst("o-programu-karta"),
+        katalog.tekst("o-programu-ostalo"),
+    ]
+}
+
+fn crtaj_o_programu(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 460.0;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 290.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    let naslov = katalog.s_tekstovima(
+        "o-programu-naslov",
+        &[("inacica", env!("CARGO_PKG_VERSION").to_string())],
+    );
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 26.0),
+        &naslov,
+        font_srednji(17.0),
+        boje.tekst,
+    );
+    let tekst_okvir = Rect::from_min_size(
+        pos2(okvir.min.x + 20.0, okvir.min.y + 52.0),
+        vec2(sirina - 40.0, 180.0),
+    );
+    ui.scope_builder(egui::UiBuilder::new().max_rect(tekst_okvir), |ui| {
+        for redak in retci_o_programu(katalog) {
+            ui.label(
+                egui::RichText::new(redak)
+                    .font(font_obicni(13.0))
+                    .color(boje.tekst_2),
+            );
+            ui.add_space(6.0);
+        }
+    });
+    let zatvori = gumb_dijaloga(
+        ui,
+        Rect::from_min_size(
+            pos2(okvir.max.x - 106.0, okvir.max.y - 42.0),
+            vec2(86.0, 30.0),
+        ),
+        &katalog.tekst("o-programu-zatvori"),
+        true,
+        false,
+        boje,
+    );
+    zatvori.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
 }
 
 /// Odluke (9. 11. 2026.): nakon sukoba nudi se samo Spremi kao. Gumba koji bi pregazio izmjene
