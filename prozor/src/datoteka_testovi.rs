@@ -645,6 +645,48 @@ fn klik_izvan_padajuceg_izbornika_zatvara_izbornik() {
 }
 
 #[test]
+fn izbornik_pise_precace_kako_je_uobicajeno_na_sustavu() {
+    for (sustav, ocekivano, krivo) in [
+        (
+            egui::os::OperatingSystem::Mac,
+            ["⌘N", "⌘O", "⌘S", "⇧⌘S"],
+            "Ctrl+S",
+        ),
+        (
+            egui::os::OperatingSystem::Windows,
+            ["Ctrl+N", "Ctrl+O", "Ctrl+S", "Ctrl+Shift+S"],
+            "⌘S",
+        ),
+        (
+            egui::os::OperatingSystem::Nix,
+            ["Ctrl+N", "Ctrl+O", "Ctrl+S", "Ctrl+Shift+S"],
+            "⌘S",
+        ),
+    ] {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: false,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_os(sustav)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+        harness.get_by_label("Datoteka").click();
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let tekstovi = nacrtani_tekstovi(&harness);
+        for oznaka in ocekivano {
+            assert!(
+                tekstovi.iter().any(|t| t == oznaka),
+                "{sustav:?}: nema {oznaka} u {tekstovi:?}"
+            );
+        }
+        assert!(!tekstovi.iter().any(|t| t == krivo), "{sustav:?}: {krivo}");
+    }
+}
+
+#[test]
 fn spremi_kao_iz_novog_projekta_bez_postojeceg_gpkg() {
     let mapa = PathBuf::from(".quality/test_ui_spremi_kao_novi");
     let _ = std::fs::create_dir_all(&mapa);

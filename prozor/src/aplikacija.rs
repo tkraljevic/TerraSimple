@@ -373,8 +373,8 @@ impl Aplikacija {
     }
 
     fn izvrsi_precac(&mut self, key: Key, modifiers: &egui::Modifiers) {
-        let cmd = modifiers.command || modifiers.ctrl;
-        if cmd {
+        // `command` je ⌘ na Macu, a Ctrl drugdje, pa Ctrl na Macu nije prečac (Odluke (9. 11. 2026.)).
+        if modifiers.command {
             self.obradi_cmd_precac(key, modifiers.shift);
         } else if key == Key::F2 {
             let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
@@ -1302,11 +1302,16 @@ mod testovi {
         cekaj_smirenje(&mut harness, Duration::from_millis(500));
         assert!(harness.query_by_label("Vodovod").is_none());
 
+        // Ctrl bez ⌘ je Ctrl na Macu i ne smije poništiti.
         harness.key_press_modifiers(Modifiers::CTRL, Key::Z);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert!(harness.query_by_label("Vodovod").is_none());
+
+        harness.key_press_modifiers(Modifiers::COMMAND, Key::Z);
         cekaj_smirenje(&mut harness, Duration::from_millis(500));
         assert!(harness.query_by_label("Vodovod").is_some());
 
-        harness.key_press_modifiers(Modifiers::CTRL, Key::Y);
+        harness.key_press_modifiers(Modifiers::COMMAND, Key::Y);
         cekaj_smirenje(&mut harness, Duration::from_millis(500));
         assert!(harness.query_by_label("Vodovod").is_none());
     }

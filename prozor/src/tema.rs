@@ -210,4 +210,15 @@ mod testovi {
         assert_eq!(font_srednji(13.0).size, 13.0);
         assert_eq!(font_kurziv(11.0).size, 11.0);
     }
+
+    #[test]
+    fn font_ima_znakove_precaca_za_mac() {
+        let ctx = egui::Context::default();
+        ctx.set_fonts(fontovi());
+        ctx.run_ui(egui::RawInput::default(), |_| {})
+            .textures_delta
+            .clear();
+        assert!(ctx.fonts_mut(|f| f.has_glyphs(&font_obicni(13.0), "⌘⇧")));
+        assert!(ctx.fonts_mut(|f| f.has_glyphs(&font_srednji(13.0), "⌘⇧")));
+    }
 }

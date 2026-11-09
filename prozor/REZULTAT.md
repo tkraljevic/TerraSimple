@@ -206,7 +206,7 @@ Naredba `cargo xtask provjera` prolazi u cijelosti:
 ### F. Što traži odluke i nije provjereno
 
 1. **Izgled prečaca na tipkovnici za druge operacijske sustave:**
-   - Trenutno tekstualni prikaz u izborniku koristi macOS konvenciju (`⌘N`, `⌘O`, `⌘S`, `⇧⌘S`). Na Windows i Linux sustavima uobičajen je prikaz `Ctrl+N`, `Ctrl+O`, itd. Potrebno je odlučiti hoće li se oznaka prilagođavati ovisno o ciljnoj platformi.
+   - Oznaka se prilagođava sustavu: na Macu `⌘N`, `⌘O`, `⌘S`, `⇧⌘S` i prečaci samo s ⌘, a na Windowsu i Linuxu `Ctrl+N`, `Ctrl+O`, `Ctrl+S`, `Ctrl+Shift+S` (Odluke (9. 11. 2026.)).
 2. **Sistemski dijalozi (`rfd`) na Linuxu bez grafičkog sučelja ili specifičnih portala:**
    - Implementacija se oslanja na `rfd`, koji na Linuxu koristi XDG Desktop Portal ili GTK3/4. Ponašanje u različitim okruženjima (Wayland vs X11) nije automatski testirano u integracijskom testu jer se u testovima koristi deterministički `LazniBirac`.
 

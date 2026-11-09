@@ -475,6 +475,7 @@ temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka
   kao na papiru.
 - **Tipke:** Backspace i Escape dok crtanje traje pripadaju karti, a inače Backspace briše odabrano u
   ploči. Gumbi Približi, Udalji i Cijeli zaslon rade, a Sjever i Ispis još nemaju radnju.
+  Gumb Sjever ostaje (Odluke (9. 11. 2026.)).
 - **Novi sloj (8. 11. 2026., nakon probe mišem):** gumb je uvijek stvarao sloj za poligone, pa su nacrtane
   točke i linije tiho završavale u drugom sloju, bez naziva. Sad otvara prozorčić po zaslonu F: naziv, vrsta
   (predlaže se prema alatu) i mapa. Polja i koordinatni sustav iz nacrta još nisu tu. Novi objekt dobiva naziv
@@ -512,13 +513,13 @@ u `geopaket/PROSIRENJE.md`.
 izbor datoteke (`rfd`, na Linuxu preko XDG portala). Novi, Otvori i zatvaranje pitaju za nespremljene izmjene, a
 uz naziv datoteke vidi se kad ih ima. Brisanje sloja ili mape s neobičnim zapisima najprije upozorava. Greške
 pri otvaranju i spremanju javljaju se u dijalogu i ne gube projekt. Cijeli izvještaj je u `prozor/REZULTAT.md`.
+Na Macu prečaci idu s ⌘ i tako pišu u izborniku (⌘S, ⇧⌘S), a drugdje s Ctrl (Odluke (9. 11. 2026.)).
 
 - **Nespremljene izmjene** prati `Uredjivac`: svaki korak povijesti ima oznaku, pa poništavanje do spremljenog
   stanja opet znači „spremljeno”.
 - **Pri spajanju ispravljeno:** klik i Delete prolazili su kroz otvoren dijalog na kartu i ploču, a nakon Otvori
   karta je mogla crtati slojeve starog projekta. Otvoreni projekt sad se prikazuje cijeli.
-- **Nije provjereno:** pravi prozor za izbor datoteke na sva tri sustava, Windows i Linux. Oznake prečaca su
-  „Ctrl+…” i na macOS-u; treba odlučiti hoće li Mac pokazivati ⌘.
+- **Nije provjereno:** pravi prozor za izbor datoteke na sva tri sustava, Windows i Linux.
 
 **Fuzz čitača i paket `qgis` (8. 11. 2026.):** izvještaji su u `fuzz/REZULTAT.md` i `qgis/REZULTAT.md`.
 
@@ -540,8 +541,8 @@ pri otvaranju i spremanju javljaju se u dijalogu i ne gube projekt. Cijeli izvje
   pokriveno provjerom. Ključne namjerne greške su uhvaćene.
   Ako se datoteka preimenuje izvan TerraSimplea, QGIS ne nađe slojeve dok je TerraSimple opet ne spremi. Isto se
   događa s projektom koji sprema sam QGIS. Gumb uvijek najprije sprema.
-- **Traži odluku:** sustav projekta EPSG:3765 i podloga OpenStreetMap. Na Macu svaki klik pokreće novi QGIS,
-  i kad je jedan već otvoren. Stil promijenjen u QGIS-u ostaje u datoteci, ali ga sljedeće spremanje iz
+- **Odluke (9. 11. 2026.):** podloga OpenStreetMap ostaje u QGIS projektu.
+- **Traži odluku:** na Macu svaki klik pokreće novi QGIS, i kad je jedan već otvoren. Stil promijenjen u QGIS-u ostaje u datoteci, ali ga sljedeće spremanje iz
   TerraSimplea u projektu zamijeni svojim.
 - **Nije provjereno:** pravo otvaranje projekta s prozorom, Windows i Linux.
 
