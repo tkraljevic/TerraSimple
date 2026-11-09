@@ -2,7 +2,7 @@ name: Redovna provjera
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [master, proba]
 permissions:
   contents: read
 concurrency:
