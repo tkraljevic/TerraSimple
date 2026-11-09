@@ -60,9 +60,15 @@ nastavi dalje ako može.
 
 ## 7. Tražilica
 
-Koraci se dopisuju kad se tražilica spoji. Najmanje: koordinate u stupnjevima s točkom i sa zarezom, u
-stupnjevima, minutama i sekundama i u HTRS96/TM vode na isto mjesto; naziv objekta bez kvačica nalazi
-objekt s kvačicama i odabire ga; Backspace u polju ne briše odabrani objekt.
+1. ⌘F (Ctrl+F drugdje) stavlja kursor u polje „Traži koordinate ili naziv”.
+2. Upiši redom `45.5547, 18.6955`, `45,5547 18,6955`, `45°33'17"N 18°41'44"E` i HTRS96/TM istog mjesta
+   (očitaj ga u statusnoj traci). Svaki put Enter: karta ide na isto mjesto s crvenom oznakom.
+3. Upiši `33 51 36 J 151 12 00 I`. Karta ide u Sydney, na južnu polutku. Tekst u popisu čita se natrag u
+   istu točku: kopiraj ga, upiši i provjeri.
+4. Upiši `45 65 00 N 18 00 00 E`. Popis kaže da minute moraju biti manje od 60.
+5. Nazovi neki objekt „Kuća” i upiši `kuca`. Objekt se nađe, odabere u ploči i karta ga pokaže cijelog.
+6. Dok je objekt odabran, u polju obriši slova Backspaceom. Objekt ostaje.
+7. Escape briše tekst i crvenu oznaku.
 
 ## 8. Na kraju
 
