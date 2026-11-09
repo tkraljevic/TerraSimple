@@ -2,3 +2,6 @@
 members = ["geometrija", "geopaket", "karta", "koordinate", "prozor", "qgis", "slojevi", "xtask"]
 exclude = ["probe"]
 resolver = "3"
+
+[profile.release]
+strip = "symbols"

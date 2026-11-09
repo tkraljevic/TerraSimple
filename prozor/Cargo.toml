@@ -24,3 +24,6 @@ unic-langid = "0.9"
 geometrija = { path = "../geometrija", version = "0.0.0" }
 egui_kittest = "0.37.0"
 rusqlite = "0.41"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1.34"

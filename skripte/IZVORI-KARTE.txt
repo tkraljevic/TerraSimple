@@ -1,0 +1,14 @@
+Izvori karte
+
+OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+https://openfreemap.org
+https://www.openmaptiles.org/
+https://www.openstreetmap.org/copyright
+
+Sadrži podatke Državne geodetske uprave — Digitalna ortofotokarta (DOF),
+Hrvatska osnovna karta (HOK) ili Topografska karta 1:25 000 (TK25), prema
+odabranoj podlozi, u skladu s Otvorenom dozvolom.
+https://geoportal.dgu.hr
+
+Paket programa ne uključuje pločice tih izvora. Navod aktivne podloge prikazuje
+se na karti. Kod izvoza podataka treba navesti i godište, datum pristupa te izmjene.
