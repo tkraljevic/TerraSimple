@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=TerraSimple
+Comment=Karta, crtanje i mjerenje
+Exec=TerraSimple
+Icon=terrasimple
+Terminal=false
+Categories=Education;Geography;
+StartupNotify=true

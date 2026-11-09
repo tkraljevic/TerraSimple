@@ -1,0 +1,88 @@
+name: Paketi izdanja
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: izdanje-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  paketi:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            sustav: macos
+            targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - os: windows-2022
+            sustav: windows
+            targets: x86_64-pc-windows-msvc
+          - os: ubuntu-24.04
+            sustav: linux
+            targets: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          targets: ${{ matrix.targets }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: Swatinem/rust-cache@v2
+      - name: Provjera pakiranja
+        timeout-minutes: 2
+        run: python -m unittest discover -s skripte -p test_izdanje.py
+      - name: Alati za licence
+        timeout-minutes: 20
+        run: |
+          cargo install cargo-about --version 0.9.3 --locked --features cli
+          cargo install cargo-deny --version 0.20.2 --locked
+      - name: Linux prozor i softverska kartica
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: sudo apt-get update && sudo apt-get install -y xvfb mesa-vulkan-drivers libxkbcommon-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - name: Windows kartica
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '"WGPU_BACKEND=dx12" >> $env:GITHUB_ENV'
+      - name: Linux kartica
+        if: runner.os == 'Linux'
+        run: echo 'WGPU_BACKEND=vulkan' >> "$GITHUB_ENV"
+      - name: Gradnja, licence, paket i pravi prozor
+        timeout-minutes: 95
+        run: python skripte/izdanje.py ${{ matrix.sustav }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TerraSimple-${{ matrix.sustav }}
+          path: |
+            target/izdanje/*.zip
+            target/izdanje/*.tar.gz
+            target/izdanje/*.json
+          if-no-files-found: error
+          retention-days: 14
+  nacrt:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: paketi
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: target/artefakti
+          merge-multiple: true
+      - name: Samo nacrt izdanja
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TERRASIMPLE_OZNAKA: ${{ github.ref_name }}
+        run: python3 skripte/nacrt_izdanja.py
