@@ -11,7 +11,8 @@ sustav, uključujući QGIS-ov zapis 100000. Nepoznat sustav vraća grešku.
 
 Neizmijenjene geometrije ostaju bajt za bajt iste. Nepoznati stupci i nepovezane
 tablice ostaju sačuvani; `spremi_kao` koristi SQLite backup, uključujući WAL.
-Sukob s drugim piscem prekida spremanje. Priprema je izvan transakcije, a upis
+Sukob s drugim piscem prekida spremanje, ali ne i `spremi_kao` (vidi „Stil iz QGIS-a
+i Spremi kao nakon sukoba” niže). Priprema je izvan transakcije, a upis
 je atomski. Testovi stvarnih SQLite grešaka i izlaska podprocesa usred upisa
 potvrdili su povrat starog projekta i `integrity_check = ok`.
 
@@ -202,6 +203,36 @@ prozora to nije uhvatila jer je crtala ručno nabrojene slojeve; sad platno dobi
 kao u QGIS-u, a svaka stavka stabla mora pokazivati na sloj. Na staroj datoteci stavke ne pokazuju
 na slojeve (isprobano bez prozora).
 
-Traži odluku: sustav projekta EPSG:3765 i podloga OpenStreetMap. Stil promijenjen u
-QGIS-u ostaje u `layer_styles`, ali sljedeće spremanje iz TerraSimplea u projekt opet
-upiše stil iz TerraSimplea.
+Traži odluku: sustav projekta EPSG:3765 i podloga OpenStreetMap (podloga ostaje, Odluke
+(9. 11. 2026.)).
+
+## Stil iz QGIS-a i Spremi kao nakon sukoba (9. 11. 2026.)
+
+Odluke (9. 11. 2026.): stil koji korisnik namjesti u QGIS-u ostaje dok ga ne promijeni u
+TerraSimpleu, a nakon sukoba Spremi kao sprema projekt kako ga vidi TerraSimple u novu
+datoteku.
+
+**Stil.** Svako spremanje slagalo je QGIS projekt iznova, pa je stil koji je korisnik
+namjestio u QGIS-u i spremio u projekt nestao. Sad `qgis_stari.rs` pročita projekt koji
+je već u datoteci. Za sloj kojem se u TerraSimpleu stil nije mijenjao od učitavanja,
+cijeli element `<maplayer>` ostaje kako ga je spremio QGIS: stil, natpisi, prozirnost i
+ostalo. Mijenjaju se samo naziv sloja i staza do datoteke. Ako se stari projekt ne da
+pročitati, projekt se složi iznova, kao prije. Postavke cijelog projekta, npr. ispisni
+predlošci, i dalje se ne čuvaju.
+
+**Spremi kao nakon sukoba.** `spremi_kao` je odbijao spremiti kad je datoteku u
+međuvremenu promijenio QGIS, pa se nespremljeni crtež gubio. Sad kopira datoteku kakva
+jest i u nju upiše projekt kako ga vidi TerraSimple, a izvorna datoteka ostaje netaknuta.
+Kopija tada nosi i QGIS-ove nove objekte. Oni se čitaju s brojevima iznad svih brojeva u
+projektu, inače bi novi objekt iz TerraSimplea dobio isti broj kao QGIS-ov i preuzeo
+njegov redak s njegovim vrijednostima. Test s QGIS-ovim stupcem `napomena` to pokazuje:
+bez pomaka brojeva novi objekt nosi QGIS-ovu napomenu.
+
+**Provjera.** `krug.py` s pravim QGIS-om 3.44.15 bez prozora: QGIS sloju promijeni boju i
+prozirnost i spremi projekt u paket, TerraSimple izmijeni objekt i spremi, a QGIS zatim
+vidi istu boju i prozirnost. Sve 92 provjere prolaze. Bez čuvanja starog elementa ta
+provjera pada. U zasebnoj probi ostali su i natpisi i veličina znaka.
+
+**Namjerne greške.** Na `qgis_stari.rs` 105 je uhvaćeno, 0 preživjelo, 9 neizvedivo. Na
+`lib.rs` nije preživjela nijedna. U `qgis_projekt.rs` preživjele su samo već opisane
+(obuhvat, uvlake, oznake geometrije, zaglavlje zipa).

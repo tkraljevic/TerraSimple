@@ -6,6 +6,7 @@ mod fid;
 mod geometrija;
 mod pisanje;
 mod qgis_projekt;
+mod qgis_stari;
 mod qgis_sustavi;
 mod shema;
 mod stil;
@@ -67,9 +68,13 @@ impl Datoteka {
         })
     }
     pub fn ucitaj(&mut self) -> Result<Projekt, Greska> {
+        self.ucitaj_iznad(0)
+    }
+    /// Objekti bez zapisanog broja dobiju brojeve veće od `najmanji`.
+    fn ucitaj_iznad(&mut self, najmanji: u64) -> Result<Projekt, Greska> {
         let tx = self.veza.unchecked_transaction()?;
         let verzija = tx.query_row("PRAGMA data_version", [], |r| r.get(0))?;
-        let (p, upozorenja) = citanje::projekt(&tx)?;
+        let (p, upozorenja) = citanje::projekt(&tx, najmanji)?;
         tx.commit()?;
         self.verzija = verzija;
         self.procitano = true;
@@ -85,15 +90,31 @@ impl Datoteka {
         Ok(())
     }
     /// SQLite backup uključuje i spremljene WAL izmjene te nepoznate tablice i krivulje.
+    ///
+    /// Radi i nakon sukoba (Odluke (9. 11. 2026.)): nova datoteka dobije projekt kako ga vidi
+    /// TerraSimple, a izvorna, koju je promijenio drugi program, ostaje netaknuta. Kopija tada
+    /// nosi i tuđe izmjene, pa se objekti koje je drugi program dodao čitaju s brojevima iznad
+    /// svih brojeva u projektu. Inače bi novi objekt iz TerraSimplea dobio isti broj kao tuđi
+    /// i spremanje bi tuđi redak prepisalo umjesto da doda novi.
     pub fn spremi_kao(&mut self, staza: impl AsRef<Path>, projekt: &Projekt) -> Result<(), Greska> {
         self.provjeri_spremanje(projekt)?;
         if staza.as_ref().exists() {
             return Err("Odredišna datoteka već postoji.".into());
         }
-        pisanje::provjeri_verziju(&self.veza, self.verzija)?;
         let mut druga = self.kopija(staza)?;
-        druga.ucitaj()?;
+        druga.ucitaj_iznad(self.najmanji_novi_id(projekt))?;
         druga.spremi(projekt)
+    }
+    /// Druge greške pri provjeri izvorne datoteke ovdje se ne javljaju: kopija je već napravljena,
+    /// a čitanje i spremanje kopije javit će svoju.
+    fn najmanji_novi_id(&self, projekt: &Projekt) -> u64 {
+        let promijenjena = pisanje::provjeri_verziju(&self.veza, self.verzija)
+            .is_err_and(|e| e.is::<DatotekaPromijenjena>());
+        if promijenjena {
+            projekt.najveci_id()
+        } else {
+            0
+        }
     }
     fn provjeri_spremanje(&self, p: &Projekt) -> Result<(), Greska> {
         if !self.procitano {
@@ -111,7 +132,6 @@ impl Datoteka {
         self.veza
             .backup("main", &staza, None::<fn(rusqlite::backup::Progress)>)
             .map_err(Into::into)
-            .and_then(|()| pisanje::provjeri_verziju(&self.veza, self.verzija))
             .and_then(|()| Self::otvori(staza))
     }
 }

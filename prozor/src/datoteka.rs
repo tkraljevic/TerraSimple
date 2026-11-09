@@ -354,6 +354,70 @@ mod testovi {
         let _ = std::fs::remove_dir_all(&mapa);
     }
 
+    /// Odluke (9. 11. 2026.): nakon sukoba s QGIS-om crtež se sprema kao nova datoteka i
+    /// rad se u njoj nastavlja.
+    #[test]
+    fn nakon_sukoba_spremi_kao_sprema_crtez_i_rad_se_nastavlja() {
+        let mapa = PathBuf::from(".quality/test_sukob_spremi_kao");
+        let _ = std::fs::remove_dir_all(&mapa);
+        std::fs::create_dir_all(&mapa).unwrap();
+        let izvorna = mapa.join("izvorna.gpkg");
+        let nova = mapa.join("nova.gpkg");
+        let katalog = KatalogPoruka::hrvatski();
+        let mut uredjivac = Uredjivac::novi();
+        let mut datoteka = PodaciDatoteke::nova();
+        let sloj = match uredjivac
+            .izvrsi(NaredbaStabla::DodajSloj {
+                naziv: "Točke".into(),
+                vrsta: VrstaGeometrije::Tocka,
+                u: None,
+            })
+            .unwrap()
+        {
+            Some(slojevi::Novo::Sloj(s)) => s,
+            _ => panic!("nema sloja"),
+        };
+        radnja_spremi_kao(&mut uredjivac, &mut datoteka, &katalog, izvorna.clone()).unwrap();
+
+        uredjivac
+            .izvrsi(slojevi::NaredbaObjekta::Dodaj {
+                sloj,
+                naziv: "Crtež".into(),
+                geometrija: slojevi::Geometrija::Tocka(slojevi::Vrh::novi(18.7, 45.55)),
+            })
+            .unwrap();
+        rusqlite::Connection::open(&izvorna)
+            .unwrap()
+            .execute_batch("CREATE TABLE iz_qgisa(v TEXT)")
+            .unwrap();
+
+        let greska = radnja_spremi(&mut uredjivac, &mut datoteka, &katalog).unwrap_err();
+        assert_eq!(greska, katalog.tekst("greska-sukob-promjena"));
+        assert!(uredjivac.je_li_izmijenjen());
+
+        radnja_spremi_kao(&mut uredjivac, &mut datoteka, &katalog, nova.clone()).unwrap();
+        assert!(!uredjivac.je_li_izmijenjen());
+        assert_eq!(datoteka.staza.as_ref(), Some(&nova));
+        let procitaj = |staza: &Path| {
+            let mut d = geopaket::Datoteka::otvori(staza).unwrap();
+            let p = d.ucitaj().unwrap();
+            p.sloj(sloj).unwrap().objekti.len()
+        };
+        assert_eq!(procitaj(&nova), 1);
+        assert_eq!(procitaj(&izvorna), 0);
+
+        uredjivac
+            .izvrsi(slojevi::NaredbaObjekta::Dodaj {
+                sloj,
+                naziv: "Nastavak".into(),
+                geometrija: slojevi::Geometrija::Tocka(slojevi::Vrh::novi(18.71, 45.55)),
+            })
+            .unwrap();
+        assert!(radnja_spremi(&mut uredjivac, &mut datoteka, &katalog).unwrap());
+        assert_eq!(procitaj(&nova), 2);
+        let _ = std::fs::remove_dir_all(&mapa);
+    }
+
     #[test]
     fn status_datoteke_provjerava_primjer_i_stazu() {
         let katalog = KatalogPoruka::hrvatski();

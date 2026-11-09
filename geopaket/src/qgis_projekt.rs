@@ -3,11 +3,13 @@
 //! Omogućuje da QGIS pri otvaranju prepozna nazive slojeva, mape i stilove
 //! identično kao u TerraSimpleu.
 
+use crate::qgis_stari::{self, SlojQgisa};
 use crate::qgis_sustavi::{HTRS96_TM, PSEUDO_MERKATOR};
 use crate::{Greska, qgis_sustavi, stil};
 use koordinate::{Pretvornik, Sustav};
 use rusqlite::Connection;
 use slojevi::{Geometrija, IdSloja, Projekt, Stavka, VrstaGeometrije};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 /// Naziv QGIS projekta koji sprema TerraSimple.
@@ -15,11 +17,13 @@ pub const NAZIV_PROJEKTA: &str = "TerraSimple";
 
 /// Sprema ili zamjenjuje projekt `TerraSimple` u tablici `qgis_projects`.
 ///
-/// Ostali projekti u tablici ostaju netaknuti.
-pub fn spremi(c: &Connection, p: &Projekt) -> Result<(), Greska> {
+/// Ostali projekti u tablici ostaju netaknuti. Sloj kojem stil nije mijenjan od `prije`
+/// zadržava svoj element iz projekta koji je već u datoteci (Odluke (9. 11. 2026.)).
+pub fn spremi(c: &Connection, prije: &Projekt, p: &Projekt) -> Result<(), Greska> {
     stvori_tablicu_ako_ne_postoji(c)?;
     let ime_datoteke = dohvati_ime_datoteke(c);
-    let xml = generiraj_qgs(p, &ime_datoteke);
+    let sacuvani = sacuvani_slojevi(c, prije, p);
+    let xml = generiraj_qgs_sa(p, &ime_datoteke, &sacuvani);
     let zip_bajti = zapakiraj_qgz(xml.as_bytes())?;
     let heks_sadrzaj = heksadecimalni_niz(&zip_bajti);
 
@@ -50,7 +54,25 @@ fn dohvati_ime_datoteke(c: &Connection) -> String {
     }
 }
 
+/// Slojevi kojima TerraSimple nije mijenjao stil, s elementom iz starog projekta.
+fn sacuvani_slojevi(c: &Connection, prije: &Projekt, p: &Projekt) -> BTreeMap<IdSloja, SlojQgisa> {
+    let mut stari = qgis_stari::slojevi(c, NAZIV_PROJEKTA);
+    p.slojevi()
+        .filter(|(id, s)| prije.sloj(*id).is_some_and(|ps| ps.stil == s.stil))
+        .filter_map(|(id, _)| stari.remove(&id_sloja(p, id)).map(|x| (id, x)))
+        .collect()
+}
+
+#[cfg(test)]
 pub fn generiraj_qgs(p: &Projekt, ime_datoteke: &str) -> String {
+    generiraj_qgs_sa(p, ime_datoteke, &BTreeMap::new())
+}
+
+fn generiraj_qgs_sa(
+    p: &Projekt,
+    ime_datoteke: &str,
+    sacuvani: &BTreeMap<IdSloja, SlojQgisa>,
+) -> String {
     let (min_x, min_y, max_x, max_y) = opseg_projekta(p);
     let mut xml = String::with_capacity(4096);
     xml.push_str("<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>\n");
@@ -59,7 +81,7 @@ pub fn generiraj_qgs(p: &Projekt, ime_datoteke: &str) -> String {
     xml.push_str("  <title>TerraSimple</title>\n");
     dodaj_crs_xml(&mut xml);
     dodaj_stablo_xml(&mut xml, p, ime_datoteke);
-    dodaj_slojeve_xml(&mut xml, p, ime_datoteke);
+    dodaj_slojeve_xml(&mut xml, p, ime_datoteke, sacuvani);
     dodaj_redoslijed_xml(&mut xml, p);
     dodaj_pogled_xml(&mut xml, min_x, min_y, max_x, max_y);
     xml.push_str("</qgis>\n");
@@ -137,13 +159,25 @@ fn stablo_stavka_xml(
     }
 }
 
-fn dodaj_slojeve_xml(xml: &mut String, p: &Projekt, ime_datoteke: &str) {
+fn dodaj_slojeve_xml(
+    xml: &mut String,
+    p: &Projekt,
+    ime_datoteke: &str,
+    sacuvani: &BTreeMap<IdSloja, SlojQgisa>,
+) {
     // `<srs>` mora biti sustav u kojem je sloj stvarno spremljen (WGS84, HTRS96/TM, HDKS).
     // QGIS ga sluša i bez njega sloj ostaje bez sustava, a s krivim crta objekte na krivom mjestu.
     xml.push_str("  <projectlayers>\n");
     for (id, s) in p.slojevi() {
         let id_tekst = id_sloja(p, id);
         let tablica = crate::pisanje::tablica(p, id);
+        if let Some(stari) = sacuvani.get(&id) {
+            let izvor = format!("./{}|layername={}", ime_datoteke, tablica);
+            xml.push_str("    ");
+            xml.push_str(&stari.prilagodi(&xml_bijeg(&izvor), &xml_bijeg(&s.naziv)));
+            xml.push('\n');
+            continue;
+        }
         let (geom_tip, wkb_tip) = geometrija_oznake(s.vrsta);
         let renderer = stil::renderer(s.vrsta, s.stil);
         let srs = qgis_sustavi::zapis(sustav_sloja(p, id));
@@ -509,7 +543,7 @@ mod testovi {
         })
         .unwrap();
 
-        spremi(&c, u.projekt()).unwrap();
+        spremi(&c, &Projekt::default(), u.projekt()).unwrap();
 
         // Tuđi projekt ostaje
         let drugi: String = c

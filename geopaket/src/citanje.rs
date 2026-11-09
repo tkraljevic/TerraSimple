@@ -162,15 +162,15 @@ pub(crate) fn ids(c: &Connection) -> Result<BTreeMap<(String, i64), u64>, Greska
         .and_then(Iterator::collect)
         .map_err(Into::into)
 }
-pub(crate) fn projekt(c: &Connection) -> Result<(Projekt, Vec<String>), Greska> {
+/// Sloj ili objekt bez zapisanog broja dobije prvi slobodan broj veći od `najmanji`.
+pub(crate) fn projekt(c: &Connection, najmanji: u64) -> Result<(Projekt, Vec<String>), Greska> {
     let n = cvorovi(c)?;
     let ids = ids(c)?;
     let mut sljedeci = n
         .iter()
         .map(|n| n.id)
         .chain(ids.values().copied())
-        .max()
-        .unwrap_or(0);
+        .fold(najmanji, u64::max);
     let info = slojevi(c, &n, &mut sljedeci)?;
     let mut slojevi = BTreeMap::new();
     let mut zapisi = Zapisi::default();
@@ -496,7 +496,7 @@ mod testovi {
         .unwrap();
         c.execute_batch("DROP TABLE gpkg_ts_objekti; DROP TABLE gpkg_ts_stablo;")
             .unwrap();
-        let (p, u) = projekt(&c).unwrap();
+        let (p, u) = projekt(&c, 0).unwrap();
         assert!(u.is_empty(), "{u:?}");
         let (id, s) = p.slojevi().next().unwrap();
         assert_eq!(s.objekti.len(), 1);
@@ -509,9 +509,9 @@ mod testovi {
         assert!(v[0].duzina > 18.0 && v[0].duzina < 19.0);
         assert_eq!(p.zapisi().slojevi[&id].objekti[&o.id].nepoznati.len(), 5);
         c.execute_batch("UPDATE gpkg_spatial_ref_sys SET organization='NONE',definition='PROJCS[\"x\",AUTHORITY[\"EPSG\",\"3765\"]]' WHERE srs_id=3765;").unwrap();
-        assert!(projekt(&c).is_ok());
+        assert!(projekt(&c, 0).is_ok());
         c.execute_batch("UPDATE gpkg_spatial_ref_sys SET organization='NONE',definition='nepoznato' WHERE srs_id=3765;").unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
     }
     #[test]
     fn prazno_i_krivulja_ostaju_u_bazi() {
@@ -527,7 +527,7 @@ mod testovi {
         b[3] = 1;
         b[9] = 9;
         c.execute("INSERT INTO test(geom) VALUES(?1)", [b]).unwrap();
-        let (p, u) = projekt(&c).unwrap();
+        let (p, u) = projekt(&c, 0).unwrap();
         assert_eq!(u.len(), 3);
         assert_eq!(p.slojevi().next().unwrap().1.objekti.len(), 0);
         assert_eq!(
@@ -554,23 +554,23 @@ mod testovi {
         }
         assert!(stanje(4).is_err());
         let c = baza();
-        assert!(projekt(&c).is_ok());
+        assert!(projekt(&c, 0).is_ok());
         let mut id = u64::MAX;
         assert!(novi_id(&mut id).is_err());
         c.execute_batch("CREATE TABLE bez_pk(v TEXT);").unwrap();
         assert!(kljuc_sloja(&c, "bez_pk").is_err());
         c.execute_batch("INSERT INTO gpkg_ts_stablo VALUES(1,'krivo',NULL,0,'Krivo',NULL,NULL,0)")
             .unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
         c.execute_batch("UPDATE gpkg_ts_stablo SET vrsta='mapa',roditelj=99")
             .unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
         c.execute_batch("UPDATE gpkg_ts_stablo SET roditelj=-1")
             .unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
         c.execute_batch("UPDATE gpkg_ts_stablo SET roditelj=NULL,id=-1")
             .unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
     }
 }
 
@@ -720,11 +720,11 @@ mod rubni_slucajevi {
         assert_eq!(u.len(), 1);
         c.execute_batch("INSERT INTO gpkg_ts_stablo VALUES(1,'mapa',1,0,'Mapa',NULL,NULL,0)")
             .unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
         c.execute_batch("DELETE FROM gpkg_ts_stablo; INSERT INTO gpkg_ts_stablo VALUES(9223372036854775807,'mapa',NULL,0,'M',NULL,NULL,0)").unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
         c.execute_batch("DELETE FROM gpkg_ts_stablo; CREATE TABLE bez(fid TEXT); INSERT INTO gpkg_contents(table_name,data_type,srs_id) VALUES('bez','features',4326); INSERT INTO gpkg_geometry_columns VALUES('bez','geom','POINT',4326,0,0)").unwrap();
-        assert!(projekt(&c).is_err());
+        assert!(projekt(&c, 0).is_err());
     }
     #[test]
     fn podatak_o_prstenovima_mora_biti_valjan() {

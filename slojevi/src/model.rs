@@ -211,6 +211,23 @@ impl Projekt {
     pub fn slojevi(&self) -> impl Iterator<Item = (IdSloja, &Sloj)> {
         self.slojevi.iter().map(|(id, s)| (*id, s))
     }
+
+    /// Najveći broj koji projekt koristi za sloj, mapu, objekt ili redak u datoteci.
+    /// Novi brojevi moraju biti veći od njega.
+    pub fn najveci_id(&self) -> u64 {
+        let fidovi = self
+            .zapisi
+            .slojevi
+            .values()
+            .flat_map(|s| s.objekti.values().filter_map(|o| u64::try_from(o.fid).ok()));
+        self.slojevi()
+            .flat_map(|(id, s)| std::iter::once(id.0).chain(s.objekti.keys().map(|id| id.0)))
+            .chain(self.mape.keys().map(|id| id.0))
+            .chain(std::iter::once(self.zapisi.najveci_id))
+            .chain(fidovi)
+            .max()
+            .unwrap_or(0)
+    }
 }
 
 #[cfg(test)]

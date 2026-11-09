@@ -394,20 +394,7 @@ impl Skupina<'_> {
 
 impl Uredjivac {
     pub(crate) fn preuzmi_projekt(projekt: Projekt) -> Self {
-        let sljedeci_id = projekt
-            .slojevi()
-            .flat_map(|(id, s)| std::iter::once(id.0).chain(s.objekti.keys().map(|id| id.0)))
-            .chain(projekt.mape.keys().map(|id| id.0))
-            .chain(std::iter::once(projekt.zapisi.najveci_id))
-            .chain(
-                projekt
-                    .zapisi
-                    .slojevi
-                    .values()
-                    .flat_map(|s| s.objekti.values().filter_map(|o| u64::try_from(o.fid).ok())),
-            )
-            .max()
-            .unwrap_or(0);
+        let sljedeci_id = projekt.najveci_id();
         Self {
             projekt,
             sljedeci_id,

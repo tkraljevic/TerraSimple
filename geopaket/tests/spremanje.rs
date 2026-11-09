@@ -378,17 +378,86 @@ fn kolizija_nepoznatog_stupca_odbija_premjestanje_bez_gubitka() {
     );
     assert!(d.ucitaj().unwrap().objekt(s, o).is_some());
 }
+/// Odluke (9. 11. 2026.): nakon sukoba Spremi kao sprema projekt kako ga vidi TerraSimple u novu
+/// datoteku, a datoteka koju je mijenjao QGIS ostaje netaknuta.
 #[test]
-fn sukob_se_provjerava_i_prije_kopiranja() {
-    let (put, mut d, u, s, _) = pripremi("sukob-kopije");
+fn nakon_sukoba_spremi_kao_cuva_obje_inacice() {
+    let (put, mut d, u, s, o) = pripremi("sukob-kopije");
     d.spremi(u.projekt()).unwrap();
-    let p = d.ucitaj().unwrap();
+    let mut u = Uredjivac::iz_projekta(d.ucitaj().unwrap());
+    u.izvrsi(NaredbaObjekta::Izmijeni {
+        sloj: s,
+        objekt: o,
+        izmjena: IzmjenaObjekta::Naziv("Prva iz TerraSimplea".into()),
+    })
+    .unwrap();
+    u.izvrsi(NaredbaObjekta::Dodaj {
+        sloj: s,
+        naziv: "Nova iz TerraSimplea".into(),
+        geometrija: Geometrija::Tocka(Vrh::novi(18.7, 45.56)),
+    })
+    .unwrap();
+    // QGIS u istom sloju mijenja postojeći objekt i dodaje svoj, s vlastitim stupcem. Njegov
+    // novi objekt pri čitanju dobije isti broj kao novi objekt iz TerraSimplea.
     let c = Connection::open(&put).unwrap();
-    c.execute(&format!("UPDATE sloj_{} SET naziv='Tuđa izmjena'", s.0), [])
-        .unwrap();
+    c.execute_batch(&format!(
+        "UPDATE sloj_{0} SET naziv='Prva iz QGIS-a'; \
+         ALTER TABLE sloj_{0} ADD COLUMN napomena TEXT; \
+         INSERT INTO sloj_{0}(naziv, geom, napomena) SELECT 'Nova iz QGIS-a', geom, 'iz QGIS-a' FROM sloj_{0};",
+        s.0
+    ))
+    .unwrap();
+    drop(c);
+    let qgisova = std::fs::read(&put).unwrap();
+    assert!(
+        d.spremi(u.projekt())
+            .unwrap_err()
+            .is::<geopaket::DatotekaPromijenjena>()
+    );
     let izlaz = put.with_file_name(format!("sukob-kopije-izlaz-{}.gpkg", std::process::id()));
-    assert!(d.spremi_kao(&izlaz, &p).is_err());
-    assert!(!izlaz.exists());
+    if izlaz.exists() {
+        std::fs::remove_file(&izlaz).unwrap();
+    }
+    d.spremi_kao(&izlaz, u.projekt()).unwrap();
+    assert_eq!(std::fs::read(&put).unwrap(), qgisova);
+
+    let mut nova = Datoteka::otvori(&izlaz).unwrap();
+    let procitan = nova.ucitaj().unwrap();
+    assert_eq!(procitan.sloj(s), u.projekt().sloj(s));
+    // Novi objekt iz TerraSimplea ne preuzima QGIS-ov redak ni njegove vrijednosti.
+    let tudji: i64 = Connection::open(&izlaz)
+        .unwrap()
+        .query_row(
+            &format!(
+                "SELECT count(*) FROM sloj_{} WHERE napomena IS NOT NULL",
+                s.0
+            ),
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(tudji, 0);
+    // Nastavak rada u novoj datoteci: sljedeće spremanje i čitanje daju isto.
+    u.izvrsi(NaredbaObjekta::Izmijeni {
+        sloj: s,
+        objekt: o,
+        izmjena: IzmjenaObjekta::Opis("Nastavak".into()),
+    })
+    .unwrap();
+    nova.spremi(u.projekt()).unwrap();
+    assert_eq!(nova.ucitaj().unwrap().sloj(s), u.projekt().sloj(s));
+    let mut stara = Datoteka::otvori(&put).unwrap();
+    let mut nazivi: Vec<_> = stara
+        .ucitaj()
+        .unwrap()
+        .sloj(s)
+        .unwrap()
+        .objekti
+        .values()
+        .map(|o| o.naziv.clone())
+        .collect();
+    nazivi.sort();
+    assert_eq!(nazivi, ["Nova iz QGIS-a", "Prva iz QGIS-a"]);
 }
 
 #[test]
