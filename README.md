@@ -16,7 +16,8 @@ QGIS-u, pa profesionalac nastavlja tamo gdje je običan korisnik stao.
 
 ## Što zasad radi
 
-Program se priprema za prvo izdanje, 0.0.1 alfa. Gotovih paketa za preuzimanje još nema.
+Program se priprema za prvo izdanje, 0.0.1 alfa. Paketi za Windows, macOS i Linux grade se na GitHubu, ali
+izdanja još nema. Upute su u [izdanje.md](docs/izdanje.md).
 
 - **Karta:** podloga OpenFreeMap ili DGU ortofoto, svijetla i tamna tema, mjerilo i koordinate pod mišem u
   HTRS96/TM.
