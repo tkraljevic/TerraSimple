@@ -41,7 +41,7 @@ dopuštenje podrške računala.
 Raspakiraj `TerraSimple-…-linux-x86_64.tar.gz` u svoju mapu. U raspakiranoj mapi
 pokreni `./pokreni.sh` ili program `TerraSimple`. Paket se gradi na Ubuntu 24.04;
 starije distribucije i sve kombinacije grafičkih upravljačkih programa nisu
-potvrđene. Trebaju uobičajene biblioteke X11 ili Waylanda i podrška za Vulkan.
+potvrđene. Trebaju uobičajene biblioteke X11 ili Waylanda, među njima `libxkbcommon-x11`, i podrška za Vulkan.
 
 Ako želiš prečac u izborniku, kopiraj `TerraSimple.desktop` u
 `~/.local/share/applications/`. U njemu postavi `Exec` na punu stazu programa, a

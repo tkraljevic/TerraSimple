@@ -10,6 +10,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import tarfile
 import time
 import zipfile
@@ -79,7 +80,8 @@ def mac(mapa, ulazi, verzija):
     izvedi(["lipo", "-create", *map(str, ulazi), "-output", str(exe)])
     izvedi(["lipo", "-info", str(exe)])
     if len(ulazi) == 2:
-        izvedi(["lipo", "-verify_arch", "arm64", "x86_64", str(exe)])
+        # Datoteka ide prije -verify_arch; obrnuto lipo javlja grešku na svakom Macu.
+        izvedi(["lipo", str(exe), "-verify_arch", "arm64", "x86_64"])
     shutil.copy2(KORIJEN / "resursi/ikone/izdanje/TerraSimple.icns", app / "Resources/TerraSimple.icns")
     podaci = {"CFBundleName": "TerraSimple", "CFBundleDisplayName": "TerraSimple",
               "CFBundleExecutable": "TerraSimple", "CFBundlePackageType": "APPL",
@@ -165,4 +167,6 @@ def glavno():
     print(json.dumps(rezultat, ensure_ascii=False))
 
 if __name__ == "__main__":
+    # Konzola Windowsa piše u cp1252 i ne zna okvirne crte iz ispisa cargo-denyja.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     glavno()
