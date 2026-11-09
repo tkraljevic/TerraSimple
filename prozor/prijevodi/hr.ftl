@@ -200,7 +200,10 @@ brisanje-gumb-odustani = Odustani
 greska-otvaranja-naslov = Greška pri otvaranju
 greska-spremanja-naslov = Greška pri spremanju
 greska-gumb-u-redu = U redu
-greska-sukob-promjena = Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno.
+greska-sukob-promjena = Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program, npr. QGIS. Spremi svoj crtež kao novu datoteku. Datoteka koju je promijenio drugi program ostaje kakva jest.
+sukob-naslov = Datoteku je promijenio drugi program
+sukob-gumb-odustani = Odustani
+sukob-gumb-spremi-kao = Spremi kao…
 greska-spremanja-opcenito = Projekt nije spremljen: { $detalji }. Pokušaj ponovno ili spremi pod drugim nazivom.
 greska-otvaranja-opcenito = Projekt nije otvoren: { $detalji }. Provjeri je li datoteka ispravan GeoPackage.
 

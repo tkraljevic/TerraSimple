@@ -54,9 +54,11 @@ nastavi dalje ako može.
 ## 6. Sukob
 
 1. Projekt je otvoren u oba programa. U QGIS-u pomakni jednu točku i spremi izmjene sloja.
-2. U TerraSimpleu nacrtaj nešto i spremi. Spremanje se odbija s porukom da je datoteku u međuvremenu
-   promijenio drugi program.
-3. Otvori projekt ponovno. Izmjena iz QGIS-a je tu, a datoteka nije oštećena: QGIS je i dalje otvara.
+2. U TerraSimpleu nacrtaj nešto i spremi. Iskoči prozorčić „Datoteku je promijenio drugi program” s gumbima
+   Odustani i Spremi kao…. Odustani: crtež je i dalje na karti, uz naziv piše „nespremljeno”.
+3. Spremi opet pa odaberi Spremi kao…, u novu datoteku. Ispod naziva je nova datoteka i „spremljeno”.
+4. Otvori novu datoteku: tvoj crtež je tu, a izmjena iz QGIS-a nije. Otvori izvornu: izmjena iz QGIS-a je tu,
+   tvog crteža nema, a QGIS je i dalje otvara.
 
 ## 7. Tražilica
 

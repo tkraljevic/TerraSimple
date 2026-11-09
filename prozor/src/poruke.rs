@@ -348,7 +348,7 @@ mod testovi {
         );
         assert_eq!(
             katalog.greska_spremanja(&geopaket::DatotekaPromijenjena),
-            "Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno."
+            "Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program, npr. QGIS. Spremi svoj crtež kao novu datoteku. Datoteka koju je promijenio drugi program ostaje kakva jest."
         );
         assert!(
             katalog

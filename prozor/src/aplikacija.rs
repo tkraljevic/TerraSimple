@@ -1,6 +1,6 @@
 use crate::datoteka::{
-    BiracDatoteka, PodaciDatoteke, SustavskiBirac, radnja_novi, radnja_otvori, radnja_spremi,
-    radnja_spremi_kao, tekst_statusa_datoteke,
+    BiracDatoteka, GreskaSpremanja, PodaciDatoteke, SustavskiBirac, radnja_novi, radnja_otvori,
+    radnja_spremi, radnja_spremi_kao, tekst_statusa_datoteke,
 };
 use crate::dijalozi::{
     AktivniDijalog, IshodDijaloga, NamjeraPotvrde, StavkaIzbornikaDatoteka, crtaj_aktivni_dijalog,
@@ -187,6 +187,35 @@ impl Default for Aplikacija {
     }
 }
 
+/// Prozorčić koji se otvori sam, za snimke i pregled izgleda (`--dijalog <naziv>`).
+pub(crate) fn dijalog_za_pregled(
+    naziv: Option<&str>,
+    katalog: &KatalogPoruka,
+) -> Option<AktivniDijalog> {
+    match naziv {
+        Some("potvrda") => Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi)),
+        Some("greska") => Some(AktivniDijalog::PorukaGreske {
+            naslov: katalog.tekst("greska-spremanja-naslov"),
+            poruka: katalog.greska_spremanja(&std::io::Error::other("disk je pun")),
+        }),
+        Some("sukob") => Some(AktivniDijalog::SukobSpremanja),
+        Some("upozorenje") => Some(AktivniDijalog::UpozorenjeBrisanja {
+            stavka: slojevi::Stavka::Sloj(slojevi::IdSloja(1)),
+            naziv: "Građevine".to_string(),
+            broj_nepodrzanih: 5,
+        }),
+        Some("upozorenja-otvaranja") => Some(AktivniDijalog::UpozorenjaOtvaranja {
+            upozorenja: vec![
+                "Sloj „Katastar” sadrži krivulje koje nisu podržane".to_string(),
+                "Sloj „Točke” sadrži nepodržane M koordinate".to_string(),
+                "Sloj „Granice” sadrži nepoznati SRID 9999".to_string(),
+            ],
+            otvoren_popis: false,
+        }),
+        _ => None,
+    }
+}
+
 impl Aplikacija {
     #[must_use]
     pub fn nova(postavke: PostavkeAplikacije) -> Self {
@@ -201,27 +230,7 @@ impl Aplikacija {
             // Izmišljeni likovi primjera su kod 16,0° E i 45,8° N.
             karta.karta().idi_na(16.004, 45.802, 16.5);
         }
-        let aktivni_dijalog = match postavke.dijalog.as_deref() {
-            Some("potvrda") => Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi)),
-            Some("greska") => Some(AktivniDijalog::PorukaGreske {
-                naslov: katalog.tekst("greska-spremanja-naslov"),
-                poruka: katalog.greska_spremanja(&geopaket::DatotekaPromijenjena),
-            }),
-            Some("upozorenje") => Some(AktivniDijalog::UpozorenjeBrisanja {
-                stavka: slojevi::Stavka::Sloj(slojevi::IdSloja(1)),
-                naziv: "Građevine".to_string(),
-                broj_nepodrzanih: 5,
-            }),
-            Some("upozorenja-otvaranja") => Some(AktivniDijalog::UpozorenjaOtvaranja {
-                upozorenja: vec![
-                    "Sloj „Katastar” sadrži krivulje koje nisu podržane".to_string(),
-                    "Sloj „Točke” sadrži nepodržane M koordinate".to_string(),
-                    "Sloj „Granice” sadrži nepoznati SRID 9999".to_string(),
-                ],
-                otvoren_popis: false,
-            }),
-            _ => None,
-        };
+        let aktivni_dijalog = dijalog_za_pregled(postavke.dijalog.as_deref(), &katalog);
         Self {
             uredjivac,
             stanje,
@@ -444,7 +453,6 @@ impl Aplikacija {
             "izbornik-crtanje",
             "izbornik-slojevi",
             "izbornik-prikaz",
-            "izbornik-ispis",
             "izbornik-alati",
             "izbornik-pomoc",
         ];
@@ -716,7 +724,8 @@ impl Aplikacija {
         let ky = pocetak.y;
         let tamna = self.stanje.tema_tamna;
 
-        let k1 = Rect::from_min_size(pos2(kx, ky), vec2(40.0, 81.0));
+        // Odluke (9. 11. 2026.): gumb Ispis je skriven dok ispis ne proradi (faza 6).
+        let k1 = Rect::from_min_size(pos2(kx, ky), vec2(40.0, 40.0));
         zaklon(ui, k1, "lebdeci_k1");
         zaobljeni_okvir(ui, k1, boje.lebdeca, Some(boje.obrub), 10.0);
         let zaslon = gumb_ikona(
@@ -734,27 +743,8 @@ impl Aplikacija {
             tamna,
             boje,
         );
-        ui.painter().line_segment(
-            [pos2(kx + 6.0, ky + 40.0), pos2(kx + 34.0, ky + 40.0)],
-            Stroke::new(1.0, boje.obrub),
-        );
-        let _ = gumb_ikona(
-            ui,
-            &mut self.ikone,
-            &OpisGumbaIkone {
-                okvir: Rect::from_min_size(pos2(kx, ky + 41.0), vec2(40.0, 40.0)),
-                ikona: "ispis",
-                stanje: "obicno",
-                crtez: 20,
-                obrubljen: false,
-                aktivno: false,
-                labela: &self.katalog.tekst("lebdeci-ispis"),
-            },
-            tamna,
-            boje,
-        );
 
-        let k2 = Rect::from_min_size(pos2(kx, ky + 91.0), vec2(40.0, 40.0));
+        let k2 = Rect::from_min_size(pos2(kx, ky + 50.0), vec2(40.0, 40.0));
         zaklon(ui, k2, "lebdeci_k2");
         zaobljeni_okvir(ui, k2, boje.lebdeca, Some(boje.obrub), 10.0);
         let _ = gumb_ikona(
@@ -773,14 +763,14 @@ impl Aplikacija {
             boje,
         );
 
-        let k3 = Rect::from_min_size(pos2(kx, ky + 141.0), vec2(40.0, 81.0));
+        let k3 = Rect::from_min_size(pos2(kx, ky + 100.0), vec2(40.0, 81.0));
         zaklon(ui, k3, "lebdeci_k3");
         zaobljeni_okvir(ui, k3, boje.lebdeca, Some(boje.obrub), 10.0);
         let plus = gumb_ikona(
             ui,
             &mut self.ikone,
             &OpisGumbaIkone {
-                okvir: Rect::from_min_size(pos2(kx, ky + 141.0), vec2(40.0, 40.0)),
+                okvir: Rect::from_min_size(pos2(kx, ky + 100.0), vec2(40.0, 40.0)),
                 ikona: "plus",
                 stanje: "obicno",
                 crtez: 20,
@@ -792,14 +782,14 @@ impl Aplikacija {
             boje,
         );
         ui.painter().line_segment(
-            [pos2(kx + 6.0, ky + 181.0), pos2(kx + 34.0, ky + 181.0)],
+            [pos2(kx + 6.0, ky + 140.0), pos2(kx + 34.0, ky + 140.0)],
             Stroke::new(1.0, boje.obrub),
         );
         let minus = gumb_ikona(
             ui,
             &mut self.ikone,
             &OpisGumbaIkone {
-                okvir: Rect::from_min_size(pos2(kx, ky + 182.0), vec2(40.0, 40.0)),
+                okvir: Rect::from_min_size(pos2(kx, ky + 141.0), vec2(40.0, 40.0)),
                 ikona: "minus",
                 stanje: "obicno",
                 crtez: 20,
@@ -914,8 +904,8 @@ impl Aplikacija {
             StavkaIzbornikaDatoteka::Novi => self.pokreni_novi(),
             StavkaIzbornikaDatoteka::Otvori => self.pokreni_otvori(),
             StavkaIzbornikaDatoteka::Spremi => {
-                if let Err(poruka) = self.izvrsi_spremanje() {
-                    self.postavi_gresku_spremanja(poruka);
+                if let Err(greska) = self.izvrsi_spremanje() {
+                    self.postavi_gresku_spremanja(greska);
                 }
             }
             StavkaIzbornikaDatoteka::SpremiKao => self.izvrsi_spremi_kao(),
@@ -949,7 +939,7 @@ impl Aplikacija {
                 staza,
             )
         {
-            self.postavi_gresku_spremanja(poruka);
+            self.postavi_gresku_spremanja(GreskaSpremanja::Poruka(poruka));
         }
     }
 
@@ -957,7 +947,7 @@ impl Aplikacija {
     /// Nespremljen projekt traži mjesto za datoteku; ako korisnik odustane, ne događa se ništa.
     pub fn otvori_u_qgisu(&mut self) {
         match self.izvrsi_spremanje() {
-            Err(poruka) => return self.postavi_gresku_spremanja(poruka),
+            Err(greska) => return self.postavi_gresku_spremanja(greska),
             Ok(false) => return,
             Ok(true) => {}
         }
@@ -972,10 +962,13 @@ impl Aplikacija {
         }
     }
 
-    fn postavi_gresku_spremanja(&mut self, poruka: String) {
-        self.aktivni_dijalog = Some(AktivniDijalog::PorukaGreske {
-            naslov: self.katalog.tekst("greska-spremanja-naslov"),
-            poruka,
+    fn postavi_gresku_spremanja(&mut self, greska: GreskaSpremanja) {
+        self.aktivni_dijalog = Some(match greska {
+            GreskaSpremanja::Sukob => AktivniDijalog::SukobSpremanja,
+            GreskaSpremanja::Poruka(poruka) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("greska-spremanja-naslov"),
+                poruka,
+            },
         });
     }
 
@@ -1007,7 +1000,7 @@ impl Aplikacija {
         }
     }
 
-    fn izvrsi_spremanje(&mut self) -> Result<bool, String> {
+    fn izvrsi_spremanje(&mut self) -> Result<bool, GreskaSpremanja> {
         let spremljeno = radnja_spremi(&mut self.uredjivac, &mut self.datoteka, &self.katalog)?;
         if !spremljeno {
             if let Some(staza) = self.birac.spremi_datoteku(None) {
@@ -1016,7 +1009,8 @@ impl Aplikacija {
                     &mut self.datoteka,
                     &self.katalog,
                     staza,
-                )?;
+                )
+                .map_err(GreskaSpremanja::Poruka)?;
                 Ok(true)
             } else {
                 Ok(false)
@@ -1119,6 +1113,10 @@ impl Aplikacija {
                 self.aktivni_dijalog = Some(dijalog);
             }
             IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
+            IshodDijaloga::SukobSpremiKao => {
+                self.aktivni_dijalog = None;
+                self.izvrsi_spremi_kao();
+            }
         }
     }
 
@@ -1136,8 +1134,8 @@ impl Aplikacija {
             Ok(false) => {
                 self.aktivni_dijalog = Some(dijalog);
             }
-            Err(poruka) => {
-                self.postavi_gresku_spremanja(poruka);
+            Err(greska) => {
+                self.postavi_gresku_spremanja(greska);
             }
         }
     }

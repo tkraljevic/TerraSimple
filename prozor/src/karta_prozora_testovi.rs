@@ -388,6 +388,24 @@ fn primjer_ima_pravo_mjerilo_koordinate_i_zum_iz_gumba() {
     assert!((h.state_mut().karta.karta().memorija().zoom() - zum).abs() < 1e-9);
 }
 
+/// Odluke (9. 11. 2026.): Ispis je skriven dok ne proradi, i na karti i u izborniku, a ostali
+/// plutajući gumbi ostaju jedan ispod drugoga bez rupe.
+#[test]
+fn ispis_je_skriven_a_ostali_gumbi_su_redom() {
+    let h = prozor(Aplikacija::nova(PostavkeAplikacije::default()));
+    assert!(h.query_by_label("Ispis").is_none());
+    assert!(
+        !tekstovi(&h).contains(&"Ispis".to_owned()),
+        "{:?}",
+        tekstovi(&h)
+    );
+    let y = |naziv: &str| h.get_by_label(naziv).rect().min.y;
+    let zaslon = y("Cijeli zaslon");
+    assert_eq!(y("Sjever") - zaslon, 50.0);
+    assert_eq!(y("Približi") - zaslon, 100.0);
+    assert_eq!(y("Udalji") - zaslon, 141.0);
+}
+
 #[test]
 fn navod_se_crta_samo_uz_postavljenu_podlogu() {
     let mut app = Aplikacija::default();

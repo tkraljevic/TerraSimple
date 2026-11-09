@@ -42,17 +42,17 @@ Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
 - Projekt je jedna GeoPackage datoteka. Tuđi slojevi, stupci i tablice u njoj ostaju netaknuti.
 - Prije zatvaranja, otvaranja drugog projekta ili novog projekta program pita za nespremljene izmjene.
 - Gumb „Otvori u QGIS-u” sprema projekt i otvara ga u QGIS-u, s nazivima slojeva, mapama i stilovima.
-- Ako je QGIS u međuvremenu promijenio datoteku, spremanje se odbije. Spremi kao tada sprema tvoj crtež u
-  novu datoteku, a datoteka koju je mijenjao QGIS ostaje kakva jest.
+- Ako je QGIS u međuvremenu promijenio datoteku, spremanje se odbije i program ponudi Spremi kao. Tvoj crtež
+  ide u novu datoteku, a datoteka koju je mijenjao QGIS ostaje kakva jest.
 - Stil, natpisi i prozirnost koje namjestiš u QGIS-u i spremiš u projekt ostaju nakon spremanja iz
   TerraSimplea. Zamijene se samo kad tom sloju promijeniš stil u TerraSimpleu.
 
 ### Poznata ograničenja
 
 - Ispis, KML i ostali formati još ne rade. Tražilica ne zna HDKS ni adrese.
-- Gumbi Sjever, Ispis, Uvezi sloj, Učitaj datoteku i Dodaj WMS još nemaju radnju.
+- Gumbi Sjever, Uvezi sloj, Učitaj datoteku i Dodaj WMS još nemaju radnju. Gumb Ispis je skriven dok ispis
+  ne proradi.
 - Na Macu svaki klik na „Otvori u QGIS-u” pokreće novi QGIS, i kad je jedan već otvoren.
-- Poruka nakon sukoba s QGIS-om još kaže da datoteku treba otvoriti ponovno, a ne nudi Spremi kao.
 - Ispisni predlošci i ostale postavke cijelog projekta napravljene u QGIS-u ne ostaju nakon spremanja iz
   TerraSimplea. Ostaje samo ono što pripada pojedinom sloju.
 - Spremanje velikog projekta je sporo: oko 1 s na 87 000 objekata.

@@ -13,8 +13,8 @@ Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 
 
 Tražilica i paketi za preuzimanje spojeni su 9. 11. 2026.; tijek paketa na GitHubu još nije pokrenut. Do
 izdanja 0.0.1 ostaju upozorenje za lik koji siječe sam sebe, prozor „O programu” s inačicom i proba od početka do kraja s pravim
-QGIS-om. Uz to, po odlukama od 9. 11. 2026.: poruka nakon sukoba s QGIS-om koja nudi Spremi kao i skriven
-gumb Ispis. Odluke su u odjeljku „Gumb Otvori u QGIS-u” niže.
+QGIS-om. Poruka nakon sukoba koja nudi Spremi kao i skriven gumb Ispis gotovi su 9. 11. 2026. Odluke su u
+odjeljku „Gumb Otvori u QGIS-u” niže.
 
 Rust 1.99.1 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`,
 `walkers`, `lyon`, `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale
@@ -480,7 +480,7 @@ temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka
   pod mišem pokazuju se u HTRS96/TM. Nazivnik mjerila uzima 96 točaka po inču, pa na zaslonu nije točan
   kao na papiru.
 - **Tipke:** Backspace i Escape dok crtanje traje pripadaju karti, a inače Backspace briše odabrano u
-  ploči. Gumbi Približi, Udalji i Cijeli zaslon rade, a Sjever i Ispis još nemaju radnju.
+  ploči. Gumbi Približi, Udalji i Cijeli zaslon rade, a Sjever još nema radnju. Ispis je skriven (Odluke (9. 11. 2026.)).
   Gumb Sjever ostaje (Odluke (9. 11. 2026.)).
 - **Novi sloj (8. 11. 2026., nakon probe mišem):** gumb je uvijek stvarao sloj za poligone, pa su nacrtane
   točke i linije tiho završavale u drugom sloju, bez naziva. Sad otvara prozorčić po zaslonu F: naziv, vrsta
@@ -556,15 +556,14 @@ Na Macu prečaci idu s ⌘ i tako pišu u izborniku (⌘S, ⇧⌘S), a drugdje s
   - podloga OpenStreetMap ostaje u QGIS projektu;
   - **sukob:** nakon sukoba s QGIS-om poruka nudi Spremi kao. Izmjene iz TerraSimplea idu u novu datoteku,
     a datoteka koju je mijenjao QGIS ostaje netaknuta. Gumba koji pregazi izmjene iz QGIS-a nema.
-    Napravljeno u paketu `geopaket` i u radnji Spremi kao. Poruka u prozoru još kaže „Otvori je ponovno”
-    i ne nudi Spremi kao; to ide nakon spajanja tražilice, jer dira `aplikacija.rs` i `hr.ftl`;
+    Napravljeno: prozorčić „Datoteku je promijenio drugi program” ima gumbe Odustani i Spremi kao…;
   - **stil:** TerraSimple zamjenjuje stil sloja u QGIS projektu samo kad ga je korisnik u TerraSimpleu
     mijenjao. Inače ostaje sve što je za taj sloj namješteno u QGIS-u: stil, natpisi, prozirnost.
     Napravljeno i provjereno s pravim QGIS-om bez prozora. Postavke cijelog projekta iz QGIS-a, npr.
     ispisni predlošci, i dalje se gube; za njih odluke još nema;
   - **QGIS na Macu:** za 0.0.1 svaki klik i dalje pokreće novi QGIS, uz napomenu u popisu promjena. Poslije
     se provjeri prima li već otvoreni QGIS projekt kako treba;
-  - **Ispis:** gumb je skriven dok ispis ne proradi u fazi 6;
+  - **Ispis:** gumb i stavka izbornika skriveni su dok ispis ne proradi u fazi 6 (napravljeno);
   - **HDKS u tražilici:** program sam prepozna HDKS po rasponu brojeva, bez oznake ispred. U Hrvatskoj HDKS
     istok ima sedam znamenki i počinje brojem zone, a HTRS96/TM istok šest, pa se ne preklapaju. Uz rezultat
     piše da je točnost oko 5 m. Ide kao zaseban mali zadatak nakon spajanja tražilice.
