@@ -223,3 +223,93 @@ brisanje i katalogu tekstova; zadržano je oboje. Pri pregledu je ispravljeno:
   zatvara.
 - Testovi koji su stvarali izmjenu klikom na Novi sloj sad potvrđuju prozorčić.
 - Tri poruke govorile su korisniku „vi”, a ostatak programa „ti”; ujednačeno je na „ti”.
+
+---
+
+## 2. Tražilica
+
+U paketu `prozor` implementirana je interaktivna tražilica koordinata, slojeva i objekata projekta (`prozor/src/trazilica.rs`, `prozor/src/trazilica_testovi.rs`).
+
+### Što prepoznaje i što ne
+- **Prepoznaje:**
+  - Koordinate koje prepoznaje paket `koordinate` (WGS84 decimalne, stupnjevi-minute-sekunde, HTRS96/TM).
+  - Slojeve u projektu po nazivu (neovisno o veličini slova i dijakritičkim znakovima, npr. `cesta` pronalazi `Česta`).
+  - Objekte u projektu po nazivu (neovisno o veličini slova i kvačicama, uz prikaz naziva sloja kojem objekt pripada, npr. `u sloju Česta`).
+- **Što ne prepoznaje:**
+  - Geokodiranje adresa i naselja preko interneta (radi rada bez interneta i zaštite privatnosti).
+  - Atribute objekata izvan polja naziva.
+
+### Interakcija i ponašanje
+- **Aktivacija:** Klik na polje tražilice ili prečac `⌘F` (na macOS-u) odnosno `Ctrl+F` (drugdje).
+- **Zatvaranje:** Tipka `Escape` prazni tekst, uklanja privremenu oznaku i zatvara padajući popis.
+- **Tipke za uređivanje:** Dok je polje tražilice u fokusu, `Backspace` i `Delete` uređuju tekst u polju te **ne brišu** odabrani objekt u projektu niti točke crteža koji je u tijeku na karti.
+- **Odabir rezultata (`Enter` ili klik mišem):**
+  - Za koordinatu: karta se centrira na točku uz privremenu crvenu oznaku (oznaka nije objekt, ne sprema se i ne ulazi u povijest poništavanja).
+  - Za objekt: karta se centrira i prilagođava mjerilo obuhvatu objekta, objekt se odabire u stablu i na karti, a mape iznad njega se automatski otvaraju.
+  - Za sloj: karta prikazuje obuhvat svih objekata sloja i sloj se odabire u stablu.
+- **Prazan rezultat:** Ako nema pogodaka, prikazuje se obavijest „Nema koordinata ni objekta s tim nazivom.”
+
+### Brojke mutacija i namjernih grešaka (krug nakon ispravaka 9. 11. 2026.)
+- **cargo mutants na `prozor/src/trazilica.rs`:**
+  - Ukupno mutanata: 139.
+  - Uhvaćeno (caught): 78 (skok s 13 zahvaljujući novim testovima pomaka karte, linija, poligona i slojeva).
+  - Preživjelo (missed): 50.
+  - Neizvedivo (unviable): 11.
+  - **Iskreno razvrstavanje preživjelih mutanata:**
+    - **36 mutanata (crtanje sučelja i pozicioniranje piksela):**
+      - Pozicioniranje unosa i ikone (`crtaj_polje`, pomaci piksela `+`, `-`, `*` na linijama 323, 341).
+      - Pozicioniranje i dimenzije padajućeg popisa (`crtaj_popis_rezultata`, linije 383, 392, 394, 407, 418 — x/y pomaci, faktor visine retka).
+      - Pozicioniranje elemenata retka rezultata (`nacrtaj_redak_rezultata`, linije 439, 442, 452, 465, 473 — x/y pomaci naslova, podnaslova, bedža i ikone).
+      - Ove mutacije mijenjaju vizualni izgled i raspored piksela u GUI-ju bez utjecaja na selekciju ili logiku podataka.
+    - **10 mutanata (formatiranje koordinata za tekstualni prikaz u padajućem popisu):**
+      - Funkcije `formatiraj_wgs`, `formatiraj_htrs` i `formatiraj_koordinatu` (linije 122, 123, 136, 152, 153, 154) — zamjena formatiranog teksta sa `String::new()` ili `"xyzzy"`, te `>=` u `<` za predznak. Testovi provjeravaju postojanje rezultata, točnost numeričkih koordinata i stvarni pomak karte, ali ne provjeravaju tekstualni prikaz podnaslova u padajućem popisu.
+    - **3 mutanta (rubna logika stanja i međuspremnika):**
+      - `ponisti_ili_zatvori` (linija 31): zamjena `||` s `&&` u provjeri stanja (poništavanje fokusa kada je tekst prazan).
+      - `rezultati` (linija 54): `!=` u `==` za provjeru promjene inačice uređivača (`self.zadnja_inacica != uredjivac.inacica()`).
+      - `otvori_roditeljske_mape` (linija 259): zamjena poziva sa `()` pri odabiru sloja koji se nalazi u podmapi stabla.
+    - **1 mutant (iscrtavanje privremene oznake na platnu karte):**
+      - `crtaj_privremenu_oznaku` (linija 491): zamjena tijela sa `()`. Test provjerava postojanje `privremena_oznaka` u stanju i pomak kamere, ali ne presijeca pozive slikara na platnu karte.
+    - *Napomena o obuhvatu:* Sve mutacije funkcija `obuhvat_objekta` i `obuhvat_sloja` (zamjena s `None` ili zamjena izračunatih granica), koje su u prethodnom krugu preživljavale, u ovom su krugu **100 % uhvaćene** jer novi testovi provjeravaju stvarni pomak središta pogleda karte i obuhvaćanje svih vrhova unutar ekranskog okvira karte.
+- **Namjerne greške (Fault Injection):**
+  - **Karta koja se ne pomakne:** u `prozor/src/trazilica.rs::primijeni_odabir` isključen poziv `karta.karta().idi_na(*duzina, *sirina, 16.0)`. Test `trazilica_testovi::pretraga_koordinata_pomice_kartu_i_postavlja_privremenu_oznaku` odmah je pao s `panicked at prozor/src/trazilica_testovi.rs: sredina duzina 16.450000000000014, ocekivano 18.6955`. Kod je vraćen u ispravno stanje.
+  - **J bez minusa:** u `koordinate/src/citanje.rs::odredi_oznaku` južna širina ostavljena pozitivna (`s` umjesto `-s`). Test `citanje::testovi::stupnjevi_minute_sekunde_i_strane_svijeta` pao je s `assertion failed: tocke_se[0].sirina < 0.0`. Kod je vraćen u ispravno stanje.
+
+### Odluke donesene 9. 11. 2026.
+1. **Natpis u polju tražilice:** Potvrđen je natpis `Traži koordinate ili naziv` (definiran u `hr.ftl`).
+2. **Tumačenje slova S:**
+   - Uz oznake `I` ili `Z` (hrvatski zapis), `S` označava sjever (+).
+   - Uz oznake `E` ili `W` (engleski zapis), `S` označava jug (-).
+   - Ako koordinatni par nema oznaka ili je druga koordinata bez oznake, `S` označava sjever (+).
+   - `N` je uvijek sjever (+), `J` je uvijek jug (-), `I` i `E` su istok (+), `Z` i `W` su zapad (-).
+3. **Prikaz koordinata u aplikaciji:**
+   - Koriste se hrvatske oznake strana svijeta (`S`, `J`, `I`, `Z`) i decimalni zarez (`45,5547° S 18,6955° I`, `33,8600° J 151,2000° I`, `51,5000° S 0,1200° Z`).
+   - Sve prikazane koordinate uspješno se čitaju natrag u istu točku (kružna provjera / roundtrip test).
+
+### Što traži odluku
+1. **Odabir HDKS koordinata:**
+   - Preporuka: uvođenje prefiksa `HDKS:` (npr. `HDKS: 5543210 5047321`) ili padajući odabir koordinatnog sustava uz tražilicu.
+2. **Mrežno pretraživanje mjesta i adresa:**
+   - Zahtijeva odluku o poslužitelju (DGU, OSM Nominatim) i pravilima keširanja radi rada bez interneta.
+
+### Što nije provjereno
+- Korištenje tražilice preko dodirnog zaslona (touch screen gesti).
+- Pretraga u projektima s preko 10.000 objekata (potencijalna potreba za prostornim indeksom ili predindeksiranim nazivima).
+
+
+### Pregled pri spajanju (9. 11. 2026.)
+
+- **Brzina:** na izmišljenom projektu s 87 105 objekata jedna pretraga traje 41–53 ms
+  (izdanje, ovaj Mac). Rezultati se računaju samo kad se promijeni tekst ili projekt, pa se to
+  osjeti samo kao kratko kašnjenje pri upisu slova. Svaki naziv se pri svakoj pretrazi ponovno
+  pretvara u mala slova bez kvačica; ako to bude smetalo, nazive treba pripremiti unaprijed.
+- **Dodani testovi:** prikaz koordinate iz prozora čita se natrag u istu točku na sva četiri
+  kvadranta, uz točan tekst prikaza (prije se to provjeravalo samo na kopiji funkcije u testu
+  paketa `koordinate`); rezultati se osvježe kad se projekt promijeni; Escape briše i samo
+  oznaku ili samo tekst; odabir objekta otvara obje mape iznad njega. Namjerne greške na tim
+  funkcijama: 16 uhvaćeno, 0 preživjelo.
+- **Ponovljeno:** `cargo mutants` na `koordinate/src/citanje.rs`: 164 uhvaćeno, 0 preživjelo,
+  14 neizvedivo. `cargo xtask provjera` prolazi (919 funkcija, 95,58 %).
+- **HTRS96/TM u popisu** se prikazuje s engleskim slovima `m E` i `m N`. Odluka o hrvatskim
+  slovima odnosila se na zemljopisne koordinate; za metre odluke još nema.
+- **HDKS:** Odluke (9. 11. 2026.): program ga prepoznaje sam po rasponu, bez oznake ispred,
+  kao zaseban zadatak nakon spajanja.

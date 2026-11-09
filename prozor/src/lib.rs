@@ -17,3 +17,6 @@ pub mod qgis_veza;
 pub mod sastavnice;
 pub mod stanje;
 pub mod tema;
+pub mod trazilica;
+#[cfg(test)]
+mod trazilica_testovi;

@@ -6,8 +6,12 @@
 //! Web Mercator.
 #![forbid(unsafe_code)]
 
+mod citanje;
 mod pretvorba;
 mod sustav;
 
+pub use citanje::{
+    IshodPrepoznavanja, PrepoznataKoordinata, RazlogRaspona, je_u_hrvatskoj, prepoznaj_koordinate,
+};
 pub use pretvorba::{Greska, Pretvornik};
 pub use sustav::Sustav;

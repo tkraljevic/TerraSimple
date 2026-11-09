@@ -287,6 +287,11 @@ impl Crtanje {
         self.crtez.as_ref().is_some_and(|c| !c.gotov) || self.vuce.is_some()
     }
 
+    /// Vrhovi crteža koji je trenutno u tijeku.
+    pub fn vrhovi_crteza(&self) -> Option<&[Vrh]> {
+        self.crtez.as_ref().map(|c| c.vrhovi.as_slice())
+    }
+
     /// U koji sloj ide novi objekt te vrste. Ako ga nema, nastaje novi.
     pub fn postavi_aktivni_sloj(&mut self, vrsta: VrstaGeometrije, sloj: IdSloja) {
         self.aktivni.retain(|(v, _)| *v != vrsta);

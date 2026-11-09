@@ -20,6 +20,7 @@ use crate::sastavnice::{
 };
 use crate::stanje::{Alat, Odabir, StanjePrikaza};
 use crate::tema::{Boje, Razmaci, font_obicni, font_srednji, fontovi, primijeni_stil};
+use crate::trazilica::{self, StanjeTrazilice};
 use eframe::egui::{self, Event, Key, Pos2, Rect, Role, Sense, Stroke, WidgetInfo, pos2, vec2};
 use slojevi::{NaredbaStabla, Stavka, Uredjivac};
 use std::path::{Path, PathBuf};
@@ -170,6 +171,7 @@ pub struct Aplikacija {
     pub qgis: Box<dyn crate::qgis_veza::PokretacQgisa>,
     pub aktivni_dijalog: Option<AktivniDijalog>,
     pub izbornik_datoteka_otvoren: bool,
+    pub trazilica: StanjeTrazilice,
     pub snimka: Option<PathBuf>,
     pub okvir_brojac: u32,
     /// Snimka čeka da stignu pločice podloge. Bez mreže nema što čekati.
@@ -231,6 +233,7 @@ impl Aplikacija {
             qgis: Box::new(crate::qgis_veza::SustavskiQgis),
             aktivni_dijalog,
             izbornik_datoteka_otvoren: false,
+            trazilica: StanjeTrazilice::default(),
             snimka: postavke.snimka,
             okvir_brojac: 0,
             cekanje_snimke: if postavke.podloga_s_mreze {
@@ -376,15 +379,32 @@ impl Aplikacija {
         // `command` je ⌘ na Macu, a Ctrl drugdje, pa Ctrl na Macu nije prečac (Odluke (9. 11. 2026.)).
         if modifiers.command {
             self.obradi_cmd_precac(key, modifiers.shift);
-        } else if key == Key::F2 {
+            return;
+        }
+        if key == Key::F2 {
             let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
-        } else if matches!(key, Key::Delete | Key::Backspace) && !self.karta.u_tijeku() {
+            return;
+        }
+        if key == Key::Escape {
+            self.trazilica.ponisti_ili_zatvori();
+            return;
+        }
+        if self.smije_brisati_tipkom(key) {
             self.pokreni_brisanje();
         }
     }
 
+    fn smije_brisati_tipkom(&mut self, key: Key) -> bool {
+        let tipka_brisanja = key == Key::Delete || key == Key::Backspace;
+        tipka_brisanja && !self.karta.u_tijeku() && !self.trazilica.fokusirana
+    }
+
     fn obradi_cmd_precac(&mut self, key: Key, shift: bool) {
         match (key, shift) {
+            (Key::F, false) => {
+                self.trazilica.fokusiraj = true;
+                self.trazilica.otvorena = true;
+            }
             (Key::Z, false) => {
                 let _ = self.uredjivac.ponisti();
             }
@@ -560,6 +580,15 @@ impl Aplikacija {
             &mut self.stanje,
             &self.katalog,
         );
+        if let Some(oznaka) = self.trazilica.privremena_oznaka {
+            trazilica::crtaj_privremenu_oznaku(
+                ui.painter(),
+                okvir_karte,
+                &self.karta,
+                oznaka,
+                boje,
+            );
+        }
         if let Some(okvir_ploce) = okvir_ploce(&self.stanje, okvir_karte) {
             zaklon(ui, okvir_ploce, "ploca_slojeva");
         }
@@ -605,14 +634,11 @@ impl Aplikacija {
         );
     }
 
-    fn crtaj_trazilicu(&mut self, ui: &egui::Ui, min: Pos2, boje: &Boje) {
-        let trazilica = Rect::from_min_size(min, vec2(310.0, 40.0));
-        zaklon(ui, trazilica, "trazilica");
-        zaobljeni_okvir(ui, trazilica, boje.lebdeca, Some(boje.obrub), 10.0);
-        let ikona_okvir = Rect::from_center_size(
-            pos2(trazilica.min.x + 21.0, trazilica.center().y),
-            vec2(18.0, 18.0),
-        );
+    fn crtaj_trazilicu(&mut self, ui: &mut egui::Ui, min: Pos2, boje: &Boje) {
+        let (okvir, enter) =
+            trazilica::crtaj_polje(ui, min, &mut self.trazilica, &self.katalog, boje);
+        let ikona_okvir =
+            Rect::from_center_size(pos2(okvir.min.x + 21.0, okvir.center().y), vec2(18.0, 18.0));
         self.ikone.crtaj(
             ui,
             ikona_okvir,
@@ -621,13 +647,47 @@ impl Aplikacija {
             "obicno",
             18,
         );
-        tekst_lijevo(
-            ui,
-            pos2(trazilica.min.x + 38.0, trazilica.center().y),
-            &self.katalog.tekst("trazi-mjesto"),
-            font_obicni(13.0),
-            boje.tekst_3,
-        );
+
+        if self.trazilica.otvorena {
+            let (rezultati, greska) = self.trazilica.rezultati(&self.uredjivac, &self.katalog);
+            if enter {
+                if let Some(prvi) = rezultati.first() {
+                    trazilica::primijeni_odabir(
+                        prvi,
+                        &mut self.karta,
+                        self.uredjivac.projekt(),
+                        &mut self.stanje,
+                        &mut self.trazilica,
+                    );
+                }
+            } else if !self.trazilica.tekst.trim().is_empty() {
+                let visina = if rezultati.is_empty() {
+                    36.0 + 8.0
+                } else {
+                    (rezultati.len() as f32) * 36.0 + 8.0
+                };
+                let okvir_popisa =
+                    Rect::from_min_size(pos2(okvir.min.x, okvir.max.y + 4.0), vec2(310.0, visina));
+                zaklon(ui, okvir_popisa, "trazilica_popis");
+                if let Some(odabir) = trazilica::crtaj_popis_rezultata(
+                    ui,
+                    okvir,
+                    &rezultati,
+                    greska,
+                    &self.trazilica.tekst,
+                    &self.katalog,
+                    boje,
+                ) {
+                    trazilica::primijeni_odabir(
+                        &odabir,
+                        &mut self.karta,
+                        self.uredjivac.projekt(),
+                        &mut self.stanje,
+                        &mut self.trazilica,
+                    );
+                }
+            }
+        }
     }
 
     fn crtaj_alatnu_traku(&mut self, ui: &mut egui::Ui, min: Pos2, boje: &Boje) {

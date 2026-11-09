@@ -86,6 +86,16 @@ impl KartaProzora {
     }
 
     #[must_use]
+    pub fn pogled(&self) -> Option<Pogled> {
+        self.karta.pogled()
+    }
+
+    #[must_use]
+    pub fn tocka_u_ekran(&self, tocka: slojevi::Vrh, okvir: Rect) -> Option<Pos2> {
+        self.karta.tocka_u_ekran(tocka, okvir)
+    }
+
+    #[must_use]
     pub fn status(&self) -> Option<StatusKarte> {
         let pogled = self.karta.pogled()?;
         let mjesto = pogled.mis.unwrap_or(pogled.sredina);
@@ -394,19 +404,12 @@ fn s_okolinom<R>(
     })
 }
 
-/// Sredina i zum na kojem se vide svi objekti projekta. Zum je približan: karta široka oko tisuću
-/// točaka, s malo ruba. Bez objekata nema obuhvata.
+/// Računa sredinu i zum iz niza vrhova.
 #[must_use]
-pub fn obuhvat(projekt: &Projekt) -> Option<(f64, f64, f64)> {
+pub fn obuhvat_vrhova<'a>(
+    vrhovi: impl IntoIterator<Item = &'a slojevi::Vrh>,
+) -> Option<(f64, f64, f64)> {
     let mut granice: Option<[f64; 4]> = None;
-    let vrhovi = projekt
-        .slojevi()
-        .flat_map(|(_, s)| s.objekti.values())
-        .flat_map(|o| match &o.geometrija {
-            Geometrija::Tocka(v) => vec![*v],
-            Geometrija::Linija(v) => v.clone(),
-            Geometrija::Poligon(p) => p.iter().flatten().copied().collect(),
-        });
     for v in vrhovi {
         let g = granice.get_or_insert([v.duzina, v.sirina, v.duzina, v.sirina]);
         *g = [
@@ -424,6 +427,21 @@ pub fn obuhvat(projekt: &Projekt) -> Option<(f64, f64, f64)> {
         16.0
     };
     Some(((z + i) / 2.0, (j + s) / 2.0, zum))
+}
+
+/// Sredina i zum na kojem se vide svi objekti projekta. Zum je približan: karta široka oko tisuću
+/// točaka, s malo ruba. Bez objekata nema obuhvata.
+#[must_use]
+pub fn obuhvat(projekt: &Projekt) -> Option<(f64, f64, f64)> {
+    let vrhovi = projekt
+        .slojevi()
+        .flat_map(|(_, s)| s.objekti.values())
+        .flat_map(|o| match &o.geometrija {
+            Geometrija::Tocka(v) => vec![v],
+            Geometrija::Linija(v) => v.iter().collect(),
+            Geometrija::Poligon(p) => p.iter().flatten().collect(),
+        });
+    obuhvat_vrhova(vrhovi)
 }
 
 /// Sloj se crta kad su uključeni i on i sve mape iznad njega.
