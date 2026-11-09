@@ -54,6 +54,20 @@ pub enum IshodDijaloga {
     ZatvoriPoruku,
 }
 
+/// Oznaka prečaca kako je pišu programi na tom sustavu: na Macu `⌘S`, drugdje `Ctrl+S`.
+pub fn oznaka_precaca(
+    katalog: &KatalogPoruka,
+    sustav: egui::os::OperatingSystem,
+    kljuc: &str,
+) -> String {
+    let naziv = if sustav == egui::os::OperatingSystem::Mac {
+        "mac"
+    } else {
+        "ostali"
+    };
+    katalog.s_tekstovima(kljuc, &[("sustav", naziv.to_owned())])
+}
+
 /// Crta padajući izbornik "Datoteka" ispod gornje trake.
 pub fn crtaj_padajuci_izbornik_datoteka(
     ui: &mut egui::Ui,
@@ -71,26 +85,27 @@ pub fn crtaj_padajuci_izbornik_datoteka(
     }
 
     let pocetak = pos2(40.0, Razmaci::VISINA_IZBORNIKA + 2.0);
+    let precac = |kljuc: &str| oznaka_precaca(katalog, ui.ctx().os(), kljuc);
     let stavke = [
         (
             StavkaIzbornikaDatoteka::Novi,
             katalog.tekst("izbornik-datoteka-novi"),
-            katalog.tekst("precac-novi"),
+            precac("precac-novi"),
         ),
         (
             StavkaIzbornikaDatoteka::Otvori,
             katalog.tekst("izbornik-datoteka-otvori"),
-            katalog.tekst("precac-otvori"),
+            precac("precac-otvori"),
         ),
         (
             StavkaIzbornikaDatoteka::Spremi,
             katalog.tekst("izbornik-datoteka-spremi"),
-            katalog.tekst("precac-spremi"),
+            precac("precac-spremi"),
         ),
         (
             StavkaIzbornikaDatoteka::SpremiKao,
             katalog.tekst("izbornik-datoteka-spremi-kao"),
-            katalog.tekst("precac-spremi-kao"),
+            precac("precac-spremi-kao"),
         ),
     ];
 

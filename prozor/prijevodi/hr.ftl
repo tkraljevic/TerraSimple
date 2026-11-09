@@ -150,10 +150,23 @@ izbornik-datoteka-novi = Novi
 izbornik-datoteka-otvori = Otvori…
 izbornik-datoteka-spremi = Spremi
 izbornik-datoteka-spremi-kao = Spremi kao…
-precac-novi = Ctrl+N
-precac-otvori = Ctrl+O
-precac-spremi = Ctrl+S
-precac-spremi-kao = Shift+Ctrl+S
+# Prečaci: na Macu ⌘, drugdje Ctrl (Odluke (9. 11. 2026.)).
+precac-novi = { $sustav ->
+    [mac] ⌘N
+   *[ostali] Ctrl+N
+}
+precac-otvori = { $sustav ->
+    [mac] ⌘O
+   *[ostali] Ctrl+O
+}
+precac-spremi = { $sustav ->
+    [mac] ⌘S
+   *[ostali] Ctrl+S
+}
+precac-spremi-kao = { $sustav ->
+    [mac] ⇧⌘S
+   *[ostali] Ctrl+Shift+S
+}
 
 potvrda-naslov = Nespremljene izmjene
 potvrda-poruka = Želiš li spremiti izmjene u projektu prije nastavka?
