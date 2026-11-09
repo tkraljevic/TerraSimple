@@ -71,9 +71,9 @@ pouzdano ubrzanje ili usporenje. Mjerenja su u `.quality/profil-*-velicina.json`
   AppImagea ostaje za potvrdu. Potpisivanje i Appleova ovjera nisu uvedeni.
 - `actionlint` nije instaliran. YAML je pročitan parserom i pregledana je matrica
   triju sustava, ali to ne zamjenjuje actionlint ni stvarno pokretanje tijeka.
-- GitHub tijek, univerzalna gradnja, stvarni Windows/WARP i Linux/Mesa prozor,
-  Windows ikona i odsutnost konzole te upozorenja pri preuzimanju nisu provjereni.
-  CI ima te provjere pokretanja i ne preskače njihov pad.
+- Tijek na GitHubu, univerzalna gradnja i pravi prozor na Windowsima i Linuxu
+  provjereni su 9. 11. 2026. (odjeljak „Prvo pokretanje tijeka” niže). Windows
+  ikona, odsutnost konzole i upozorenja pri preuzimanju nisu provjereni ručno.
 - Lokalno je instaliran samo `cargo-about 0.9.3 --features cli`, u `.quality/alati`.
   Prvi pokušaj bez značajke `cli` nije dao izvršnu datoteku. Nije mijenjana zadana
   inačica Rusta i nije dodan nijedan cilj ni sistemski alat.
@@ -101,3 +101,31 @@ pouzdano ubrzanje ili usporenje. Mjerenja su u `.quality/profil-*-velicina.json`
 - Python testovi skripte prolaze (6).
 - `actionlint` i dalje nije pokrenut: instalaciju u privremenu mapu zaustavila je
   zaštita računala.
+
+## Prvo pokretanje tijeka (9. 11. 2026.)
+
+Prvi pokušaj (run 42686024600) izgradio je program na sva tri sustava, ali je
+pao na tri greške u pakiranju:
+
+- **Linux:** stroju je falila `libxkbcommon-x11.so`, pa se program nije mogao
+  pokrenuti. Tijek je sad instalira, a upute je navode.
+- **Windows:** skripta je pala ispisujući okvirne crte iz `cargo deny` u konzolu
+  koja piše u cp1252. Skripta sad ispisuje u UTF-8.
+- **macOS:** `lipo -verify_arch arm64 x86_64 <datoteka>` javlja grešku na svakom
+  Macu; datoteka mora ići prije opcije. Lokalno se nije vidjelo, jer se uz
+  `--samo-arm` ta provjera preskače.
+
+Drugi pokušaj (run 42694276594, commit 463eb3b) prošao je na sva tri sustava:
+
+| Sustav | Paket | Veličina | Gradnja | Provjera pokretanja |
+|---|---|---:|---:|---|
+| Windows x86_64 | `TerraSimple-0.0.1-windows-x86_64.zip` | 10,3 MB | 15 min | karta nacrtana (DX12) |
+| Linux x86_64 | `TerraSimple-0.0.1-linux-x86_64.tar.gz` | 11,3 MB | 7 min | karta nacrtana (xvfb, Mesa) |
+| macOS | `TerraSimple-0.0.1-macos-universal.zip` | 19,5 MB | 4 + 2 min | karta nacrtana prije i poslije raspakiranja |
+
+Mac paket sadrži `x86_64` i `arm64`, a cijeli `.app` prošao je
+`codesign --verify --strict`. Paketi su artefakti tog pokretanja i čuvaju se 14
+dana. Nacrt izdanja nije napravljen, jer nastaje samo na oznaku.
+
+Nije provjereno ručno: preuzimanje i pokretanje na pravom Windows i Linux
+računalu, upozorenja SmartScreen i Gatekeeper, Intel Mac.
