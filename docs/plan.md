@@ -6,13 +6,18 @@ Standardi kvalitete su u [kvaliteta.md](kvaliteta.md) i vrijede od prvog retka.
 
 ## Stanje
 
-Faza 0 je gotova, osim glatkoće karte u prozoru, i počela je faza 1. Postoje dokumenti, nacrt,
-naredba `cargo xtask provjera`, deset proba u `probe/` (rezultati su u fazama 0 i 1) i šest paketa
-programa, `koordinate`, `geometrija`, `slojevi`, `karta`, `prozor` i `geopaket`. Karta je spojena u prozor, a
-prozor još ne otvara ni ne sprema datoteke. Rust 1.99.1
-je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`, `walkers`, `lyon`,
-`geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale biblioteke
-provjerene su samo po podacima s crates.io i njihovim uputama.
+Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 se privodi kraju za izdanje
+0.0.1 alfa. Program ima sedam paketa: `koordinate`, `geometrija`, `slojevi`, `karta`, `prozor`, `geopaket` i
+`qgis`. Crta, mjeri, sprema u GeoPackage i otvara projekt u QGIS-u. Što je ušlo u izdanje, piše u
+[PROMJENE.md](../PROMJENE.md).
+
+Do izdanja 0.0.1 ostaju tražilica koordinata i vlastitih objekata, paketi za preuzimanje na tri sustava,
+upozorenje za lik koji siječe sam sebe, prozor „O programu” s inačicom i proba od početka do kraja s pravim
+QGIS-om. Odluke koje još čekaju su u odjeljku „Gumb Otvori u QGIS-u” niže.
+
+Rust 1.99.1 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`,
+`walkers`, `lyon`, `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale
+biblioteke provjerene su samo po podacima s crates.io i njihovim uputama.
 
 Rok koji dolazi izvana: Google najavljuje da se Earth Pro od 25. 6. 2027. više
 neće moći preuzeti. Prvo upotrebljivo izdanje treba biti gotovo prije toga.
@@ -541,9 +546,17 @@ Na Macu prečaci idu s ⌘ i tako pišu u izborniku (⌘S, ⇧⌘S), a drugdje s
   pokriveno provjerom. Ključne namjerne greške su uhvaćene.
   Ako se datoteka preimenuje izvan TerraSimplea, QGIS ne nađe slojeve dok je TerraSimple opet ne spremi. Isto se
   događa s projektom koji sprema sam QGIS. Gumb uvijek najprije sprema.
+- **Sukob s QGIS-om (9. 11. 2026.):** ako je QGIS u međuvremenu promijenio datoteku, spremanje se odbije i
+  prozor javlja: „Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je
+  ponovno.” Prije je pokazivao opću poruku, jer je razlog tražio po riječi u tekstu greške. Sad ga prepoznaje
+  po vrsti greške iz paketa `geopaket`.
 - **Odluke (9. 11. 2026.):** podloga OpenStreetMap ostaje u QGIS projektu.
-- **Traži odluku:** na Macu svaki klik pokreće novi QGIS, i kad je jedan već otvoren. Stil promijenjen u QGIS-u ostaje u datoteci, ali ga sljedeće spremanje iz
-  TerraSimplea u projektu zamijeni svojim.
+- **Traži odluku:**
+  - na Macu svaki klik pokreće novi QGIS, i kad je jedan već otvoren;
+  - stil promijenjen u QGIS-u ostaje u datoteci, ali ga sljedeće spremanje iz TerraSimplea u projektu
+    zamijeni svojim;
+  - nakon sukoba s QGIS-om nespremljene izmjene u TerraSimpleu se gube, jer ni Spremi kao tada ne prolazi;
+  - gumb Ispis do faze 6 sakriti ili ostaviti bez radnje.
 - **Nije provjereno:** pravo otvaranje projekta s prozorom, Windows i Linux.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)

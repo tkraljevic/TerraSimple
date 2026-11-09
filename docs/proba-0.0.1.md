@@ -1,0 +1,70 @@
+# Proba prije izdanja 0.0.1 alfa
+
+Proba se radi pravim mišem, na programu iz paketa za preuzimanje, a ne iz `cargo run`. Prvo na macOS-u, a
+zatim, ako ih budemo imali, na Windowsu i Linuxu. Podaci su izmišljeni: crta se bilo gdje na karti, a
+projekt se sprema u novu praznu mapu.
+
+Uz svaki korak piše što se mora vidjeti. Kad nešto ne odgovara, zapiši broj koraka i što se vidjelo, pa
+nastavi dalje ako može.
+
+## 1. Pokretanje
+
+1. Pokreni program dvoklikom. Mora se otvoriti bez crnog prozora naredbenog retka. U naslovu piše
+   inačica 0.0.1.
+2. Prazan projekt: karta OpenFreeMap, ploča Slojevi prazna, ispod naziva piše „Novi projekt · nespremljeno”.
+3. Pomakni kartu, pusti je dok se miče, zumiraj kotačićem i gumbima Približi i Udalji. Karta kliže i staje
+   bez skoka.
+4. Promijeni temu pa podlogu na DGU ortofoto i natrag. Izvor podataka na karti mijenja se s podlogom.
+5. Mjerilo i koordinate u statusnoj traci mijenjaju se dok pomičeš miš.
+
+## 2. Crtanje
+
+1. Novi sloj „Točke” za točke. Nacrtaj tri točke. Pojavljuju se u ploči kao „Točka 1”, „Točka 2”, „Točka 3”.
+2. Novi sloj „Linije” za linije. Nacrtaj liniju od pet točaka i završi dvoklikom.
+3. Klikni kraj linije i dodaj još dvije točke. Poništi jednom: nestanu obje nove točke odjednom.
+4. Novi sloj „Poligoni” za poligone. Nacrtaj poligon, pomakni mu jednu točku povlačenjem i obriši drugu
+   desnim klikom.
+5. Dok je u ploči odabran sloj „Linije”, nacrtaj točku. Točka ide u sloj „Točke”, a ispod karte piše zašto.
+6. Poništi i ponovi nekoliko puta (⌘Z i ⌘Y na Macu, Ctrl+Z i Ctrl+Y drugdje). Crtež se vraća točno.
+7. Napravi mapu, preimenuj je i isključi joj vidljivost. Slojevi u njoj nestaju s karte i vraćaju se.
+
+## 3. Mjerenje
+
+1. Izmjeri udaljenost između dva poznata mjesta i usporedi s mjerenjem u QGIS-u ili Google Earthu. Razlika
+   ne smije biti veća od nekoliko centimetara.
+2. Izmjeri površinu i spremi je kao poligon. Poligon se pojavi u sloju za poligone.
+3. Očisti mjerenje. Na karti ne ostaje ništa osim spremljenog poligona.
+
+## 4. Spremanje i otvaranje
+
+1. Spremi kao, u novu mapu, pod nazivom „Proba 0.0.1”. Ispod naziva piše „spremljeno” i vrijeme.
+2. Promijeni nešto. Uz naziv piše „nespremljeno”. Poništi promjenu: opet piše „spremljeno”.
+3. Promijeni nešto pa odaberi Novi. Program pita za spremanje; odaberi Odustani. Ništa se ne gubi.
+4. Zatvori program bez spremanja. Program pita za spremanje.
+5. Otvori program i Otvori „Proba 0.0.1”. Sve je kao prije: slojevi, mape, nazivi, vidljivost i crtež.
+
+## 5. QGIS
+
+1. Klikni „Otvori u QGIS-u”. QGIS se otvara s projektom „TerraSimple”: nazivi slojeva, mape kao skupine,
+   isti redoslijed i podloga OpenStreetMap. Objekti su na istom mjestu kao u TerraSimpleu.
+2. U QGIS-u izmjeri isti poligon. Površina na elipsoidu ista je kao u TerraSimpleu.
+3. U QGIS-u dodaj točku u sloj „Točke” i spremi izmjene sloja.
+4. U TerraSimpleu ponovno otvori projekt. Nova točka iz QGIS-a je na karti.
+
+## 6. Sukob
+
+1. Projekt je otvoren u oba programa. U QGIS-u pomakni jednu točku i spremi izmjene sloja.
+2. U TerraSimpleu nacrtaj nešto i spremi. Spremanje se odbija s porukom da je datoteku u međuvremenu
+   promijenio drugi program.
+3. Otvori projekt ponovno. Izmjena iz QGIS-a je tu, a datoteka nije oštećena: QGIS je i dalje otvara.
+
+## 7. Tražilica
+
+Koraci se dopisuju kad se tražilica spoji. Najmanje: koordinate u stupnjevima s točkom i sa zarezom, u
+stupnjevima, minutama i sekundama i u HTRS96/TM vode na isto mjesto; naziv objekta bez kvačica nalazi
+objekt s kvačicama i odabire ga; Backspace u polju ne briše odabrani objekt.
+
+## 8. Na kraju
+
+1. Pomoć › O programu: inačica, licenca i izvor karte.
+2. Zapiši na kojem je sustavu i računalu proba rađena, i što nije prošlo.
