@@ -37,6 +37,12 @@ Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
 - Lik koji siječe sam sebe, npr. osmica, dobiva crveni krug na mjestu presjeka, i dok ga crtaš ili mjeriš
   i kad ga odabereš. Ispod karte piše da površina zato nije točna.
 
+### Program
+
+- U naslovu prozora piše inačica. Pomoć u izborniku i gumb ? otvaraju „O programu”, s inačicom, licencom i
+  izvorima karte.
+- Paketi za Windows, macOS i Linux raspakiraju se u korisničku mapu i ne traže administratora.
+
 ### Datoteke i QGIS
 
 - Novi, Otvori, Spremi i Spremi kao. Prečaci su na Macu ⌘N, ⌘O, ⌘S i ⇧⌘S, a na Windowsu i Linuxu Ctrl+N,

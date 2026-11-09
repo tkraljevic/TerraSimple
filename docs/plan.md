@@ -13,7 +13,7 @@ Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 
 
 Tražilica i paketi za preuzimanje spojeni su 9. 11. 2026. Tijek paketa na GitHubu prošao je na sva tri sustava, s
 provjerom pokretanja; rezultati su u [REZULTAT-izdanje.md](../REZULTAT-izdanje.md). Do
-izdanja 0.0.1 ostaju prozor „O programu” s inačicom i proba od početka do kraja s pravim QGIS-om. Upozorenje
+izdanja 0.0.1 ostaje proba od početka do kraja s pravim QGIS-om; prozor „O programu” gotov je 10. 11. 2026. Upozorenje
 za lik koji siječe sam sebe gotovo je 9. 11. 2026. (`geometrija/REZULTAT.md`, `karta/REZULTAT.md`); traži
 odluku smije li se takav lik spremiti, a sad se sprema uz upozorenje. Poruka nakon sukoba koja nudi Spremi kao i skriven gumb Ispis gotovi su 9. 11. 2026. Odluke su u
 odjeljku „Gumb Otvori u QGIS-u” niže.

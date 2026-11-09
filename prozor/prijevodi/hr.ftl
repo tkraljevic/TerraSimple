@@ -205,6 +205,12 @@ greska-sukob-promjena = Projekt nije spremljen: datoteku je u međuvremenu promi
 sukob-naslov = Datoteku je promijenio drugi program
 sukob-gumb-odustani = Odustani
 sukob-gumb-spremi-kao = Spremi kao…
+o-programu-naslov = TerraSimple { $inacica } alfa
+o-programu-opis = Jednostavan program za crtanje i mjerenje na karti. Nacrtano se sprema u GeoPackage i otvara u QGIS-u.
+o-programu-licenca = Licenca: EUPL-1.2. Hrvatski tekst licence je u mapi Dozvole uz program.
+o-programu-karta = Karta: OpenFreeMap © OpenMapTiles, podaci © suradnici OpenStreetMapa. Ortofoto i karte DGU-a © Državna geodetska uprava.
+o-programu-ostalo = Slova Inter (licenca OFL) i ikone Lucide (licenca ISC). Popis svih biblioteka i njihovih licenci je u mapi Dozvole.
+o-programu-zatvori = Zatvori
 greska-spremanja-opcenito = Projekt nije spremljen: { $detalji }. Pokušaj ponovno ili spremi pod drugim nazivom.
 greska-otvaranja-opcenito = Projekt nije otvoren: { $detalji }. Provjeri je li datoteka ispravan GeoPackage.
 

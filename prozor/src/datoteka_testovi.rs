@@ -850,6 +850,88 @@ fn pregled_dijaloga_po_nazivu() {
         dijalog_za_pregled(Some("upozorenja-otvaranja"), &k),
         Some(AktivniDijalog::UpozorenjaOtvaranja { upozorenja, .. }) if upozorenja.len() == 3
     ));
+    assert_eq!(
+        dijalog_za_pregled(Some("o-programu"), &k),
+        Some(AktivniDijalog::OProgramu)
+    );
     assert_eq!(dijalog_za_pregled(Some("nepoznato"), &k), None);
     assert_eq!(dijalog_za_pregled(None, &k), None);
+}
+
+/// Izbornik Pomoć i gumb „?” otvaraju „O programu” s inačicom, licencom i izvorom karte.
+#[test]
+fn pomoc_otvara_o_programu() {
+    let app = Aplikacija::nova(PostavkeAplikacije::default());
+    let mut h = Harness::builder()
+        .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+        .with_step_dt(0.05)
+        .with_context_setup(Aplikacija::postavi_kontekst)
+        .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+    h.run_steps(3);
+    let k = crate::poruke::KatalogPoruka::hrvatski();
+    let pomoc: Vec<_> = h
+        .get_all_by_label("Pomoć")
+        .map(|n| n.rect().center())
+        .collect();
+    assert_eq!(pomoc.len(), 2, "stavka izbornika i gumb");
+    for mjesto in pomoc {
+        assert!(h.state().aktivni_dijalog.is_none());
+        h.input_mut().events.push(egui::Event::PointerMoved(mjesto));
+        h.run_steps(1);
+        for pritisnut in [true, false] {
+            h.input_mut().events.push(egui::Event::PointerButton {
+                pos: mjesto,
+                button: egui::PointerButton::Primary,
+                pressed: pritisnut,
+                modifiers: Modifiers::NONE,
+            });
+            h.run_steps(1);
+        }
+        cekaj_smirenje(&mut h, Duration::from_millis(500));
+        assert_eq!(h.state().aktivni_dijalog, Some(AktivniDijalog::OProgramu));
+        let t = nacrtani_tekstovi(&h);
+        assert!(t.iter().any(|t| t == "TerraSimple 0.0.1 alfa"), "{t:?}");
+        for redak in crate::dijalozi::retci_o_programu(&k) {
+            assert!(t.contains(&redak), "nema retka {redak:?} u {t:?}");
+        }
+        assert!(t.iter().any(|t| t.contains("EUPL-1.2")));
+        assert!(t.iter().any(|t| t.contains("OpenStreetMap")));
+        h.get_by_label("Zatvori").click();
+        cekaj_smirenje(&mut h, Duration::from_millis(500));
+    }
+    assert!(h.state().aktivni_dijalog.is_none());
+}
+
+/// Datoteka i Slojevi u izborniku i dalje rade, a ostale stavke ne otvaraju ništa.
+#[test]
+fn stavke_izbornika_rade_svaka_svoje() {
+    let mut app = Aplikacija::nova(PostavkeAplikacije::default());
+    let ploca = app.stanje.ploca_otvorena;
+    app.otvori_stavku_izbornika("izbornik-datoteka");
+    assert!(app.izbornik_datoteka_otvoren);
+    app.otvori_stavku_izbornika("izbornik-slojevi");
+    assert_eq!(app.stanje.ploca_otvorena, !ploca);
+    assert!(app.aktivni_dijalog.is_none());
+    app.otvori_stavku_izbornika("izbornik-pomoc");
+    assert_eq!(app.aktivni_dijalog, Some(AktivniDijalog::OProgramu));
+}
+
+/// Gumb za temu mijenja svijetlu u tamnu i natrag.
+#[test]
+fn gumb_teme_mijenja_temu() {
+    let app = Aplikacija::nova(PostavkeAplikacije::default());
+    let mut h = Harness::builder()
+        .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+        .with_step_dt(0.05)
+        .with_context_setup(Aplikacija::postavi_kontekst)
+        .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+    h.run_steps(3);
+    let naziv = crate::poruke::KatalogPoruka::hrvatski().tekst("gumb-tema");
+    assert!(!h.state().stanje.tema_tamna);
+    h.get_by_label(&naziv).click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert!(h.state().stanje.tema_tamna);
+    h.get_by_label(&naziv).click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert!(!h.state().stanje.tema_tamna);
 }
