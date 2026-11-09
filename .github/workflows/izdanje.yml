@@ -55,6 +55,10 @@ jobs:
       - name: Linux kartica
         if: runner.os == 'Linux'
         run: echo 'WGPU_BACKEND=vulkan' >> "$GITHUB_ENV"
+      # Spremište gradnje vraća cijeli target, i stare pakete; skripta ih ne smije zatrpati.
+      - name: Prazna mapa paketa
+        shell: bash
+        run: rm -rf target/izdanje
       - name: Gradnja, licence, paket i pravi prozor
         timeout-minutes: 95
         run: python skripte/izdanje.py ${{ matrix.sustav }}
