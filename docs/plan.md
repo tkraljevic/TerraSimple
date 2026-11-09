@@ -13,7 +13,8 @@ Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 
 
 Do izdanja 0.0.1 ostaju tražilica koordinata i vlastitih objekata, paketi za preuzimanje na tri sustava,
 upozorenje za lik koji siječe sam sebe, prozor „O programu” s inačicom i proba od početka do kraja s pravim
-QGIS-om. Odluke koje još čekaju su u odjeljku „Gumb Otvori u QGIS-u” niže.
+QGIS-om. Uz to, po odlukama od 9. 11. 2026.: poruka nakon sukoba s QGIS-om koja nudi Spremi kao i skriven
+gumb Ispis. Odluke su u odjeljku „Gumb Otvori u QGIS-u” niže.
 
 Rust 1.99.1 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`,
 `walkers`, `lyon`, `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale
@@ -550,13 +551,22 @@ Na Macu prečaci idu s ⌘ i tako pišu u izborniku (⌘S, ⇧⌘S), a drugdje s
   prozor javlja: „Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je
   ponovno.” Prije je pokazivao opću poruku, jer je razlog tražio po riječi u tekstu greške. Sad ga prepoznaje
   po vrsti greške iz paketa `geopaket`.
-- **Odluke (9. 11. 2026.):** podloga OpenStreetMap ostaje u QGIS projektu.
-- **Traži odluku:**
-  - na Macu svaki klik pokreće novi QGIS, i kad je jedan već otvoren;
-  - stil promijenjen u QGIS-u ostaje u datoteci, ali ga sljedeće spremanje iz TerraSimplea u projektu
-    zamijeni svojim;
-  - nakon sukoba s QGIS-om nespremljene izmjene u TerraSimpleu se gube, jer ni Spremi kao tada ne prolazi;
-  - gumb Ispis do faze 6 sakriti ili ostaviti bez radnje.
+- **Odluke (9. 11. 2026.):**
+  - podloga OpenStreetMap ostaje u QGIS projektu;
+  - **sukob:** nakon sukoba s QGIS-om poruka nudi Spremi kao. Izmjene iz TerraSimplea idu u novu datoteku,
+    a datoteka koju je mijenjao QGIS ostaje netaknuta. Gumba koji pregazi izmjene iz QGIS-a nema.
+    Napravljeno u paketu `geopaket` i u radnji Spremi kao. Poruka u prozoru još kaže „Otvori je ponovno”
+    i ne nudi Spremi kao; to ide nakon spajanja tražilice, jer dira `aplikacija.rs` i `hr.ftl`;
+  - **stil:** TerraSimple zamjenjuje stil sloja u QGIS projektu samo kad ga je korisnik u TerraSimpleu
+    mijenjao. Inače ostaje sve što je za taj sloj namješteno u QGIS-u: stil, natpisi, prozirnost.
+    Napravljeno i provjereno s pravim QGIS-om bez prozora. Postavke cijelog projekta iz QGIS-a, npr.
+    ispisni predlošci, i dalje se gube; za njih odluke još nema;
+  - **QGIS na Macu:** za 0.0.1 svaki klik i dalje pokreće novi QGIS, uz napomenu u popisu promjena. Poslije
+    se provjeri prima li već otvoreni QGIS projekt kako treba;
+  - **Ispis:** gumb je skriven dok ispis ne proradi u fazi 6;
+  - **HDKS u tražilici:** program sam prepozna HDKS po rasponu brojeva, bez oznake ispred. U Hrvatskoj HDKS
+    istok ima sedam znamenki i počinje brojem zone, a HTRS96/TM istok šest, pa se ne preklapaju. Uz rezultat
+    piše da je točnost oko 5 m. Ide kao zaseban mali zadatak nakon spajanja tražilice.
 - **Nije provjereno:** pravo otvaranje projekta s prozorom, Windows i Linux.
 
 ### Faza 2: projekt i slojevi (3–4 tjedna)

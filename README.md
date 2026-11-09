@@ -26,8 +26,8 @@ Program se priprema za prvo izdanje, 0.0.1 alfa. Gotovih paketa za preuzimanje j
   linija ili poligon.
 - **Spremanje:** projekt je jedna GeoPackage datoteka. Tuđi slojevi i stupci u njoj ostaju netaknuti.
 - **QGIS:** gumb „Otvori u QGIS-u” sprema projekt i otvara ga u QGIS-u, s nazivima slojeva, mapama i
-  stilovima. Ako je QGIS u međuvremenu promijenio datoteku, TerraSimple je ne pregazi, nego javi da je treba
-  otvoriti ponovno.
+  stilovima. Stil namješten u QGIS-u ostaje dok ga ne promijeniš u TerraSimpleu. Ako je QGIS u međuvremenu
+  promijenio datoteku, TerraSimple je ne pregazi, a Spremi kao sprema tvoj crtež u novu datoteku.
 
 Još ne radi: tražilica, ispis, KML i ostali formati, polja u slojevima i podloge iz vlastitih datoteka. Dolaze
 redom, po [planu rada](docs/plan.md).

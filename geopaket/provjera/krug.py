@@ -205,5 +205,15 @@ j=json.loads(rust('citaj',krivulja));provjeri('krivulja je prijavljena kao nepod
 r=subprocess.run([program,'dodaj-bez-visine',str(krivulja)],capture_output=True,text=True,timeout=30)
 provjeri('novi upis u nepodržani sloj je odbijen',r.returncode!=0 and 'nepodržanom vrstom' in r.stderr)
 rust('spremi',krivulja);c=sqlite3.connect(krivulja);provjeri('krivulja ostaje bajt za bajt',prije==c.execute('SELECT hex(geom) FROM krivulja').fetchone()[0]);c.close();val(krivulja)
+# Odluke (9. 11. 2026.): stil koji korisnik namjesti u QGIS projektu ostaje nakon našeg spremanja.
+from qgis.PyQt.QtGui import QColor
+stil=mapa/'stil-projekta.gpkg';ocisti(stil);rust('stvori',stil)
+prj=QgsProject.instance();prj.clear();prj.read(f"geopackage:{stil}?projectName=TerraSimple")
+t=next(l for l in prj.mapLayers().values() if l.name()=='Tocka')
+s=QgsSymbol.defaultSymbol(t.geometryType());s.setColor(QColor('#123456'));t.setRenderer(QgsSingleSymbolRenderer(s));t.setOpacity(0.5);t=None
+provjeri('QGIS sprema projekt u paket',prj.write(f"geopackage:{stil}?projectName=TerraSimple"))
+rust('promijeni',stil);prj.clear();prj.read(f"geopackage:{stil}?projectName=TerraSimple")
+t=next(l for l in prj.mapLayers().values() if l.name()=='Tocka')
+provjeri('QGIS stil projekta ostaje nakon našeg spremanja',t.renderer().symbol().color().name()=='#123456' and t.opacity()==0.5);t=None;prj.clear();val(stil)
 (mapa/'rezultat.json').write_text(json.dumps(rez,ensure_ascii=False,indent=2)+'\n')
 print('Završni broj provjera:',len(rez))

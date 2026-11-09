@@ -251,7 +251,7 @@ fn primijeni(
     plan: Plan,
 ) -> Result<(), Greska> {
     primijeni_slojeve(c, prije, p, b, plan)?;
-    crate::qgis_projekt::spremi(c, p)?;
+    crate::qgis_projekt::spremi(c, prije, p)?;
     Ok(())
 }
 
@@ -843,7 +843,7 @@ mod obnova_i_greske {
         let tx = c.transaction().unwrap();
         assert!(primijeni(&tx, &prazno, p, &b, plan).is_err());
         tx.rollback().unwrap();
-        assert_eq!(citanje::projekt(&c).unwrap().0, prazno);
+        assert_eq!(citanje::projekt(&c, 0).unwrap().0, prazno);
     }
 }
 
@@ -881,7 +881,7 @@ mod provjera_novih_upisa {
         geometrija::funkcije(&c).unwrap();
         let u = crate::kvarovi::model();
         spremi(&mut c, &Projekt::default(), u.projekt(), 1).unwrap();
-        let p = citanje::projekt(&c).unwrap().0;
+        let p = citanje::projekt(&c, 0).unwrap().0;
         assert!(!nedostaje_stablo(&c, &p).unwrap());
         assert!(upisi_stablo(&c, &p, &p).unwrap().is_empty());
         // Ista imena tablica uz zamijenjene brojeve nisu ista veza.
@@ -890,7 +890,7 @@ mod provjera_novih_upisa {
         let plan = upisi_stablo(&c, &p, &p).unwrap();
         assert!(!plan.is_empty());
         izvrsi_upise(&c, plan.into_iter()).unwrap();
-        assert_eq!(citanje::projekt(&c).unwrap().0, p);
+        assert_eq!(citanje::projekt(&c, 0).unwrap().0, p);
         assert!(!nedostaje_stablo(&c, &p).unwrap());
     }
 
@@ -902,7 +902,7 @@ mod provjera_novih_upisa {
         let u = crate::kvarovi::model();
         spremi(&mut c, &Projekt::default(), u.projekt(), 1).unwrap();
         c.execute_batch("UPDATE gpkg_geometry_columns SET z=0; CREATE TRIGGER odbij_z BEFORE UPDATE OF z ON gpkg_geometry_columns BEGIN SELECT RAISE(ABORT,'odbijena dimenzija'); END").unwrap();
-        let p = citanje::projekt(&c).unwrap().0;
+        let p = citanje::projekt(&c, 0).unwrap().0;
         let s = p.slojevi().next().unwrap().0;
         let mut u = Uredjivac::iz_projekta(p.clone());
         u.izvrsi(NaredbaObjekta::Dodaj {
@@ -918,7 +918,7 @@ mod provjera_novih_upisa {
         let e = spremi(&mut c, &p, u.projekt(), 1).unwrap_err();
         assert!(e.to_string().contains("odbijena dimenzija"));
         assert!(c.is_autocommit());
-        assert_eq!(citanje::projekt(&c).unwrap().0, p);
+        assert_eq!(citanje::projekt(&c, 0).unwrap().0, p);
         assert_eq!(
             c.query_row("SELECT max(z) FROM gpkg_geometry_columns", [], |r| r
                 .get::<_, i64>(0))
