@@ -40,6 +40,8 @@ pub enum AktivniDijalog {
         upozorenja: Vec<String>,
         otvoren_popis: bool,
     },
+    /// Spremanje je odbijeno jer je datoteku promijenio drugi program; nudi se Spremi kao.
+    SukobSpremanja,
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -52,6 +54,7 @@ pub enum IshodDijaloga {
     ObrisiOdustani,
     UpozorenjaPreklopiPopis,
     ZatvoriPoruku,
+    SukobSpremiKao,
 }
 
 /// Oznaka prečaca kako je pišu programi na tom sustavu: na Macu `⌘S`, drugdje `Ctrl+S`.
@@ -215,6 +218,63 @@ pub fn crtaj_aktivni_dijalog(
             upozorenja,
             otvoren_popis,
         } => crtaj_upozorenja_otvaranja(ui, dostupan, upozorenja, otvoren_popis, boje, katalog),
+        AktivniDijalog::SukobSpremanja => crtaj_sukob_spremanja(ui, dostupan, boje, katalog),
+    }
+}
+
+/// Odluke (9. 11. 2026.): nakon sukoba nudi se samo Spremi kao. Gumba koji bi pregazio izmjene
+/// drugog programa nema.
+fn crtaj_sukob_spremanja(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 440.0;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 180.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 24.0),
+        &katalog.tekst("sukob-naslov"),
+        font_srednji(15.0),
+        boje.crvena,
+    );
+    let tekst_okvir = Rect::from_min_size(
+        pos2(okvir.min.x + 20.0, okvir.min.y + 50.0),
+        vec2(sirina - 40.0, 75.0),
+    );
+    ui.put(
+        tekst_okvir,
+        egui::Label::new(
+            egui::RichText::new(katalog.tekst("greska-sukob-promjena"))
+                .font(font_obicni(13.0))
+                .color(boje.tekst_2),
+        ),
+    );
+    let by = okvir.max.y - 42.0;
+    let odustani = gumb_dijaloga(
+        ui,
+        Rect::from_min_size(pos2(okvir.max.x - 230.0, by), vec2(96.0, 30.0)),
+        &katalog.tekst("sukob-gumb-odustani"),
+        false,
+        false,
+        boje,
+    );
+    let spremi_kao = gumb_dijaloga(
+        ui,
+        Rect::from_min_size(pos2(okvir.max.x - 124.0, by), vec2(104.0, 30.0)),
+        &katalog.tekst("sukob-gumb-spremi-kao"),
+        true,
+        false,
+        boje,
+    );
+    if spremi_kao.clicked() {
+        Some(IshodDijaloga::SukobSpremiKao)
+    } else if odustani.clicked() {
+        Some(IshodDijaloga::ZatvoriPoruku)
+    } else {
+        None
     }
 }
 

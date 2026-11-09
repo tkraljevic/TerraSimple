@@ -184,19 +184,43 @@ pub fn radnja_otvori(
     Ok(upozorenja)
 }
 
+/// Zašto spremanje nije uspjelo.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GreskaSpremanja {
+    /// Datoteku je u međuvremenu promijenio drugi program, npr. QGIS. Prozor nudi Spremi kao
+    /// (Odluke (9. 11. 2026.)).
+    Sukob,
+    /// Ostale greške, s tekstom za korisnika.
+    Poruka(String),
+}
+
+impl GreskaSpremanja {
+    fn iz(
+        greska: &(dyn std::error::Error + Send + Sync + 'static),
+        katalog: &KatalogPoruka,
+    ) -> Self {
+        if greska.is::<geopaket::DatotekaPromijenjena>() {
+            Self::Sukob
+        } else {
+            Self::Poruka(katalog.greska_spremanja(greska))
+        }
+    }
+}
+
 /// Sprema projekt u postojeću datoteku. Vraća `Ok(true)` ako je spremljeno,
-/// `Ok(false)` ako nema stazu pa treba "Spremi kao", ili `Err(opis)` pri grešci.
+/// `Ok(false)` ako nema stazu pa treba "Spremi kao", ili grešku.
 pub fn radnja_spremi(
     uredjivac: &mut Uredjivac,
     datoteka: &mut PodaciDatoteke,
     katalog: &KatalogPoruka,
-) -> Result<bool, String> {
+) -> Result<bool, GreskaSpremanja> {
     let Some(staza) = &datoteka.staza else {
         return Ok(false);
     };
 
     if datoteka.gpkg.is_none() {
-        let gpkg = geopaket::Datoteka::otvori(staza).map_err(|e| katalog.greska_spremanja(&*e))?;
+        let gpkg =
+            geopaket::Datoteka::otvori(staza).map_err(|e| GreskaSpremanja::iz(&*e, katalog))?;
         datoteka.gpkg = Some(gpkg);
     }
 
@@ -205,7 +229,7 @@ pub fn radnja_spremi(
     };
 
     gpkg.spremi(uredjivac.projekt())
-        .map_err(|e| katalog.greska_spremanja(&*e))?;
+        .map_err(|e| GreskaSpremanja::iz(&*e, katalog))?;
     uredjivac.oznaci_spremljeno();
     datoteka.zadnje_spremanje = Some(trenutno_vrijeme());
     Ok(true)
@@ -392,7 +416,7 @@ mod testovi {
             .unwrap();
 
         let greska = radnja_spremi(&mut uredjivac, &mut datoteka, &katalog).unwrap_err();
-        assert_eq!(greska, katalog.tekst("greska-sukob-promjena"));
+        assert_eq!(greska, GreskaSpremanja::Sukob);
         assert!(uredjivac.je_li_izmijenjen());
 
         radnja_spremi_kao(&mut uredjivac, &mut datoteka, &katalog, nova.clone()).unwrap();

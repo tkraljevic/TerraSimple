@@ -267,26 +267,55 @@ fn greska_pri_spremanju() {
     harness.key_press_modifiers(Modifiers::COMMAND, Key::S);
     cekaj_smirenje(&mut harness, Duration::from_millis(500));
 
-    // Iskočila je poruka o sukobu, a ne opća poruka s tekstom iz geopaketa.
-    match &harness.state().aktivni_dijalog {
-        Some(AktivniDijalog::PorukaGreske { poruka, .. }) => assert_eq!(
-            poruka,
-            "Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno."
-        ),
-        drugo => panic!("nema poruke o sukobu: {drugo:?}"),
-    }
+    // Iskočio je prozorčić o sukobu, a ne opća poruka s tekstom iz geopaketa.
+    assert_eq!(
+        harness.state().aktivni_dijalog,
+        Some(AktivniDijalog::SukobSpremanja)
+    );
+    let t = nacrtani_tekstovi(&harness);
+    assert!(
+        t.iter()
+            .any(|t| t == "Datoteku je promijenio drugi program"),
+        "{t:?}"
+    );
+    assert!(
+        t.iter()
+            .any(|t| t.contains("Spremi svoj crtež kao novu datoteku")),
+        "{t:?}"
+    );
 
-    // Zatvori poruku klikom na gumb "U redu"
-    harness.get_by_label("U redu").click();
+    // Odustani zatvara prozorčić, a projekt NIJE izgubljen.
+    harness.get_by_label("Odustani").click();
     cekaj_smirenje(&mut harness, Duration::from_millis(500));
     assert!(harness.state().aktivni_dijalog.is_none());
-
-    // Projekt NIJE izgubljen!
     assert_eq!(
         harness.state().uredjivac.projekt().slojevi().count(),
         broj_slojeva_prije
     );
     assert!(harness.state().uredjivac.je_li_izmijenjen());
+
+    // Odluke (9. 11. 2026.): Spremi kao sprema crtež u novu datoteku, a izvorna ostaje kakva jest.
+    let izvorna_prije = std::fs::read(&staza).unwrap();
+    let nova = mapa.join("nakon-sukoba.gpkg");
+    let _ = std::fs::remove_file(&nova);
+    harness.key_press_modifiers(Modifiers::COMMAND, Key::S);
+    cekaj_smirenje(&mut harness, Duration::from_millis(500));
+    assert_eq!(
+        harness.state().aktivni_dijalog,
+        Some(AktivniDijalog::SukobSpremanja)
+    );
+    birac.postavi_spremanje(nova.clone());
+    harness.get_by_label("Spremi kao…").click();
+    cekaj_smirenje(&mut harness, Duration::from_millis(500));
+    assert!(harness.state().aktivni_dijalog.is_none());
+    assert!(!harness.state().uredjivac.je_li_izmijenjen());
+    assert_eq!(harness.state().datoteka.staza.as_ref(), Some(&nova));
+    assert_eq!(std::fs::read(&staza).unwrap(), izvorna_prije);
+    let mut procitana = geopaket::Datoteka::otvori(&nova).unwrap();
+    assert_eq!(
+        procitana.ucitaj().unwrap().slojevi().count(),
+        broj_slojeva_prije
+    );
 
     let _ = std::fs::remove_dir_all(&mapa);
 }
@@ -791,4 +820,36 @@ fn qgis_koji_se_ne_da_otvoriti_javlja_poruku() {
     assert!(t.iter().any(|t| t == "QGIS se nije otvorio"), "{t:?}");
     assert!(t.iter().any(|t| t.contains("QGIS nije pronađen")), "{t:?}");
     let _ = std::fs::remove_file(&staza);
+}
+
+/// `--dijalog <naziv>` otvara točno taj prozorčić, za snimke izgleda.
+#[test]
+fn pregled_dijaloga_po_nazivu() {
+    use crate::aplikacija::dijalog_za_pregled;
+    let k = crate::poruke::KatalogPoruka::hrvatski();
+    assert_eq!(
+        dijalog_za_pregled(Some("potvrda"), &k),
+        Some(AktivniDijalog::PotvrdaNespremljeno(NamjeraPotvrde::Novi))
+    );
+    assert_eq!(
+        dijalog_za_pregled(Some("sukob"), &k),
+        Some(AktivniDijalog::SukobSpremanja)
+    );
+    assert!(matches!(
+        dijalog_za_pregled(Some("greska"), &k),
+        Some(AktivniDijalog::PorukaGreske { poruka, .. }) if poruka.contains("disk je pun")
+    ));
+    assert!(matches!(
+        dijalog_za_pregled(Some("upozorenje"), &k),
+        Some(AktivniDijalog::UpozorenjeBrisanja {
+            broj_nepodrzanih: 5,
+            ..
+        })
+    ));
+    assert!(matches!(
+        dijalog_za_pregled(Some("upozorenja-otvaranja"), &k),
+        Some(AktivniDijalog::UpozorenjaOtvaranja { upozorenja, .. }) if upozorenja.len() == 3
+    ));
+    assert_eq!(dijalog_za_pregled(Some("nepoznato"), &k), None);
+    assert_eq!(dijalog_za_pregled(None, &k), None);
 }
