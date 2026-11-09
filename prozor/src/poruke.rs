@@ -143,15 +143,15 @@ impl KatalogPoruka {
     }
 
     #[must_use]
-    pub fn greska_spremanja(&self, detalji: &str) -> String {
-        if detalji.contains("promijenjena")
-            || detalji.contains("data_version")
-            || detalji.contains("verzija")
-        {
+    pub fn greska_spremanja(
+        &self,
+        greska: &(dyn std::error::Error + Send + Sync + 'static),
+    ) -> String {
+        if greska.is::<geopaket::DatotekaPromijenjena>() {
             self.tekst("greska-sukob-promjena")
         } else {
             let mut argumenti = FluentArgs::new();
-            argumenti.set("detalji", detalji);
+            argumenti.set("detalji", greska.to_string());
             self.dohvati("greska-spremanja-opcenito", Some(&argumenti))
         }
     }
@@ -347,12 +347,12 @@ mod testovi {
             "teren.gpkg · spremljeno 14:20 (nespremljeno)"
         );
         assert_eq!(
-            katalog.greska_spremanja("promijenjena u drugom programu"),
+            katalog.greska_spremanja(&geopaket::DatotekaPromijenjena),
             "Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno."
         );
         assert!(
             katalog
-                .greska_spremanja("disk je pun")
+                .greska_spremanja(&std::io::Error::other("disk je pun"))
                 .contains("disk je pun")
         );
         assert!(

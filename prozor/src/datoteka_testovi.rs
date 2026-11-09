@@ -267,11 +267,14 @@ fn greska_pri_spremanju() {
     harness.key_press_modifiers(Modifiers::COMMAND, Key::S);
     cekaj_smirenje(&mut harness, Duration::from_millis(500));
 
-    // Provjeri da je iskočio dijalog greške
-    assert!(matches!(
-        harness.state().aktivni_dijalog,
-        Some(AktivniDijalog::PorukaGreske { .. })
-    ));
+    // Iskočila je poruka o sukobu, a ne opća poruka s tekstom iz geopaketa.
+    match &harness.state().aktivni_dijalog {
+        Some(AktivniDijalog::PorukaGreske { poruka, .. }) => assert_eq!(
+            poruka,
+            "Projekt nije spremljen: datoteku je u međuvremenu promijenio drugi program. Otvori je ponovno."
+        ),
+        drugo => panic!("nema poruke o sukobu: {drugo:?}"),
+    }
 
     // Zatvori poruku klikom na gumb "U redu"
     harness.get_by_label("U redu").click();
