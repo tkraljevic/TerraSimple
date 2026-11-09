@@ -598,3 +598,59 @@ fn klik_izvan_otvorenog_izbornika_datoteka_ga_samo_zatvara() {
     klikni(&mut h, sredina_karte());
     assert_eq!(broj_objekata(h.state()), 1, "sljedeći klik crta");
 }
+
+/// Odabran lik koji siječe sam sebe dobiva upozorenje ispod karte, a ispravan ne.
+#[test]
+fn odabrana_osmica_dobiva_upozorenje_ispod_karte() {
+    let mut app = Aplikacija::nova(PostavkeAplikacije::default());
+    let Ok(Some(Novo::Sloj(sloj))) = app.uredjivac.izvrsi(NaredbaStabla::DodajSloj {
+        u: None,
+        naziv: "Parcele".into(),
+        vrsta: slojevi::VrstaGeometrije::Poligon,
+    }) else {
+        panic!("nema sloja");
+    };
+    let lik = |tocke: [(f64, f64); 4]| {
+        Geometrija::Poligon(vec![tocke.iter().map(|&(x, y)| Vrh::novi(x, y)).collect()])
+    };
+    let mut objekt = |naziv: &str, g| {
+        let Ok(Some(Novo::Objekt(o))) = app.uredjivac.izvrsi(NaredbaObjekta::Dodaj {
+            sloj,
+            naziv: naziv.into(),
+            geometrija: g,
+        }) else {
+            panic!("nema objekta");
+        };
+        o
+    };
+    let osmica = objekt(
+        "Osmica",
+        lik([(18.0, 45.0), (18.01, 45.01), (18.01, 45.0), (18.0, 45.01)]),
+    );
+    let kvadrat = objekt(
+        "Kvadrat",
+        lik([(18.0, 45.0), (18.01, 45.0), (18.01, 45.01), (18.0, 45.01)]),
+    );
+    let upozorenje =
+        "Rub lika siječe sam sebe, pa površina nije točna. Mjesto je označeno crvenim krugom.";
+    let mut h = prozor(app);
+    assert!(!tekstovi(&h).iter().any(|t| t == upozorenje));
+    h.state_mut()
+        .karta
+        .karta()
+        .crtanje()
+        .postavi_odabrani(Some((sloj, osmica)));
+    h.run_steps(2);
+    assert!(
+        tekstovi(&h).iter().any(|t| t == upozorenje),
+        "{:?}",
+        tekstovi(&h)
+    );
+    h.state_mut()
+        .karta
+        .karta()
+        .crtanje()
+        .postavi_odabrani(Some((sloj, kvadrat)));
+    h.run_steps(2);
+    assert!(!tekstovi(&h).iter().any(|t| t == upozorenje));
+}

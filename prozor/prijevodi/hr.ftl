@@ -125,6 +125,7 @@ mjerenje-spremi-liniju = Spremi kao liniju
 mjerenje-spremi-poligon = Spremi kao poligon
 mjerenje-ocisti = Očisti
 mjerenje-zatvori = Zatvori mjerenje
+poruka-presjek = Rub lika siječe sam sebe, pa površina nije točna. Mjesto je označeno crvenim krugom.
 status-mjerilo = 1 : { $nazivnik }
 status-izvor-dgu = DGU ortofoto
 poruka-premalo =

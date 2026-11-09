@@ -1,7 +1,9 @@
 //! Ono što se mijenja dok korisnik radi: crtež, odabrani objekt i točke za hvatanje. Crta se kroz
 //! `egui`, jer su to mala količina i svaki okvir drukčiji podaci.
 
-use crate::crtanje::{Alat, Crtanje, Crtez, Okolina, Pretvorba, je_lik, prstenovi};
+use crate::crtanje::{
+    Alat, Crtanje, Crtez, Okolina, Pretvorba, je_lik, presjek_geometrije, prstenovi,
+};
 use eframe::egui::{self, Color32, FontId, Mesh, Painter, Pos2, Rect, Shape, Stroke, pos2, vec2};
 use lyon_tessellation::geometry_builder::{BuffersBuilder, VertexBuffers};
 use lyon_tessellation::math::point;
@@ -12,6 +14,15 @@ use slojevi::{Geometrija, Projekt, Vrh};
 const NARANCASTA: Color32 = Color32::from_rgb(0xE8, 0x59, 0x0C);
 const ISPUNA: Color32 = Color32::from_rgba_premultiplied(58, 22, 3, 64);
 const TAMNO: Color32 = Color32::from_rgb(0x1E, 0x1F, 0x23);
+/// Oznaka presjeka: crvena s bijelim obrubom vidi se na svijetloj i tamnoj karti i na ortofotu.
+const CRVENA: Color32 = Color32::from_rgb(0xD3, 0x2F, 0x2F);
+
+/// Mali crveni krug na mjestu gdje lik siječe sam sebe.
+fn nacrtaj_presjek(s: &Painter, presjek: Option<Vrh>, p: &dyn Pretvorba) {
+    if let Some(v) = presjek {
+        s.circle(p.u_ekran(&v), 6.0, CRVENA, Stroke::new(2.0, Color32::WHITE));
+    }
+}
 
 fn u_tocke(vrhovi: &[Vrh], p: &dyn Pretvorba) -> Vec<Pos2> {
     vrhovi.iter().map(|v| p.u_ekran(v)).collect()
@@ -162,9 +173,11 @@ pub(crate) fn nacrtaj(
     let odabrano = c.odabran().and_then(|(sloj, o)| projekt.objekt(sloj, o));
     if let Some(g) = c.pregled().or(odabrano.map(|o| &o.geometrija)) {
         nacrtaj_geometriju(s, g, p);
+        nacrtaj_presjek(s, presjek_geometrije(g), p);
     }
     if let Some(crtez) = &c.crtez {
         nacrtaj_trenutni(s, c, crtez, p, mis, ok);
+        nacrtaj_presjek(s, c.presjek_crteza(mis.map(|m| p.na_kartu(m))), p);
     }
     for h in &c.hvatista {
         if h.srednje {

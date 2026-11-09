@@ -424,6 +424,99 @@ fn mjerenje_se_ne_sprema_a_klik_na_prvu_tocku_daje_povrsinu() {
 }
 
 #[test]
+fn mjerenje_osmice_javlja_mjesto_presjeka() {
+    let mut s = Stol::novi(Alat::Mjeri);
+    for (x, y) in [(0.0, 0.0), (100.0, 100.0), (100.0, 0.0), (0.0, 100.0)] {
+        s.klik(x, y);
+    }
+    assert_eq!(
+        s.c.mjerenje().expect("mjerenje").presjek,
+        None,
+        "još nije lik"
+    );
+    s.klik(0.0, 0.0);
+    let m = s.c.mjerenje().expect("mjerenje");
+    assert!(m.gotovo);
+    let t = m.presjek.expect("osmica siječe samu sebe");
+    assert!(
+        (t.duzina - 18.05).abs() < 1e-9 && (t.sirina - 44.95).abs() < 1e-9,
+        "{t:?}"
+    );
+    // Isti lik dok se crta: presjek nastaje tek s točkom pod mišem.
+    let mut s = Stol::novi(Alat::Poligon);
+    for (x, y) in [(0.0, 0.0), (100.0, 100.0), (100.0, 0.0)] {
+        s.klik(x, y);
+    }
+    assert_eq!(s.c.presjek_crteza(None), None);
+    let t =
+        s.c.presjek_crteza(Some(Ravno.na_kartu(pos2(0.0, 100.0))))
+            .expect("presjek");
+    assert!((t.duzina - 18.05).abs() < 1e-9, "{t:?}");
+}
+
+#[test]
+fn presjek_za_upozorenje_gleda_crtez_pa_odabrani_lik() {
+    let mut s = Stol::novi(Alat::Poligon);
+    assert_eq!(
+        s.c.presjek(s.u.projekt()),
+        None,
+        "nema ni crteža ni odabira"
+    );
+    for (x, y) in [(0.0, 0.0), (100.0, 100.0), (100.0, 0.0), (0.0, 100.0)] {
+        s.klik(x, y);
+    }
+    assert!(s.c.presjek(s.u.projekt()).is_some(), "crtež koji traje");
+    s.zavrsi();
+    assert!(s.c.odabran().is_some() && s.c.crtez.is_none());
+    let t = s.c.presjek(s.u.projekt()).expect("odabrani lik");
+    assert!(
+        (t.duzina - 18.05).abs() < 1e-9 && (t.sirina - 44.95).abs() < 1e-9,
+        "{t:?}"
+    );
+    let ispravan = s.poligon();
+    assert_eq!(s.c.odabran(), Some(ispravan));
+    assert_eq!(s.c.presjek(s.u.projekt()), None);
+    // Novi crtež bez presjeka ima prednost pred odabranom osmicom.
+    s.c.postavi_odabrani(None);
+    s.c.postavi_alat(Alat::Poligon);
+    s.klik(0.0, 0.0);
+    assert_eq!(s.c.presjek(s.u.projekt()), None);
+}
+
+#[test]
+fn presjek_imaju_samo_likovi() {
+    let kvadrat = Geometrija::Poligon(vec![vec![
+        Vrh::novi(0.0, 0.0),
+        Vrh::novi(1.0, 0.0),
+        Vrh::novi(1.0, 1.0),
+        Vrh::novi(0.0, 1.0),
+    ]]);
+    assert_eq!(presjek_geometrije(&kvadrat), None);
+    let osmica = Geometrija::Poligon(vec![vec![
+        Vrh::novi(0.0, 0.0),
+        Vrh::novi(1.0, 1.0),
+        Vrh::novi(1.0, 0.0),
+        Vrh::novi(0.0, 1.0),
+    ]]);
+    assert_eq!(presjek_geometrije(&osmica), Some(Vrh::novi(0.5, 0.5)));
+    let crta = Geometrija::Linija(vec![
+        Vrh::novi(0.0, 0.0),
+        Vrh::novi(1.0, 1.0),
+        Vrh::novi(1.0, 0.0),
+        Vrh::novi(0.0, 1.0),
+    ]);
+    assert_eq!(
+        presjek_geometrije(&crta),
+        None,
+        "linija koja se križa nije lik"
+    );
+    assert_eq!(
+        presjek_geometrije(&Geometrija::Tocka(Vrh::novi(0.0, 0.0))),
+        None
+    );
+}
+
+#[test]
 fn zatvaranje_mjerenja_s_premalo_tocaka_ne_radi_nista() {
     let mut s = Stol::novi(Alat::Mjeri);
     s.klik(0.0, 0.0);
