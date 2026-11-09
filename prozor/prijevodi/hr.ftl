@@ -16,7 +16,18 @@ gumb-ponovi = Ponovi
 gumb-tema = Promijeni temu
 gumb-pomoc = Pomoć
 
-trazi-mjesto = Traži mjesto ili koordinate
+trazi-mjesto = Traži koordinate ili naziv
+trazi-nema-rezultata = Nema koordinata ni objekta s tim nazivom.
+trazi-sloj = Sloj: { $naziv }
+trazi-u-sloju = u sloju { $sloj }
+trazi-zamijenjen-redoslijed = zamijenjena širina i dužina, Hrvatska
+trazi-zamijenjen-htrs = zamijenjen istok i sjever, HTRS96/TM
+trazi-greska-sirina = Zemljopisna širina mora biti između -90° i 90°.
+trazi-greska-duzina = Zemljopisna dužina mora biti između -180° i 180°.
+trazi-greska-minute = Minute moraju biti manje od 60.
+trazi-greska-sekunde = Sekunde moraju biti manje od 60.
+trazi-greska-previse-brojeva = Previše brojeva u koordinati.
+trazi-greska-htrs = Koordinate HTRS96/TM su izvan raspona za Hrvatsku.
 atribucija-osm = © OpenStreetMap suradnici
 mjerilo-100m = 100 m
 

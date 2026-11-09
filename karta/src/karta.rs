@@ -52,6 +52,7 @@ pub struct Karta {
     guta_klik: bool,
     navod: bool,
     pogled: Option<Pogled>,
+    kamera: Option<Kamera>,
 }
 
 impl Karta {
@@ -75,6 +76,7 @@ impl Karta {
             guta_klik: false,
             navod: true,
             pogled: None,
+            kamera: None,
         }
     }
 
@@ -100,6 +102,17 @@ impl Karta {
     /// Pogled iz zadnjeg prikaza karte.
     pub fn pogled(&self) -> Option<Pogled> {
         self.pogled
+    }
+
+    /// Preračunava točku sa zemljopisnim koordinatama u točku ekrana.
+    /// Vraća `None` ako karta još nije prikazana ili ako je točka izvan okvira.
+    pub fn tocka_u_ekran(&self, tocka: Vrh, okvir: egui::Rect) -> Option<Pos2> {
+        let k = self.kamera.as_ref()?;
+        let [x, y] = crate::mercator::u_mercator(tocka.duzina, tocka.sirina);
+        let px = okvir.center().x + ((x - k.sredina[0]) / k.metara_po_px) as f32;
+        let py = okvir.center().y - ((y - k.sredina[1]) / k.metara_po_px) as f32;
+        let pos = egui::pos2(px, py);
+        if okvir.contains(pos) { Some(pos) } else { None }
     }
 
     pub fn crtanje(&mut self) -> &mut Crtanje {
@@ -131,6 +144,7 @@ impl Karta {
         let (crtanje, guta) = (&mut self.crtanje, &mut self.guta_klik);
         let podloga = self.podloga.filter(|_| self.navod);
         let pogled = &mut self.pogled;
+        let spremljena_kamera = &mut self.kamera;
         let izvor: Option<&mut dyn Tiles> = match self.izvor.as_mut() {
             Some(i) => Some(i.as_mut()),
             None => None,
@@ -140,13 +154,10 @@ impl Karta {
             .double_click_to_zoom(false)
             .drag_pan_buttons(tipke)
             .show(ui, |ui, odgovor, projektor, _| {
-                ui.painter().add(crtac::poziv(
-                    odgovor.rect,
-                    Poziv {
-                        kamera: kamera(odgovor, projektor),
-                        slojevi,
-                    },
-                ));
+                let k = kamera(odgovor, projektor);
+                *spremljena_kamera = Some(k);
+                ui.painter()
+                    .add(crtac::poziv(odgovor.rect, Poziv { kamera: k, slojevi }));
                 crtanje.osvjezi_hvatista(u.projekt(), projektor);
                 mis(ui, odgovor, projektor, crtanje, guta, u, ok);
                 crtanje.osvjezi_hvatista(u.projekt(), projektor);
@@ -164,6 +175,9 @@ impl Karta {
     }
 
     fn tipkovnica(&mut self, ui: &mut Ui) {
+        if ui.ctx().egui_wants_keyboard_input() {
+            return;
+        }
         let (esc, nazad) = ui.input_mut(|i| {
             (
                 i.consume_key(Modifiers::NONE, Key::Escape),
