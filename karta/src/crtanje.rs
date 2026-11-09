@@ -64,6 +64,8 @@ pub struct Mjerenje {
     /// Broj dijelova, bez onoga koji još ide do miša.
     pub dijelova: usize,
     pub gotovo: bool,
+    /// Mjesto gdje lik siječe sam sebe; tada površina nije ono što korisnik misli.
+    pub presjek: Option<Vrh>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -338,6 +340,7 @@ impl Crtanje {
                 n.saturating_sub(1)
             },
             gotovo: c.gotov,
+            presjek: self.presjek_crteza(None),
         })
     }
 
@@ -758,18 +761,50 @@ impl Crtanje {
         self.makni_prazan_crtez();
     }
 
-    /// Mjere crteža, s točkom pod mišem dok crtanje traje.
-    pub(crate) fn mjere_crteza(&self, mis: Option<Vrh>) -> Option<Mjere> {
+    /// Crtež kao geometrija, s točkom pod mišem dok crtanje traje.
+    fn geometrija_crteza(&self, mis: Option<Vrh>) -> Option<Geometrija> {
         let c = self.crtez.as_ref()?;
         let mut v = c.vrhovi.clone();
         v.extend(mis.filter(|_| !c.gotov));
-        let g = if je_lik(c) && v.len() >= 3 {
+        Some(if je_lik(c) && v.len() >= 3 {
             Geometrija::Poligon(vec![v])
         } else {
             Geometrija::Linija(v)
-        };
-        g.mjere().ok()
+        })
     }
+
+    /// Mjere crteža, s točkom pod mišem dok crtanje traje.
+    pub(crate) fn mjere_crteza(&self, mis: Option<Vrh>) -> Option<Mjere> {
+        self.geometrija_crteza(mis)?.mjere().ok()
+    }
+
+    /// Mjesto gdje lik koji se crta ili mjeri siječe sam sebe.
+    pub(crate) fn presjek_crteza(&self, mis: Option<Vrh>) -> Option<Vrh> {
+        presjek_geometrije(&self.geometrija_crteza(mis)?)
+    }
+
+    /// Mjesto gdje lik koji se crta, mjeri ili je odabran siječe sam sebe, za upozorenje ispod
+    /// karte. Dok crtež postoji, gleda se samo on.
+    pub fn presjek(&self, projekt: &Projekt) -> Option<Vrh> {
+        if self.crtez.is_some() {
+            return self.presjek_crteza(None);
+        }
+        let (sloj, objekt) = self.odabran()?;
+        presjek_geometrije(&projekt.objekt(sloj, objekt)?.geometrija)
+    }
+}
+
+/// Mjesto gdje lik siječe sam sebe, u ravnini dužine i širine kao u QGIS-u. Točka i linija
+/// nisu lik.
+pub(crate) fn presjek_geometrije(g: &Geometrija) -> Option<Vrh> {
+    let Geometrija::Poligon(prstenovi) = g else {
+        return None;
+    };
+    let tocke: Vec<Vec<[f64; 2]>> = prstenovi
+        .iter()
+        .map(|r| r.iter().map(|v| [v.duzina, v.sirina]).collect())
+        .collect();
+    geometrija::presjek_lika(&tocke).map(|[x, y]| Vrh::novi(x, y))
 }
 
 pub(crate) fn je_lik(c: &Crtez) -> bool {

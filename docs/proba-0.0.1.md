@@ -34,6 +34,9 @@ nastavi dalje ako može.
    ne smije biti veća od nekoliko centimetara.
 2. Izmjeri površinu i spremi je kao poligon. Poligon se pojavi u sloju za poligone.
 3. Očisti mjerenje. Na karti ne ostaje ništa osim spremljenog poligona.
+4. Izmjeri površinu kao osmicu: četiri točke u križ. Već s četvrtom točkom pod mišem na križanju se pojavi
+   crveni krug, a ispod karte piše da rub siječe sam sebe. Nacrtaj isti lik alatom Poligon i odaberi ga:
+   krug i poruka su tu. Odaberi ispravan lik: krug i poruka nestanu.
 
 ## 4. Spremanje i otvaranje
 

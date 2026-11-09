@@ -34,6 +34,8 @@ Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
 
 - Udaljenost i površina računaju se na elipsoidu WGS84, kao u QGIS-u.
 - Izmjereno se može spremiti kao linija ili poligon.
+- Lik koji siječe sam sebe, npr. osmica, dobiva crveni krug na mjestu presjeka, i dok ga crtaš ili mjeriš
+  i kad ga odabereš. Ispod karte piše da površina zato nije točna.
 
 ### Datoteke i QGIS
 

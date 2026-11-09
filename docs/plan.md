@@ -13,8 +13,9 @@ Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 
 
 Tražilica i paketi za preuzimanje spojeni su 9. 11. 2026. Tijek paketa na GitHubu prošao je na sva tri sustava, s
 provjerom pokretanja; rezultati su u [REZULTAT-izdanje.md](../REZULTAT-izdanje.md). Do
-izdanja 0.0.1 ostaju upozorenje za lik koji siječe sam sebe, prozor „O programu” s inačicom i proba od početka do kraja s pravim
-QGIS-om. Poruka nakon sukoba koja nudi Spremi kao i skriven gumb Ispis gotovi su 9. 11. 2026. Odluke su u
+izdanja 0.0.1 ostaju prozor „O programu” s inačicom i proba od početka do kraja s pravim QGIS-om. Upozorenje
+za lik koji siječe sam sebe gotovo je 9. 11. 2026. (`geometrija/REZULTAT.md`, `karta/REZULTAT.md`); traži
+odluku smije li se takav lik spremiti, a sad se sprema uz upozorenje. Poruka nakon sukoba koja nudi Spremi kao i skriven gumb Ispis gotovi su 9. 11. 2026. Odluke su u
 odjeljku „Gumb Otvori u QGIS-u” niže.
 
 Rust 1.99.1 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`,
@@ -146,8 +147,8 @@ i duboka provjera još nisu napravljeni.
   - **Inercija:** karta nakon brzog povlačenja još klizi, pa klik odmah nakon toga može
     promašiti. Karta i dalje klizi, a klik je samo zaustavi (Odluke (7. 11. 2026.), vidi rezultat
     probe `walkers-dodaci` u fazi 1).
-  - **Lik koji siječe sam sebe:** program ga sad bez upozorenja prima, a QGIS takvu
-    geometriju smatra neispravnom. Treba upozorenje.
+  - **Lik koji siječe sam sebe:** QGIS takvu geometriju smatra neispravnom. Od 9. 11. 2026.
+    program označi mjesto presjeka i upozori (`geometrija/REZULTAT.md`).
   - **Samoprovjera mora biti stabilna:** prve inačice padale su nasumično jer su čekale u
     okvirima, a monitori imaju 50 i 120 Hz, i jer je klizanje karte ovisilo o brzini.
     Testovi sučelja u programu moraju mjeriti vrijeme, a ne okvire.
@@ -384,7 +385,7 @@ duljina crte te opseg i površina lika računaju se na elipsoidu WGS84, a uz sva
   Vincentyjeve formule unutar 1 mm i točna formula za pojas između paralela. Svih 20 namjerno
   ubačenih grešaka testovi su uhvatili, među njima i pogrešku od milijuntog dijela površine.
 - **Kao u QGIS-u:** opseg uključuje rubove rupa, a lik koji siječe sam sebe dobiva razliku svojih
-  dijelova, pa simetrična osmica ima površinu 0. Treba upozorenje, koje još nije napravljeno.
+  dijelova, pa simetrična osmica ima površinu 0. Upozorenje je napravljeno 9. 11. 2026.
 - **Krive koordinate:** točka u metrima predana kao stupnjevi vraća grešku, a ne besmislen broj.
 - **Brzina:** 10 000 vrhova oko 5 ms, a 3 milijuna vrhova 0,3 do 0,5 s, pa se računa samo kad se lik
   promijeni, a velike likove treba računati u pozadini. Mjereno na M4 Pro, uz opterećeno računalo.
@@ -456,8 +457,7 @@ Primjer se pokreće s `cargo run -p karta --example prozor`. Pravim mišem ispro
 - **Licence:** na popis dopuštenih dodani su `0BSD`, `BSL-1.0` i `CDLA-Permissive-2.0`, koje traže biblioteke
   ispod `walkers`.
 - **Nije provjereno:** ručni rad na Windowsu i Linuxu (na njima se zasad vrte samo testovi na CI-ju), glatkoća u
-  prozoru s upaljenim ekranom i rad na slabijem računalu. Upozorenje za lik koji siječe sam sebe još nije
-  napravljeno.
+  prozoru s upaljenim ekranom i rad na slabijem računalu.
 
 **Rezultat paketa `prozor` (8. 11. 2026., `egui` 0.37):** glavni prozor po zaslonu A, u svijetloj i tamnoj
 temi: izbornik, alati, ploča Slojevi sa stablom, izbor podloge i statusna traka. Cijeli izvještaj je u

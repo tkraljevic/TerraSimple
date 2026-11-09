@@ -55,6 +55,8 @@ struct Proba {
     /// Oblici zadnjeg okvira, da se vidi je li išta nacrtano.
     oblika: usize,
     tekstovi: Vec<String>,
+    /// Ispunjeni krugovi zadnjeg okvira: sredina i boja.
+    krugovi: Vec<(Pos2, egui::Color32)>,
 }
 
 impl Proba {
@@ -69,6 +71,7 @@ impl Proba {
             vrijeme: 0.0,
             oblika: 0,
             tekstovi: Vec::new(),
+            krugovi: Vec::new(),
         };
         p.okvir(vec![Event::PointerMoved(pos2(1.0, 1.0))]);
         p
@@ -90,6 +93,14 @@ impl Proba {
         });
         izlaz.textures_delta.clear();
         self.oblika = izlaz.shapes.len();
+        self.krugovi = izlaz
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::Shape::Circle(k) => Some((k.center, k.fill)),
+                _ => None,
+            })
+            .collect();
         self.tekstovi = izlaz
             .shapes
             .iter()
@@ -478,4 +489,47 @@ fn navod_podloge_karta_crta_samo_dok_ga_prozor_ne_preuzme() {
     p.karta.crtaj_navod(false);
     p.okvir(Vec::new());
     assert!(!p.tekstovi.iter().any(|t| t == podloga.navod()));
+}
+
+/// Crvene oznake presjeka u zadnjem okviru.
+fn oznake_presjeka(p: &Proba) -> Vec<Pos2> {
+    p.krugovi
+        .iter()
+        .filter(|(_, boja)| *boja == egui::Color32::from_rgb(0xD3, 0x2F, 0x2F))
+        .map(|(m, _)| *m)
+        .collect()
+}
+
+#[test]
+fn osmica_dobiva_crvenu_oznaku_na_mjestu_presjeka() {
+    let mut p = Proba::nova(Alat::Poligon);
+    p.klik(A);
+    p.klik(C);
+    p.klik(B);
+    assert!(oznake_presjeka(&p).is_empty(), "trokut ne siječe sam sebe");
+    // Miš na četvrtom vrhu: lik koji se crta već se križa u sredini.
+    let d = pos2(100.0, 300.0);
+    p.okvir(vec![Event::PointerMoved(d)]);
+    let oznake = oznake_presjeka(&p);
+    assert_eq!(oznake.len(), 1, "{:?}", p.krugovi);
+    assert!(oznake[0].distance(pos2(200.0, 200.0)) < 1.0, "{oznake:?}");
+    p.dvoklik(d);
+    assert_eq!(p.objekata(), 1);
+    // Gotov i odabran lik i dalje ima oznaku.
+    p.okvir(Vec::new());
+    let oznake = oznake_presjeka(&p);
+    assert_eq!(oznake.len(), 1, "{:?}", p.krugovi);
+    assert!(oznake[0].distance(pos2(200.0, 200.0)) < 1.0, "{oznake:?}");
+}
+
+#[test]
+fn obican_lik_nema_oznake_presjeka() {
+    let mut p = Proba::nova(Alat::Poligon);
+    p.klik(A);
+    p.klik(B);
+    p.klik(C);
+    p.dvoklik(pos2(100.0, 300.0));
+    p.okvir(Vec::new());
+    assert_eq!(p.objekata(), 1);
+    assert!(oznake_presjeka(&p).is_empty(), "{:?}", p.krugovi);
 }

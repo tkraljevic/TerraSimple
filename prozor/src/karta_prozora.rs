@@ -305,12 +305,17 @@ impl KartaProzora {
         katalog: &KatalogPoruka,
         boje: &Boje,
     ) {
-        let tekst = match self.karta.crtanje().poruka() {
-            Some(poruka) => tekst_poruke(katalog, poruka),
-            None => match poruka_drugog_sloja(projekt, stanje, katalog) {
-                Some(t) => t,
-                None => return,
-            },
+        let crtanje = self.karta.crtanje();
+        let presjek = crtanje
+            .presjek(projekt)
+            .map(|_| katalog.tekst("poruka-presjek"));
+        let Some(tekst) = crtanje
+            .poruka()
+            .map(|poruka| tekst_poruke(katalog, poruka))
+            .or(presjek)
+            .or_else(|| poruka_drugog_sloja(projekt, stanje, katalog))
+        else {
+            return;
         };
         let sirina = tekst.chars().count() as f32 * 6.6 + 28.0;
         let okvir = Rect::from_center_size(dno - vec2(0.0, 20.0), vec2(sirina, 30.0));
