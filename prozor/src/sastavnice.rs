@@ -262,6 +262,24 @@ pub struct OpisRetkaStabla<'a> {
     pub uredjivanje: Option<bool>,
     /// Stavke izbornika na desni klik; prazno znači bez izbornika.
     pub stavke_izbornika: &'a [&'a str],
+    /// Podizbornik u izborniku na desni klik, npr. popis mapa za „Premjesti u”.
+    pub podizbornik: Option<PodizbornikRetka<'a>>,
+    /// Redak se smije povući mišem.
+    pub povlacenje: bool,
+}
+
+/// Podizbornik ide odmah iza stavke `iza_stavke`. Stavke se slažu tek kad se izbornik otvori.
+pub struct PodizbornikRetka<'a> {
+    pub naslov: &'a str,
+    pub iza_stavke: usize,
+    pub stavke: &'a dyn Fn() -> Vec<StavkaPodizbornika>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StavkaPodizbornika {
+    pub naziv: String,
+    pub uvlaka: usize,
+    pub omogucena: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -273,6 +291,10 @@ pub struct OdgovorRetkaStabla {
     pub kliknut_prekidac: bool,
     /// Redni broj stavke koju je korisnik odabrao u izborniku retka.
     pub stavka_izbornika: Option<usize>,
+    /// Redni broj stavke odabrane u podizborniku.
+    pub stavka_podizbornika: Option<usize>,
+    /// Korisnik je upravo počeo povlačiti redak.
+    pub povlacenje_pocelo: bool,
 }
 
 pub fn redak_stabla(
@@ -315,18 +337,26 @@ pub fn redak_stabla(
         pos2(desna_granica.max(x), opis.okvir.max.y),
     );
     let id_retka = ui.make_persistent_id(("redak_stabla", opis.id_kljuc));
-    let odgovor_tijela = ui.interact(okvir_tijela, id_retka, Sense::click());
+    let osjet = if opis.povlacenje {
+        Sense::click_and_drag()
+    } else {
+        Sense::click()
+    };
+    let odgovor_tijela = ui.interact(okvir_tijela, id_retka, osjet);
     odgovor_tijela.widget_info(|| {
         WidgetInfo::selected(Role::Button, ui.is_enabled(), opis.odabrano, opis.naslov)
     });
 
+    let (stavka_izbornika, stavka_podizbornika) = izbornik_retka(&odgovor_tijela, opis);
     OdgovorRetkaStabla {
         kliknut_redak: odgovor_tijela.clicked(),
         dvokliknut_redak: odgovor_tijela.double_clicked(),
         desni_klik: odgovor_tijela.secondary_clicked(),
         kliknuta_strelica,
         kliknut_prekidac,
-        stavka_izbornika: izbornik_retka(&odgovor_tijela, opis.stavke_izbornika),
+        stavka_izbornika,
+        stavka_podizbornika,
+        povlacenje_pocelo: odgovor_tijela.drag_started(),
     }
 }
 
@@ -411,21 +441,50 @@ fn polje_naziva(
     }
 }
 
-/// Izbornik na desni klik. Vraća redni broj odabrane stavke.
-fn izbornik_retka(odgovor: &Response, stavke: &[&str]) -> Option<usize> {
-    if stavke.is_empty() {
-        return None;
+/// Izbornik na desni klik. Vraća redni broj odabrane stavke i odabrane stavke podizbornika.
+fn izbornik_retka(
+    odgovor: &Response,
+    opis: &OpisRetkaStabla<'_>,
+) -> (Option<usize>, Option<usize>) {
+    let mut odabrana = (None, None);
+    if opis.stavke_izbornika.is_empty() {
+        return odabrana;
     }
-    let mut odabrana = None;
     let _ = odgovor.context_menu(|ui| {
-        for (redni, stavka) in stavke.iter().enumerate() {
+        for (redni, stavka) in opis.stavke_izbornika.iter().enumerate() {
             if ui.button(*stavka).clicked() {
-                odabrana = Some(redni);
+                odabrana.0 = Some(redni);
                 ui.close();
+            }
+            if let Some(pod) = &opis.podizbornik
+                && pod.iza_stavke == redni
+            {
+                odabrana.1 = odabrana.1.or(podizbornik_retka(ui, pod));
             }
         }
     });
     odabrana
+}
+
+fn podizbornik_retka(ui: &mut egui::Ui, pod: &PodizbornikRetka<'_>) -> Option<usize> {
+    ui.menu_button(pod.naslov, |ui| {
+        let mut odabrana = None;
+        for (redni, stavka) in (pod.stavke)().iter().enumerate() {
+            let gumb = ui
+                .horizontal(|ui| {
+                    ui.add_space(stavka.uvlaka as f32 * Razmaci::UVLAKA_PODIZBORNIKA);
+                    ui.add_enabled(stavka.omogucena, egui::Button::new(&stavka.naziv))
+                })
+                .inner;
+            if gumb.clicked() {
+                odabrana = Some(redni);
+                ui.close();
+            }
+        }
+        odabrana
+    })
+    .inner
+    .flatten()
 }
 
 fn crtaj_strelicu_retka(
@@ -604,6 +663,8 @@ mod testovi {
                         labela_vidljivosti: "Vidljivost",
                         uredjivanje: None,
                         stavke_izbornika: &[],
+                        podizbornik: None,
+                        povlacenje: false,
                     };
                     let odg = redak_stabla(ui, &mut ikone, &opis, false, &SVIJETLA);
                     if odg.kliknuta_strelica {

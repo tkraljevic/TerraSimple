@@ -12,6 +12,7 @@ pub mod karta_prozora;
 pub mod novi_sloj;
 pub mod ploca;
 pub mod poruke;
+pub mod premjestanje;
 pub mod primjer;
 pub mod qgis_veza;
 pub mod sastavnice;

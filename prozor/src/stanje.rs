@@ -1,4 +1,4 @@
-use slojevi::{IdMape, IdObjekta, IdSloja, VrstaGeometrije};
+use slojevi::{IdMape, IdObjekta, IdSloja, Stavka, VrstaGeometrije};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -86,6 +86,8 @@ pub struct StanjePrikaza {
     pub naziv_oznacen: bool,
     /// Izbornik retka u ploči traži brisanje odabranog; prozor ga izvodi, s upozorenjem ako treba.
     pub zatrazeno_brisanje: bool,
+    /// Mapa ili sloj koji korisnik upravo povlači mišem u ploči Slojevi.
+    pub povuceno: Option<Stavka>,
     pub novi_sloj: Option<NoviSloj>,
     pub alat: Alat,
     pub podloga: usize,
@@ -121,6 +123,7 @@ impl StanjePrikaza {
             preimenovanje: None,
             naziv_oznacen: false,
             zatrazeno_brisanje: false,
+            povuceno: None,
             novi_sloj: None,
             alat: Alat::Odaberi,
             podloga: 0,
