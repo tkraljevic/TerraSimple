@@ -403,28 +403,31 @@ impl Aplikacija {
 
     fn izvrsi_precac(&mut self, key: Key, modifiers: &egui::Modifiers) {
         // `command` je ⌘ na Macu, a Ctrl drugdje, pa Ctrl na Macu nije prečac (Odluke (9. 11. 2026.)).
+        if self.smije_brisati_tipkom(key, modifiers.command) {
+            self.pokreni_brisanje();
+            return;
+        }
         if modifiers.command {
             self.obradi_cmd_precac(key, modifiers.shift);
             return;
         }
-        if key == Key::F2 {
-            let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
-            return;
-        }
-        if key == Key::Escape {
-            self.trazilica.ponisti_ili_zatvori();
-            return;
-        }
-        if self.smije_brisati_tipkom(key) {
-            self.pokreni_brisanje();
+        match key {
+            Key::F2 => {
+                let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
+            }
+            Key::Escape => {
+                let _ = self.trazilica.ponisti_ili_zatvori();
+            }
+            _ => {}
         }
     }
 
-    /// Backspace s odabranom točkom briše tu točku, a to radi karta.
-    fn smije_brisati_tipkom(&mut self, key: Key) -> bool {
+    /// Objekte, mape i slojeve briše Delete ili ⌘ + Backspace, kao u Finderu (Odluke (10. 11. 2026.)).
+    /// Sam Backspace briše samo točku, a to radi karta.
+    fn smije_brisati_tipkom(&mut self, key: Key, cmd: bool) -> bool {
         let tipka_brisanja = match key {
             Key::Delete => true,
-            Key::Backspace => !self.karta.ima_odabranu_tocku(),
+            Key::Backspace => cmd,
             _ => false,
         };
         tipka_brisanja && !self.karta.u_tijeku() && !self.trazilica.fokusirana

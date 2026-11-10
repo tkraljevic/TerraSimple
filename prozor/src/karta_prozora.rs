@@ -72,11 +72,6 @@ impl KartaProzora {
         self.karta.crtanje().u_tijeku()
     }
 
-    /// Je li na karti odabrana točka objekta. Tada Backspace briše nju, a ne objekt.
-    pub fn ima_odabranu_tocku(&mut self) -> bool {
-        self.karta.crtanje().odabrana_tocka().is_some()
-    }
-
     /// Koliko je objekata odabrano na karti.
     pub fn broj_odabranih(&mut self) -> usize {
         self.karta.crtanje().odabrani().len()

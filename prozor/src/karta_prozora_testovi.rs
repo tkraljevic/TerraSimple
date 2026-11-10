@@ -71,13 +71,17 @@ fn preskoci_naziv(h: &mut Harness<'_, Aplikacija>) {
 }
 
 fn pritisni(h: &mut Harness<'_, Aplikacija>, key: Key) {
+    pritisni_s(h, Modifiers::NONE, key);
+}
+
+fn pritisni_s(h: &mut Harness<'_, Aplikacija>, modifiers: Modifiers, key: Key) {
     for pressed in [true, false] {
         h.input_mut().events.push(Event::Key {
             key,
             physical_key: None,
             pressed,
             repeat: false,
-            modifiers: Modifiers::NONE,
+            modifiers,
         });
     }
     h.run_steps(2);
@@ -282,8 +286,13 @@ fn backspace_dok_traje_crtanje_brise_tocku_crteza_a_ne_odabrani_sloj() {
     assert!(!h.state_mut().karta.u_tijeku(), "Escape odustaje od crteža");
     pritisni(&mut h, Key::Backspace);
     assert!(
+        h.state().uredjivac.projekt().sloj(s).is_some(),
+        "sam Backspace ne briše sloj"
+    );
+    pritisni_s(&mut h, Modifiers::COMMAND, Key::Backspace);
+    assert!(
         h.state().uredjivac.projekt().sloj(s).is_none(),
-        "bez crtanja Backspace briše odabrani sloj"
+        "⌘ + Backspace briše odabrani sloj"
     );
 }
 
@@ -774,7 +783,25 @@ fn backspace_brise_odabranu_tocku_lika_a_ne_cijeli_lik() {
     pritisni(&mut h, Key::Backspace);
     assert_eq!(
         broj_objekata(h.state()),
-        0,
-        "bez odabrane točke briše se lik"
+        1,
+        "sam Backspace ne briše cijeli lik"
     );
+    pritisni_s(&mut h, Modifiers::COMMAND, Key::Backspace);
+    assert_eq!(broj_objekata(h.state()), 0, "⌘ + Backspace briše lik");
+}
+
+#[test]
+fn cmd_backspace_brise_lik_i_kad_mu_je_odabrana_tocka() {
+    let mut h = prozor(Aplikacija::default());
+    let m = sredina_karte();
+    poligon_desnim_klikom(&mut h, m);
+    preskoci_naziv(&mut h);
+    klikni(&mut h, m + vec2(120.0, 0.0));
+    pritisni_s(&mut h, Modifiers::COMMAND, Key::Backspace);
+    assert_eq!(broj_objekata(h.state()), 0);
+    ponisti(&mut h);
+    let Geometrija::Poligon(p) = jedini_objekt(h.state()).geometrija else {
+        panic!("poligon");
+    };
+    assert_eq!(p[0].len(), 4, "poništavanje vraća cijeli lik");
 }
