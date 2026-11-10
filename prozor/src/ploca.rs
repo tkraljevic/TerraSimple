@@ -1,8 +1,6 @@
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::poruke::{KatalogPoruka, mjera_duljine, mjera_povrsine};
-use crate::premjestanje::{
-    naziv_stavke, odredista_premjestanja, odrediste_ispustanja, premjesti_stavku, stavka_odabira,
-};
+use crate::premjestanje::{Mjesto, odredista_premjestanja, odrediste_ispustanja, premjesti};
 use crate::primjer::ukupno_slojeva_u_mapi;
 use crate::sastavnice::{
     OpisGumbaIkone, OpisRetkaStabla, PodizbornikRetka, StavkaPodizbornika, cip, gumb_ikona,
@@ -584,10 +582,9 @@ fn crtaj_stablo_u_ploci(
     let vidljivi = &redci[..redci.len().min(maks_redaka)];
     for (indeks, redak) in vidljivi.iter().enumerate() {
         let y = podrucje.min.y + indeks as f32 * visina_retka;
-        let stavka = stavka_odabira(redak.odabir);
         let projekt = uredjivac.projekt();
-        let odredista = || stavke_podizbornika(projekt, stavka, katalog);
-        let podizbornik = stavka.map(|_| PodizbornikRetka {
+        let odredista = || stavke_podizbornika(projekt, redak.odabir, katalog);
+        let podizbornik = Some(PodizbornikRetka {
             naslov: &premjesti_u,
             iza_stavke: STAVKA_PREIMENUJ,
             stavke: &odredista,
@@ -616,7 +613,7 @@ fn crtaj_stablo_u_ploci(
             uredjivanje: uredjivanje_retka(stanje, redak.odabir),
             stavke_izbornika: &stavke_izbornika,
             podizbornik,
-            povlacenje: stavka.is_some() && stanje.preimenovanje.is_none(),
+            povlacenje: stanje.preimenovanje.is_none(),
         };
         let odg = redak_stabla(ui, ikone, &opis, tamna, boje);
         obradi_odgovor_retka(uredjivac.projekt(), stanje, redak.odabir, odg);
@@ -627,23 +624,20 @@ fn crtaj_stablo_u_ploci(
 
 fn stavke_podizbornika(
     projekt: &Projekt,
-    stavka: Option<Stavka>,
+    odabir: Odabir,
     katalog: &KatalogPoruka,
 ) -> Vec<StavkaPodizbornika> {
-    let Some(stavka) = stavka else {
-        return Vec::new();
-    };
-    odredista_premjestanja(projekt, stavka, katalog)
+    odredista_premjestanja(projekt, odabir, katalog)
         .into_iter()
         .map(|o| StavkaPodizbornika {
             naziv: o.naziv,
             uvlaka: o.uvlaka,
-            omogucena: !o.trenutna,
+            omogucena: o.omoguceno,
         })
         .collect()
 }
 
-/// Početak povlačenja retka i odabir mape u podizborniku „Premjesti u”.
+/// Početak povlačenja retka i odabir mjesta u podizborniku „Premjesti u”.
 fn obradi_premjestanje_retka(
     uredjivac: &mut Uredjivac,
     stanje: &mut StanjePrikaza,
@@ -651,21 +645,19 @@ fn obradi_premjestanje_retka(
     odabir: Odabir,
     odgovor: crate::sastavnice::OdgovorRetkaStabla,
 ) {
-    let Some(stavka) = stavka_odabira(odabir) else {
-        return;
-    };
     if odgovor.povlacenje_pocelo {
-        stanje.povuceno = Some(stavka);
+        stanje.povuceno = Some(odabir);
     }
     let Some(redni) = odgovor.stavka_podizbornika else {
         return;
     };
-    let odrediste = odredista_premjestanja(uredjivac.projekt(), stavka, katalog)
+    let mjesto = odredista_premjestanja(uredjivac.projekt(), odabir, katalog)
         .into_iter()
         .nth(redni)
-        .filter(|o| !o.trenutna);
-    if let Some(o) = odrediste {
-        let _ = premjesti_stavku(uredjivac, stanje, stavka, o.mapa, usize::MAX);
+        .filter(|o| o.omoguceno)
+        .and_then(|o| o.mjesto);
+    if let Some(mjesto) = mjesto {
+        let _ = premjesti(uredjivac, stanje, odabir, mjesto);
     }
 }
 
@@ -685,21 +677,21 @@ fn obradi_ispustanje(
     let (pokazivac, pusteno) = ui.input(|i| (i.pointer.interact_pos(), !i.pointer.primary_down()));
     let cilj = pokazivac.and_then(|p| redak_pod_pokazivacem(redci, podrucje, p));
     let odrediste = cilj.and_then(|(indeks, odabir)| {
-        odrediste_ispustanja(uredjivac.projekt(), povuceno, odabir).map(|o| (indeks, odabir, o))
+        odrediste_ispustanja(uredjivac.projekt(), povuceno, odabir).map(|m| (indeks, m))
     });
     if pusteno {
         stanje.povuceno = None;
-        if let Some((_, _, (u, polozaj))) = odrediste {
-            let _ = premjesti_stavku(uredjivac, stanje, povuceno, u, polozaj);
+        if let Some((_, mjesto)) = odrediste {
+            let _ = premjesti(uredjivac, stanje, povuceno, mjesto);
         }
         return;
     }
     ui.ctx().set_cursor_icon(CursorIcon::Grabbing);
-    if let Some((indeks, odabir, _)) = odrediste {
-        crtaj_cilj_ispustanja(ui, podrucje, indeks, odabir, boje);
+    if let Some((indeks, mjesto)) = odrediste {
+        crtaj_cilj_ispustanja(ui, podrucje, indeks, mjesto, boje);
     }
-    if let (Some(p), Some(naziv)) = (pokazivac, naziv_stavke(uredjivac.projekt(), povuceno)) {
-        crtaj_natpis_povlacenja(ui, p, naziv, boje);
+    if let (Some(p), Some(naziv)) = (pokazivac, naziv_za_odabir(uredjivac.projekt(), povuceno)) {
+        crtaj_natpis_povlacenja(ui, p, &naziv, boje);
     }
 }
 
@@ -715,15 +707,23 @@ fn redak_pod_pokazivacem(
     redci.get(indeks).map(|r| (indeks, r.odabir))
 }
 
-/// Mapa dobije okvir, jer stavka ide u nju, a iznad sloja se crta crta, jer stavka ide ispred njega.
-fn crtaj_cilj_ispustanja(ui: &egui::Ui, podrucje: Rect, indeks: usize, cilj: Odabir, boje: &Boje) {
+/// Mapa ili sloj u koji nešto ide dobije okvir, a kad mapa ili sloj ide ispred sloja, iznad njega se
+/// crta crta.
+fn crtaj_cilj_ispustanja(
+    ui: &egui::Ui,
+    podrucje: Rect,
+    indeks: usize,
+    mjesto: Mjesto,
+    boje: &Boje,
+) {
     let y = podrucje.min.y + indeks as f32 * Razmaci::VISINA_RETKA_STABLA;
     let okvir = Rect::from_min_size(
         pos2(podrucje.min.x, y),
         vec2(podrucje.width(), Razmaci::VISINA_RETKA_STABLA - 2.0),
     );
     let potez = Stroke::new(2.0, boje.primarna);
-    if matches!(cilj, Odabir::Mapa(_)) {
+    let ispred = matches!(mjesto, Mjesto::Mapa { polozaj, .. } if polozaj != usize::MAX);
+    if !ispred {
         ui.painter()
             .rect_stroke(okvir, Razmaci::ZAOBLJENJE_RETKA, potez, StrokeKind::Inside);
     } else {

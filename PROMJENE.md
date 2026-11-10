@@ -6,6 +6,8 @@
   „Izvan mapa”. Mapa ne nudi samu sebe ni svoje podmape.
 - Isto se može povlačenjem mišem: ispušteno na mapu ide na kraj te mape, a ispušteno na sloj ide ispred
   njega. Premještanje se poništava kao i svaka druga izmjena.
+- Objekt se na isti način prebacuje u drugi sloj iste vrste: poligon u sloj poligona, linija u sloj linija.
+  Podizbornik pokazuje mape kao natpise, a nudi samo slojeve u koje objekt smije.
 
 ## 0.0.3 alfa (probno, 10. 11. 2026.)
 
