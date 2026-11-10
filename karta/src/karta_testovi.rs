@@ -132,9 +132,10 @@ impl Proba {
         self.vrijeme += STANKA_S;
     }
 
-    fn dvoklik(&mut self, m: Pos2) {
-        self.klik_gumbom(m, PointerButton::Primary);
-        self.klik_gumbom(m, PointerButton::Primary);
+    /// Zadnja točka pa desni klik, koji završava crtanje.
+    fn klik_pa_desni(&mut self, m: Pos2) {
+        self.klik(m);
+        self.klik_gumbom(m, PointerButton::Secondary);
         self.vrijeme += STANKA_S;
     }
 
@@ -192,13 +193,13 @@ const B: Pos2 = pos2(300.0, 100.0);
 const C: Pos2 = pos2(300.0, 300.0);
 
 #[test]
-fn klikovi_i_dvoklik_crtaju_poligon_na_pravoj_karti() {
+fn klikovi_i_desni_klik_crtaju_poligon_na_pravoj_karti() {
     let mut p = Proba::nova(Alat::Poligon);
     p.klik(A);
     p.klik(B);
     p.klik(C);
     assert_eq!(p.objekata(), 0, "još se crta");
-    p.dvoklik(pos2(100.0, 300.0));
+    p.klik_pa_desni(pos2(100.0, 300.0));
     assert_eq!(p.objekata(), 1);
     assert_eq!(
         p.zadnji_vrhova(),
@@ -226,7 +227,7 @@ fn povlacenje_tocke_ne_pomice_kartu() {
     let mut p = Proba::nova(Alat::Linija);
     p.klik(A);
     p.klik(B);
-    p.dvoklik(C);
+    p.klik_pa_desni(C);
     let sredina = p.sredina();
     p.povuci(A, 6, Vec2::new(10.0, 5.0));
     assert!(p.pomak_px(sredina) < 1e-6, "karta se pomaknula");
@@ -300,21 +301,10 @@ fn polagano_povlacenje_ne_ostavlja_gutanje_klika() {
 }
 
 #[test]
-fn desni_klik_brise_tocku_a_tipke_rade_na_karti() {
+fn backspace_brise_tocku_a_desni_klik_zavrsava_na_karti() {
     let mut p = Proba::nova(Alat::Linija);
     p.klik(A);
     p.klik(B);
-    p.klik_gumbom(B, PointerButton::Secondary);
-    assert_eq!(
-        p.karta
-            .crtanje()
-            .crtez
-            .as_ref()
-            .expect("crtež")
-            .vrhovi
-            .len(),
-        1
-    );
     p.klik(C);
     let tipka = |key| Event::Key {
         key,
@@ -324,16 +314,20 @@ fn desni_klik_brise_tocku_a_tipke_rade_na_karti() {
         modifiers: Modifiers::NONE,
     };
     p.okvir(vec![tipka(Key::Backspace)]);
-    assert_eq!(
+    let vrhova = |p: &mut Proba| {
         p.karta
             .crtanje()
             .crtez
             .as_ref()
-            .expect("crtež")
-            .vrhovi
-            .len(),
-        1
-    );
+            .map_or(0, |c| c.vrhovi.len())
+    };
+    assert_eq!(vrhova(&mut p), 2);
+    p.klik_gumbom(B, PointerButton::Secondary);
+    assert_eq!(p.objekata(), 1, "desni klik je završio liniju");
+    assert_eq!(p.zadnji_vrhova(), 2);
+
+    p.karta.crtanje().postavi_alat(Alat::Linija);
+    p.klik(A);
     p.okvir(vec![tipka(Key::Escape)]);
     assert!(p.karta.crtanje().crtez.is_none());
 }
@@ -342,7 +336,7 @@ fn desni_klik_brise_tocku_a_tipke_rade_na_karti() {
 fn priprema_se_ponavlja_samo_kad_se_sloj_promijeni() {
     let mut p = Proba::nova(Alat::Linija);
     p.klik(A);
-    p.dvoklik(B);
+    p.klik_pa_desni(B);
     let (sloj, _) = p.karta.crtanje().odabran().expect("odabran");
     p.okvir(Vec::new());
     let razine = |p: &Proba| p.karta.pripremljeni[&sloj].razine.clone();
@@ -364,7 +358,7 @@ fn priprema_se_ponavlja_samo_kad_se_sloj_promijeni() {
 fn vuceni_objekt_nije_u_pripremi_dok_traje_vucenje() {
     let mut p = Proba::nova(Alat::Linija);
     p.klik(A);
-    p.dvoklik(B);
+    p.klik_pa_desni(B);
     let (sloj, id) = p.karta.crtanje().odabran().expect("odabran");
     p.okvir(vec![Event::PointerMoved(A)]);
     p.tipka(A, PointerButton::Primary, true);
@@ -384,7 +378,7 @@ fn vuceni_objekt_nije_u_pripremi_dok_traje_vucenje() {
 fn skriveni_sloj_se_ne_priprema() {
     let mut p = Proba::nova(Alat::Linija);
     p.klik(A);
-    p.dvoklik(B);
+    p.klik_pa_desni(B);
     let nista = |_: IdSloja| false;
     let ok = Okolina {
         vidljiv: &nista,
@@ -451,7 +445,7 @@ fn promjena_podloge_mijenja_navod_i_izvor() {
 fn linija_se_nastavlja_pravim_klikovima_a_povlacenje_kraja_i_dalje_pomice_tocku() {
     let mut p = Proba::nova(Alat::Linija);
     p.klik(A);
-    p.dvoklik(B);
+    p.klik_pa_desni(B);
     assert_eq!(p.zadnji_vrhova(), 2);
     p.okvir(Vec::new());
     p.klik(B);
@@ -461,7 +455,7 @@ fn linija_se_nastavlja_pravim_klikovima_a_povlacenje_kraja_i_dalje_pomice_tocku(
         "klik na kraj nastavlja"
     );
     p.klik(C);
-    p.dvoklik(pos2(500.0, 300.0));
+    p.klik_pa_desni(pos2(500.0, 300.0));
     assert_eq!(p.zadnji_vrhova(), 4);
     assert_eq!(p.objekata(), 1, "ista linija, a ne nova");
     assert_eq!(p.karta.crtanje().alat(), Alat::Odaberi);
@@ -513,7 +507,7 @@ fn osmica_dobiva_crvenu_oznaku_na_mjestu_presjeka() {
     let oznake = oznake_presjeka(&p);
     assert_eq!(oznake.len(), 1, "{:?}", p.krugovi);
     assert!(oznake[0].distance(pos2(200.0, 200.0)) < 1.0, "{oznake:?}");
-    p.dvoklik(d);
+    p.klik_pa_desni(d);
     assert_eq!(p.objekata(), 1);
     // Gotov i odabran lik i dalje ima oznaku.
     p.okvir(Vec::new());
@@ -528,7 +522,7 @@ fn obican_lik_nema_oznake_presjeka() {
     p.klik(A);
     p.klik(B);
     p.klik(C);
-    p.dvoklik(pos2(100.0, 300.0));
+    p.klik_pa_desni(pos2(100.0, 300.0));
     p.okvir(Vec::new());
     assert_eq!(p.objekata(), 1);
     assert!(oznake_presjeka(&p).is_empty(), "{:?}", p.krugovi);

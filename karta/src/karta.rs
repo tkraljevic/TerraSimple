@@ -131,7 +131,7 @@ impl Karta {
 
     /// Prikazuje kartu i obrađuje miš i tipkovnicu.
     pub fn prikazi(&mut self, ui: &mut Ui, u: &mut Uredjivac, ok: &Okolina<'_>) {
-        self.tipkovnica(ui);
+        self.tipkovnica(ui, u);
         self.zaustavi_pri_pritisku(ui);
         let pritisak = ui.input(|i| i.pointer.press_origin());
         let pomice = self.crtanje.smije_pomicati_kartu(pritisak);
@@ -149,7 +149,8 @@ impl Karta {
             Some(i) => Some(i.as_mut()),
             None => None,
         };
-        // Dvoklik i povlačenje imaju značenje u crtanju, pa ih karta ne smije preuzeti.
+        // Povlačenje točke ima značenje u crtanju, pa ga karta ne smije preuzeti, a dvoklik bi
+        // približavao kartu usred crtanja.
         Map::new(izvor, &mut self.memorija, self.pocetak)
             .double_click_to_zoom(false)
             .drag_pan_buttons(tipke)
@@ -168,13 +169,14 @@ impl Karta {
                     ui.input(|i| i.pointer.hover_pos()),
                 ));
                 crtez_na_karti::nacrtaj(ui.painter(), crtanje, u.projekt(), projektor, polozaj, ok);
+                crtez_na_karti::nacrtaj_okvir_odabira(ui.painter(), crtanje, projektor, polozaj);
                 if let Some(p) = podloga {
                     crtez_na_karti::nacrtaj_navod(ui.painter(), odgovor.rect, p.navod());
                 }
             });
     }
 
-    fn tipkovnica(&mut self, ui: &mut Ui) {
+    fn tipkovnica(&mut self, ui: &mut Ui, u: &mut Uredjivac) {
         if ui.ctx().egui_wants_keyboard_input() {
             return;
         }
@@ -188,7 +190,7 @@ impl Karta {
             self.crtanje.odustani();
         }
         if nazad {
-            self.crtanje.natrag();
+            self.crtanje.natrag(u);
         }
     }
 
@@ -311,14 +313,12 @@ fn klikovi(
     let Some(m) = tu else {
         return;
     };
-    // Dvoklik je i klik, pa se mora gledati prvi. Prvi klik para već je dodao točku.
-    if odgovor.double_clicked_by(PointerButton::Primary) {
-        c.zavrsi(u, ok);
-    } else if odgovor.clicked_by(PointerButton::Primary) && !*guta {
-        c.klik(m, u, ok, p);
+    if odgovor.clicked_by(PointerButton::Primary) && !*guta {
+        let shift = odgovor.ctx.input(|i| i.modifiers.shift);
+        c.klik_s(m, shift, u, ok, p);
     }
     if odgovor.clicked_by(PointerButton::Secondary) {
-        c.desni_klik(m, u);
+        c.desni_klik(u, ok);
     }
 }
 

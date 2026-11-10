@@ -6,7 +6,7 @@ use crate::poruke::{KatalogPoruka, broj_s_razmakom, mjera_duljine, mjera_povrsin
 use crate::sastavnice::{
     OpisGumbaIkone, cip, gumb_ikona, tekst_lijevo, tekst_sredina, zaobljeni_okvir,
 };
-use crate::stanje::{Alat, Odabir, StanjePrikaza};
+use crate::stanje::{Alat, NazivNovog, Odabir, StanjePrikaza};
 use crate::tema::{Boje, font_obicni, font_srednji};
 use eframe::egui::{self, Pos2, Rect, Role, Sense, Stroke, WidgetInfo, pos2, vec2};
 use karta::{Karta, ListDgu, Okolina, Podloga, Pogled, Poruka};
@@ -37,8 +37,11 @@ pub struct KartaProzora {
     /// Podloga se traži s mreže samo u pravom programu, a testovi rade bez nje.
     s_mreze: bool,
     postavljena: Option<Podloga>,
-    /// Zadnji odabrani objekt koji su karta i ploča vidjele, da se zna tko ga je promijenio.
-    zadnji_odabir: Option<(IdSloja, IdObjekta)>,
+    /// Zadnji odabir koji su karta i ploča vidjele, da se zna tko ga je promijenio.
+    zadnje_odabrano: Option<Odabir>,
+    zadnji_na_karti: Vec<(IdSloja, IdObjekta)>,
+    /// Alat koji je karta zadnji put dobila iz prozora, da se zna tko ga je promijenio.
+    zadnji_alat: Alat,
     u_htrs: Option<Pretvornik>,
 }
 
@@ -53,7 +56,9 @@ impl KartaProzora {
             karta,
             s_mreze,
             postavljena: None,
-            zadnji_odabir: None,
+            zadnje_odabrano: None,
+            zadnji_na_karti: Vec::new(),
+            zadnji_alat: Alat::Odaberi,
             u_htrs: Pretvornik::novi(Sustav::Wgs84, Sustav::Htrs96Tm).ok(),
         }
     }
@@ -67,10 +72,26 @@ impl KartaProzora {
         self.karta.crtanje().u_tijeku()
     }
 
+    /// Je li na karti odabrana točka objekta. Tada Backspace briše nju, a ne objekt.
+    pub fn ima_odabranu_tocku(&mut self) -> bool {
+        self.karta.crtanje().odabrana_tocka().is_some()
+    }
+
+    /// Koliko je objekata odabrano na karti.
+    pub fn broj_odabranih(&mut self) -> usize {
+        self.karta.crtanje().odabrani().len()
+    }
+
+    /// Briše sve objekte odabrane na karti, u jednom koraku poništavanja.
+    pub fn obrisi_odabrane(&mut self, u: &mut Uredjivac) -> bool {
+        self.karta.crtanje().obrisi_odabrane(u)
+    }
+
     /// Novi ili otvoreni projekt. Karta zaboravlja stari projekt i prikazuje sve objekte novoga.
     pub fn novi_projekt(&mut self, projekt: &Projekt) {
         self.karta.novi_projekt();
-        self.zadnji_odabir = None;
+        self.zadnje_odabrano = None;
+        self.zadnji_na_karti.clear();
         if let Some((duzina, sirina, zum)) = obuhvat(projekt) {
             self.karta.idi_na(duzina, sirina, zum);
         }
@@ -120,7 +141,7 @@ impl KartaProzora {
         katalog: &KatalogPoruka,
     ) {
         self.uskladi_podlogu(ui.ctx(), stanje);
-        self.uskladi_alat(stanje.alat);
+        self.uskladi_alat(stanje);
         self.odabir_iz_ploce(u.projekt(), stanje);
         let vidljivi = vidljivi_slojevi(u.projekt(), stanje);
         let mut dijete = ui.new_child(egui::UiBuilder::new().max_rect(okvir));
@@ -129,6 +150,13 @@ impl KartaProzora {
             self.karta.prikazi(&mut dijete, u, ok);
         });
         self.odabir_s_karte(stanje);
+        self.alat_s_karte(stanje);
+        if let Some((sloj, objekt)) = self.karta.crtanje().uzmi_novi()
+            && let Some(o) = u.projekt().objekt(sloj, objekt)
+        {
+            stanje.naziv_novog = Some(NazivNovog::novi(sloj, objekt, &o.naziv));
+            ui.ctx().request_repaint();
+        }
     }
 
     fn uskladi_podlogu(&mut self, ctx: &egui::Context, stanje: &StanjePrikaza) {
@@ -139,15 +167,27 @@ impl KartaProzora {
         }
     }
 
-    fn uskladi_alat(&mut self, alat: Alat) {
-        let zeljeni = alat_karte(alat);
+    /// Alat odabran u prozoru ide na kartu samo kad ga je korisnik promijenio. Inače bi karta
+    /// izgubila produljenje linije, koje sama prebacuje na alat Linija.
+    fn uskladi_alat(&mut self, stanje: &StanjePrikaza) {
+        if stanje.alat == self.zadnji_alat {
+            return;
+        }
+        let zeljeni = alat_karte(stanje.alat);
         if self.karta.crtanje().alat() != zeljeni {
             self.karta.crtanje().postavi_alat(zeljeni);
         }
+        self.zadnji_alat = stanje.alat;
+    }
+
+    /// Karta nakon nacrtanog objekta sama prelazi na Odaberi, a gumbi alata to moraju pokazati.
+    fn alat_s_karte(&mut self, stanje: &mut StanjePrikaza) {
+        stanje.alat = alat_prozora(self.karta.crtanje().alat());
+        self.zadnji_alat = stanje.alat;
     }
 
     /// Odabrani sloj prima nove objekte svoje vrste, a odabrani objekt karta ističe.
-    fn odabir_iz_ploce(&mut self, projekt: &Projekt, stanje: &StanjePrikaza) {
+    fn odabir_iz_ploce(&mut self, projekt: &Projekt, stanje: &mut StanjePrikaza) {
         let sloj = match stanje.odabrano {
             Some(Odabir::Sloj(s) | Odabir::Objekt(s, _)) => Some(s),
             _ => None,
@@ -155,22 +195,33 @@ impl KartaProzora {
         if let Some((s, vrsta)) = sloj.and_then(|s| projekt.sloj(s).map(|sl| (s, sl.vrsta))) {
             self.karta.crtanje().postavi_aktivni_sloj(vrsta, s);
         }
+        if stanje.odabrano == self.zadnje_odabrano {
+            return;
+        }
+        // Odabir u ploči zamjenjuje odabir na karti, pa i kad je odabran sloj ili mapa.
         let objekt = match stanje.odabrano {
             Some(Odabir::Objekt(s, o)) => Some((s, o)),
             _ => None,
         };
-        if objekt != self.zadnji_odabir {
-            self.karta.crtanje().postavi_odabrani(objekt);
-            self.zadnji_odabir = objekt;
-        }
+        self.karta.crtanje().postavi_odabrani(objekt);
+        self.zadnje_odabrano = stanje.odabrano;
+        self.zadnji_na_karti = objekt.into_iter().collect();
+        stanje.odabrani_na_karti.clone_from(&self.zadnji_na_karti);
     }
 
+    /// Jedan objekt odabran na karti odabire se i u ploči. Više njih ploča samo ističe.
     fn odabir_s_karte(&mut self, stanje: &mut StanjePrikaza) {
-        let objekt = self.karta.crtanje().odabran();
-        if objekt != self.zadnji_odabir {
-            stanje.odabrano = objekt.map(|(s, o)| Odabir::Objekt(s, o));
-            self.zadnji_odabir = objekt;
+        let na_karti = self.karta.crtanje().odabrani();
+        if na_karti == self.zadnji_na_karti.as_slice() {
+            return;
         }
+        self.zadnji_na_karti = na_karti.to_vec();
+        stanje.odabrano = match na_karti {
+            [(s, o)] => Some(Odabir::Objekt(*s, *o)),
+            _ => None,
+        };
+        stanje.odabrani_na_karti.clone_from(&self.zadnji_na_karti);
+        self.zadnje_odabrano = stanje.odabrano;
     }
 
     /// Ploča mjerenja po zaslonu D, desno od trake alata.
@@ -478,6 +529,16 @@ pub fn zeljena_podloga(stanje: &StanjePrikaza) -> Podloga {
 }
 
 #[must_use]
+const fn alat_prozora(alat: karta::Alat) -> Alat {
+    match alat {
+        karta::Alat::Odaberi => Alat::Odaberi,
+        karta::Alat::Tocka => Alat::Tocka,
+        karta::Alat::Linija => Alat::Linija,
+        karta::Alat::Poligon => Alat::Poligon,
+        karta::Alat::Mjeri => Alat::Mjeri,
+    }
+}
+
 pub fn alat_karte(alat: Alat) -> karta::Alat {
     match alat {
         Alat::Odaberi => karta::Alat::Odaberi,

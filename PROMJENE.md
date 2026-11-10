@@ -8,6 +8,15 @@
   njega. Premještanje se poništava kao i svaka druga izmjena.
 - Objekt se na isti način prebacuje u drugi sloj iste vrste: poligon u sloj poligona, linija u sloj linija.
   Podizbornik pokazuje mape kao natpise, a nudi samo slojeve u koje objekt smije.
+- Desni klik sad završava crtu, lik ili mjerenje, umjesto dvoklika. Dok crtaš, Backspace briše zadnju točku.
+- Čim je objekt nacrtan, otvara se prozorčić s nazivom. Predloženi naziv, npr. „Poligon 3”, sav je označen,
+  pa ga upisivanje zamijeni. Enter sprema naziv, a Esc ostavlja predloženi.
+- Nakon crtanja alat se vraća na Odaberi. Dosad je ostajao uključen, iako je karta već prešla na odabir.
+- Odabir kao u AutoCAD-u: klik na objekt dodaje ga u odabir, a Shift + klik ga izbacuje. Klik na prazno
+  mjesto počinje okvir, a drugi klik ga zatvara. Okvir slijeva nadesno bira samo ono što je cijelo u njemu,
+  a zdesna nalijevo sve što dotakne. Esc poništava odabir.
+- Delete briše sve odabrane objekte odjednom, a poništava se jednim korakom.
+- Klik na točku odabranog objekta odabire tu točku, a Backspace je briše. Desni klik više ne briše točku.
 
 ## 0.0.3 alfa (probno, 10. 11. 2026.)
 
