@@ -1,15 +1,7 @@
 # Popis promjena
 
-## 0.0.5 alfa (u radu)
+## 0.0.5 alfa (probno, 10. 11. 2026.)
 
-- Ploča Stil ima i vrstu crte (puna, isprekidana, točkasta, crta-točka) i ispunu lika (puna, šrafura, bez
-  ispune), za cijeli sloj ili jedan objekt. QGIS ih otvara iste. Lik iz Google Eartha bez ispune sad je
-  „Bez ispune”.
-- Gumb „?” u gornjoj traci, tipka F1 ili ⌘/ (Ctrl+/ drugdje) otvaraju popis prečaca tipkovnice i miša.
-  „O programu” je i dalje u izborniku Pomoć.
-- Program sam prepoznaje sustav. Na Macu popis prečaca piše ⌘, ⇧, delete i dodirnu plohu (dva prsta,
-  štipanje), a na Windowsu i Linuxu Ctrl, Shift, Delete i kotačić. Na Macu je ⌃ + klik desni klik, kao u
-  drugim programima za Mac; na Windowsu i Linuxu Ctrl + klik ostaje običan klik.
 - Novo: uvoz KML-a i KMZ-a iz Google Eartha, gumbom „Uvezi sloj” u ploči Slojevi ili iz izbornika
   Datoteka. Sve ide u novu mapu nazvanu po datoteci. Svaka mapa Google Eartha ostaje mapa, a njezini objekti
   idu u slojeve Točke, Linije i Poligoni. Prenose se nazivi, opisi, rupe u poligonima, visine i boje.
@@ -17,13 +9,20 @@
   slike preko karte, obilasci) navede se nakon uvoza, a cijeli uvoz poništava se jednim korakom. Na
   `myplaces.kml` od 147 MB čitanje i uvoz traju oko pola sekunde.
 - Novo: ploča Stil. Desni klik na sloj ili objekt u ploči Slojevi, pa „Stil”. Bira se jedna od osam boja ili
-  bilo koja druga, debljina crte, prozirnost, a za točke veličina. Iz retka objekta mijenja se samo taj
-  objekt ili, uz „Cijeli sloj”, cijeli sloj. Karta se mijenja odmah, a cijelo povlačenje klizača poništava
-  se jednim korakom. Stil se sprema u GeoPackage, pa ga QGIS otvara s njim.
+  bilo koja druga, debljina, prozirnost, vrsta crte (puna, isprekidana, točkasta, crta-točka) i ispuna lika
+  (puna, šrafura, bez ispune), a za točke veličina. Iz retka objekta mijenja se samo taj objekt ili, uz
+  „Cijeli sloj”, cijeli sloj. Karta se mijenja odmah, a cijelo povlačenje klizača poništava se jednim
+  korakom. Stil se sprema u GeoPackage, pa ga QGIS otvara isti.
+- Novo: gumb „?” u gornjoj traci, tipka F1 ili ⌘/ (Ctrl+/ drugdje) otvaraju popis prečaca tipkovnice i
+  miša. „O programu” je i dalje u izborniku Pomoć.
+- Program sam prepoznaje sustav. Na Macu popis prečaca piše ⌘, ⇧, delete i dodirnu plohu (dva prsta,
+  štipanje), a na Windowsu i Linuxu Ctrl, Shift, Delete i kotačić. Na Macu je ⌃ + klik desni klik, kao u
+  drugim programima za Mac; na Windowsu i Linuxu Ctrl + klik ostaje običan klik.
 - Objekte, slojeve i mape sad briše i ⌘ + delete na Macu (Ctrl + Backspace drugdje), kao u Finderu. Delete
   i fn + delete rade kao i dosad.
 - Sam Backspace (na Macu tipka delete) briše samo točku: zadnju dok crtaš, a odabranu na gotovom objektu.
   Dosad je bez odabrane točke brisao cijeli objekt, pa se lako moglo obrisati više nego što si htio.
+- Lik iz Google Eartha bez ispune dobiva „Bez ispune”.
 
 ## 0.0.4 alfa (probno, 10. 11. 2026.)
 
