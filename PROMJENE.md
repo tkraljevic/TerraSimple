@@ -2,6 +2,10 @@
 
 ## 0.0.5 alfa (u radu)
 
+- Novo: ploča Stil. Desni klik na sloj ili objekt u ploči Slojevi, pa „Stil”. Bira se jedna od osam boja ili
+  bilo koja druga, debljina crte, prozirnost, a za točke veličina. Iz retka objekta mijenja se samo taj
+  objekt ili, uz „Cijeli sloj”, cijeli sloj. Karta se mijenja odmah, a cijelo povlačenje klizača poništava
+  se jednim korakom. Stil se sprema u GeoPackage, pa ga QGIS otvara s njim.
 - Objekte, slojeve i mape sad briše i ⌘ + delete na Macu (Ctrl + Backspace drugdje), kao u Finderu. Delete
   i fn + delete rade kao i dosad.
 - Sam Backspace (na Macu tipka delete) briše samo točku: zadnju dok crtaš, a odabranu na gotovom objektu.

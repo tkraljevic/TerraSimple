@@ -24,6 +24,8 @@ Izdanja su zasad probna (alfa), za Windows, macOS i Linux, na stranici **Release
 - **Crtanje:** točke, linije i poligoni u slojevima i mapama. Klik dodaje točku, povlačenje je pomiče, Backspace
   briše zadnju, a desni klik završava crtu ili lik. Nakon crtanja upisuje se naziv. Objekti se biraju
   klikom ili okvirom, kao u AutoCAD-u, a briše ih Delete ili ⌘ + Backspace (Ctrl + Backspace drugdje). Svaka izmjena može se poništiti.
+- **Stil:** boja, debljina i prozirnost za cijeli sloj ili jedan objekt, a za točke veličina. Otvara se
+  desnim klikom na sloj ili objekt i „Stil”.
 - **Mjerenje:** udaljenost i površina na elipsoidu WGS84, kao u QGIS-u. Izmjereno se može spremiti kao
   linija ili poligon.
 - **Tražilica:** koordinate u stupnjevima i u HTRS96/TM te slojevi i objekti po nazivu.

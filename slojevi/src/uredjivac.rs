@@ -132,6 +132,27 @@ impl Uredjivac {
         self.skupina(|s| s.izvrsi(naredba))
     }
 
+    /// Izvršava naredbu i pridružuje je zadnjem koraku, npr. dok se povlači klizač: cijelo
+    /// povlačenje poništava se odjednom. Bez prethodnog koraka postaje novi korak.
+    pub fn izvrsi_uz_zadnji(
+        &mut self,
+        naredba: impl Into<Naredba>,
+    ) -> Result<Option<Novo>, Greska> {
+        let prije = self.natrag.len();
+        let novo = self.izvrsi(naredba)?;
+        if prije > 0
+            && self.natrag.len() == prije + 1
+            && let Some(novi) = self.natrag.pop()
+            && let Some(zadnji) = self.natrag.last_mut()
+        {
+            let mut promjene = novi.promjene;
+            promjene.append(&mut zadnji.promjene);
+            zadnji.promjene = promjene;
+            zadnji.oznaka = novi.oznaka;
+        }
+        Ok(novo)
+    }
+
     /// Sve naredbe iz `posao` su jedan korak: ili prođu sve, ili projekt ostane kakav je bio.
     pub fn skupina<R>(
         &mut self,

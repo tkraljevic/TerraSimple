@@ -92,6 +92,41 @@ impl NazivNovog {
     }
 }
 
+/// Ploča Stil, otvorena za sloj ili za jedan njegov objekt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UredjivanjeStila {
+    pub sloj: IdSloja,
+    /// Objekt iz čijeg je retka ploča otvorena. Tada se bira cijeli sloj ili samo on.
+    pub objekt: Option<IdObjekta>,
+    pub samo_objekt: bool,
+    /// Izmjena je počela dok je tipka miša još dolje, pa joj se sljedeće pridružuju.
+    pub potez: bool,
+}
+
+impl UredjivanjeStila {
+    /// Iz retka sloja mijenja se sloj, a iz retka objekta zadano samo taj objekt. Mapa nema stil.
+    #[must_use]
+    pub const fn za(odabir: Odabir) -> Option<Self> {
+        let (sloj, objekt) = match odabir {
+            Odabir::Mapa(_) => return None,
+            Odabir::Sloj(s) => (s, None),
+            Odabir::Objekt(s, o) => (s, Some(o)),
+        };
+        Some(Self {
+            sloj,
+            objekt,
+            samo_objekt: objekt.is_some(),
+            potez: false,
+        })
+    }
+
+    /// Objekt čiji se stil mijenja, ako se ne mijenja cijeli sloj.
+    #[must_use]
+    pub fn ciljni_objekt(&self) -> Option<IdObjekta> {
+        self.objekt.filter(|_| self.samo_objekt)
+    }
+}
+
 pub struct StanjePrikaza {
     zatvorene_mape: BTreeSet<IdMape>,
     otvoreni_slojevi: BTreeSet<IdSloja>,
@@ -115,6 +150,8 @@ pub struct StanjePrikaza {
     /// Mapa, sloj ili objekt koji korisnik upravo povlači mišem u ploči Slojevi.
     pub povuceno: Option<Odabir>,
     pub novi_sloj: Option<NoviSloj>,
+    /// Dok je postavljeno, umjesto ploče Slojevi crta se ploča Stil.
+    pub stil: Option<UredjivanjeStila>,
     pub alat: Alat,
     pub podloga: usize,
     pub ploca_lijevo: bool,
@@ -153,6 +190,7 @@ impl StanjePrikaza {
             zatrazeno_brisanje: false,
             povuceno: None,
             novi_sloj: None,
+            stil: None,
             alat: Alat::Odaberi,
             podloga: 0,
             ploca_lijevo: false,
