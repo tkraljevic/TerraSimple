@@ -3,6 +3,12 @@
 Odluke (7. 11. 2026.). Stil ostaje satin glass. Uređivi nacrt je
 `dizajn/TerraSimple-ikone-efekti.figcraft`; prethodni nacrt nije mijenjan.
 
+## Ugrađeno u program
+
+Program ne čita ikone s diska. `skripte/ugradi_ikone.py` slaže sve PNG-ove iz `manifest.json` u
+`ugradjene.bin` i `ugradjene.txt`, a program ih ugradi pri izgradnji. Nakon svake promjene ikona
+pokreni tu skriptu; test `sve_ikone_iz_popisa_su_ugradjene` pada ako je ugrađeno zastarjelo.
+
 ## Veličine i skale
 
 `manifest.json` popisuje izvorni SVG i neposredno iscrtane PNG datoteke za

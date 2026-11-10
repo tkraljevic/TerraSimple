@@ -1,5 +1,6 @@
 """Gradnja, pakiranje i provjera gotovog programa; svi procesi imaju rok."""
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -108,6 +109,18 @@ def prijenosni(mapa, program, sustav):
         (mapa / "pokreni.sh").chmod(0o755)
     return exe
 
+@contextlib.contextmanager
+def bez_izvora(korijen=KORIJEN):
+    """Za vrijeme provjere mapa resursi iz izvornog koda nije na svom mjestu. Program koji bi
+    tražio datoteke po stazi s računala na kojem je izgrađen tako pada već ovdje, a ne tek kod
+    korisnika (proba 0.0.1 na Windowsu, 10. 11. 2026.)."""
+    izvor, skriveno = korijen / "resursi", korijen / "resursi-skriveno-za-provjeru"
+    izvor.rename(skriveno)
+    try:
+        yield
+    finally:
+        skriveno.rename(izvor)
+
 def provjeri(exe, sustav):
     naredba = [str(exe), "--provjeri-pokretanje"]
     if sustav == "linux":
@@ -152,14 +165,16 @@ def glavno():
     if mapa.exists():raise RuntimeError("Mapa paketa već postoji; odaberite novu praznu radnu kopiju izlaza: " + naziv)
     mapa.mkdir(parents=True)
     exe = mac(mapa, ulazi, inacica()) if a.sustav == "macos" else prijenosni(mapa, ulazi[0], a.sustav)
-    provjeri(exe, a.sustav)
+    with bez_izvora():
+        provjeri(exe, a.sustav)
     nastavak = ".tar.gz" if a.sustav == "linux" else ".zip"
     arhiva = rad / (naziv + nastavak)
     zapakiraj(mapa, arhiva, a.sustav)
     if a.sustav == "macos":
         raspakirano = rad / (naziv + "-raspakirano")
         izvedi(["ditto", "-x", "-k", str(arhiva), str(raspakirano)], 180)
-        provjeri(raspakirano / "TerraSimple.app/Contents/MacOS/TerraSimple", a.sustav)
+        with bez_izvora():
+            provjeri(raspakirano / "TerraSimple.app/Contents/MacOS/TerraSimple", a.sustav)
     rezultat = {"inacica": inacica(), "sustav": a.sustav, "gradnje": mjerenja,
                 "paket": arhiva.name, "bajtova": arhiva.stat().st_size,
                 "sha256": hashlib.sha256(arhiva.read_bytes()).hexdigest(), "provjera_pokretanja": True}
