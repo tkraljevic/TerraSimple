@@ -170,6 +170,8 @@ pub struct Aplikacija {
     pub birac: Box<dyn BiracDatoteka>,
     pub qgis: Box<dyn crate::qgis_veza::PokretacQgisa>,
     pub aktivni_dijalog: Option<AktivniDijalog>,
+    /// Korisnik je već odgovorio na pitanje pri zatvaranju, pa se prozor zatvara bez novog pitanja.
+    pub zatvaranje_potvrdjeno: bool,
     pub izbornik_datoteka_otvoren: bool,
     pub trazilica: StanjeTrazilice,
     pub snimka: Option<PathBuf>,
@@ -245,6 +247,7 @@ impl Aplikacija {
             birac: Box::new(SustavskiBirac),
             qgis: Box::new(crate::qgis_veza::SustavskiQgis),
             aktivni_dijalog,
+            zatvaranje_potvrdjeno: false,
             izbornik_datoteka_otvoren: false,
             trazilica: StanjeTrazilice::default(),
             snimka: postavke.snimka,
@@ -274,10 +277,7 @@ impl Aplikacija {
     }
 
     pub fn crtaj_sucelje(&mut self, ui: &mut egui::Ui) {
-        if self.snimka.is_none()
-            && ui.input(|i| i.viewport().close_requested())
-            && self.uredjivac.je_li_izmijenjen()
-        {
+        if self.treba_pitati_prije_zatvaranja(ui) {
             ui.ctx()
                 .send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.aktivni_dijalog = Some(AktivniDijalog::PotvrdaNespremljeno(
@@ -321,10 +321,21 @@ impl Aplikacija {
             okvir_karte,
             &boje,
         );
+        if std::mem::take(&mut self.stanje.zatrazeno_brisanje) {
+            self.pokreni_brisanje();
+        }
         self.crtaj_statusnu_traku(ui, w, h, &boje);
         self.crtaj_slojeve_dijaloga(ui, &boje);
 
         self.zadnje_vrijeme_okvira = pocetak.elapsed();
+    }
+
+    /// Nakon „Ne spremaj” zatvaranje stiže ponovno, a izmjene su još tu, pa se ne smije pitati opet.
+    fn treba_pitati_prije_zatvaranja(&self, ui: &egui::Ui) -> bool {
+        self.snimka.is_none()
+            && !self.zatvaranje_potvrdjeno
+            && ui.input(|i| i.viewport().close_requested())
+            && self.uredjivac.je_li_izmijenjen()
     }
 
     fn obradi_tipkovnicu(&mut self, ui: &egui::Ui) {
@@ -340,24 +351,17 @@ impl Aplikacija {
 
     fn obradi_tipku_preimenovanja(&mut self, dogadjaj: &Event) {
         match dogadjaj {
-            Event::Text(uneseno) => {
-                if let Some((_, tekst)) = &mut self.stanje.preimenovanje {
-                    for znak in uneseno.chars() {
-                        if !znak.is_control() {
-                            tekst.push(znak);
-                        }
-                    }
-                }
-            }
+            Event::Text(uneseno) => self.stanje.upisi_u_naziv(uneseno),
             Event::Key {
                 key: Key::Backspace,
                 pressed: true,
                 ..
-            } => {
-                if let Some((_, tekst)) = &mut self.stanje.preimenovanje {
-                    let _ = tekst.pop();
-                }
-            }
+            } => self.stanje.obrisi_znak_naziva(),
+            Event::Key {
+                key: Key::ArrowLeft | Key::ArrowRight | Key::Home | Key::End,
+                pressed: true,
+                ..
+            } => self.stanje.naziv_oznacen = false,
             Event::Key {
                 key: Key::Enter,
                 pressed: true,
@@ -1162,6 +1166,7 @@ impl Aplikacija {
                 self.izvrsi_otvaranje();
             }
             NamjeraPotvrde::ZatvoriProzor => {
+                self.zatvaranje_potvrdjeno = true;
                 ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
             }
         }
@@ -1323,6 +1328,56 @@ mod testovi {
         let prazna = Aplikacija::default();
         assert!(prazna.uredjivac.projekt().korijen().is_empty());
         assert_eq!(prazna.uredjivac.projekt().slojevi().count(), 0);
+    }
+
+    fn izbornik_retka<'a>(harness: &mut Harness<'a, Aplikacija>, redak: &str, stavka: &str) {
+        harness.get_by_label(redak).click_secondary();
+        cekaj_smirenje(harness, Duration::from_millis(500));
+        harness.get_by_label(stavka).click();
+        cekaj_smirenje(harness, Duration::from_millis(500));
+    }
+
+    #[test]
+    fn desni_klik_preimenuje_i_brise_mapu_i_objekt() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+
+        // Objekt: upisani naziv zamijeni cijeli stari.
+        izbornik_retka(&mut harness, "Parcela 1118/2", "Preimenuj");
+        assert!(harness.state().stanje.naziv_oznacen);
+        harness.event(Event::Text("Parcela 7".into()));
+        harness.key_press(Key::Enter);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert!(harness.query_by_label("Parcela 7").is_some());
+        assert!(harness.query_by_label("Parcela 1118/2").is_none());
+
+        // Strelica skida oznaku, pa se upis dopisuje na kraj.
+        harness.key_press(Key::F2);
+        harness.key_press(Key::ArrowRight);
+        harness.event(Event::Text("a".into()));
+        harness.key_press(Key::Enter);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert!(harness.query_by_label("Parcela 7a").is_some());
+
+        // Mapa: preimenovanje pa brisanje iz istog izbornika.
+        izbornik_retka(&mut harness, "Teren 2026", "Preimenuj");
+        harness.key_press(Key::Backspace);
+        harness.event(Event::Text("Kanali".into()));
+        harness.key_press(Key::Enter);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert!(harness.query_by_label("Kanali").is_some());
+
+        izbornik_retka(&mut harness, "Kanali", "Obriši");
+        assert!(harness.query_by_label("Kanali").is_none());
+        assert!(harness.query_by_label("Parcela 7a").is_none());
+        assert!(harness.state().uredjivac.je_li_izmijenjen());
     }
 
     #[test]
