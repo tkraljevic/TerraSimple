@@ -2,6 +2,14 @@
 
 ## 0.0.5 alfa (u radu)
 
+- Ploča Stil ima i vrstu crte (puna, isprekidana, točkasta, crta-točka) i ispunu lika (puna, šrafura, bez
+  ispune), za cijeli sloj ili jedan objekt. QGIS ih otvara iste. Lik iz Google Eartha bez ispune sad je
+  „Bez ispune”.
+- Gumb „?” u gornjoj traci, tipka F1 ili ⌘/ (Ctrl+/ drugdje) otvaraju popis prečaca tipkovnice i miša.
+  „O programu” je i dalje u izborniku Pomoć.
+- Program sam prepoznaje sustav. Na Macu popis prečaca piše ⌘, ⇧, delete i dodirnu plohu (dva prsta,
+  štipanje), a na Windowsu i Linuxu Ctrl, Shift, Delete i kotačić. Na Macu je ⌃ + klik desni klik, kao u
+  drugim programima za Mac; na Windowsu i Linuxu Ctrl + klik ostaje običan klik.
 - Novo: uvoz KML-a i KMZ-a iz Google Eartha, gumbom „Uvezi sloj” u ploči Slojevi ili iz izbornika
   Datoteka. Sve ide u novu mapu nazvanu po datoteci. Svaka mapa Google Eartha ostaje mapa, a njezini objekti
   idu u slojeve Točke, Linije i Poligoni. Prenose se nazivi, opisi, rupe u poligonima, visine i boje.

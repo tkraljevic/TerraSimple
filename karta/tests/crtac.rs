@@ -6,7 +6,7 @@
 use karta::provjera::{Slika, nacrtaj_bez_prozora};
 use slojevi::{
     Boja, Geometrija, IdSloja, NaredbaObjekta, NaredbaStabla, Novo, Stil, Uredjivac, Vrh,
-    VrstaGeometrije,
+    VrstaCrte, VrstaGeometrije, VrstaIspune,
 };
 
 const SIRINA: u32 = 800;
@@ -184,4 +184,89 @@ fn prazan_projekt_i_objekt_izvan_ekrana_ne_crtaju_nista() {
     dodaj(&mut u, t, Geometrija::Tocka(oko(1.0, 1.0)));
     let s = nacrtaj(&u, ZUM);
     assert!(s.bajtovi.iter().all(|b| *b == 0));
+}
+
+/// Na vodoravnoj crti od x1 do x2 broji piksele s bojom i one bez nje.
+fn pikseli_crte(slika: &Slika, y: f64, x1: f64, x2: f64) -> (usize, usize) {
+    let (a, py) = piksel(SREDINA[0] + x1, SREDINA[1] + y);
+    let (b, _) = piksel(SREDINA[0] + x2, SREDINA[1] + y);
+    (a..b).fold((0, 0), |(puno, prazno), x| {
+        if slika.piksel(x, py)[3] > 100 {
+            (puno + 1, prazno)
+        } else {
+            (puno, prazno + 1)
+        }
+    })
+}
+
+fn postavi_stil(u: &mut Uredjivac, s: IdSloja, stil: Stil) {
+    u.izvrsi(NaredbaStabla::PostaviStil { sloj: s, stil })
+        .expect("stil");
+}
+
+#[test]
+fn isprekidana_i_tockasta_crta_imaju_razmake() {
+    for (vrsta, najmanje_praznog) in [
+        (VrstaCrte::Puna, 0),
+        (VrstaCrte::Isprekidana, 50),
+        (VrstaCrte::Tockasta, 100),
+        (VrstaCrte::CrtaTocka, 50),
+    ] {
+        let mut u = Uredjivac::novi();
+        let crta = sloj(&mut u, VrstaGeometrije::Linija);
+        dodaj(
+            &mut u,
+            crta,
+            Geometrija::Linija(vec![oko(-0.015, 0.0), oko(0.0, 0.0), oko(0.015, 0.0)]),
+        );
+        postavi_stil(
+            &mut u,
+            crta,
+            Stil {
+                boja_crte: CRVENO,
+                vrsta_crte: vrsta,
+                ..Stil::default()
+            },
+        );
+        let (puno, prazno) = pikseli_crte(&nacrtaj(&u, ZUM), 0.0, -0.014, 0.014);
+        assert!(puno > 100, "{vrsta:?}: {puno} {prazno}");
+        if najmanje_praznog == 0 {
+            assert_eq!(prazno, 0, "puna crta nema razmaka");
+        } else {
+            assert!(prazno >= najmanje_praznog, "{vrsta:?}: {puno} {prazno}");
+        }
+    }
+}
+
+#[test]
+fn srafura_ima_kose_crte_a_lik_bez_ispune_samo_rub() {
+    let mut rezultati = Vec::new();
+    for vrsta in [VrstaIspune::Puna, VrstaIspune::Srafura, VrstaIspune::Bez] {
+        let mut u = Uredjivac::novi();
+        let lik = sloj(&mut u, VrstaGeometrije::Poligon);
+        dodaj(
+            &mut u,
+            lik,
+            Geometrija::Poligon(vec![pravokutnik(-0.01, -0.005, 0.02, 0.01)]),
+        );
+        postavi_stil(
+            &mut u,
+            lik,
+            Stil {
+                boja_ispune: PLAVO,
+                vrsta_ispune: vrsta,
+                ..Stil::default()
+            },
+        );
+        rezultati.push(pikseli_crte(&nacrtaj(&u, ZUM), 0.0, -0.008, 0.008));
+    }
+    let [puna, srafura, bez] = rezultati[..] else {
+        panic!("tri lika");
+    };
+    assert_eq!(puna.1, 0, "puna ispuna nema rupa: {puna:?}");
+    assert!(
+        srafura.0 > 20 && srafura.1 > srafura.0,
+        "šrafura: {srafura:?}"
+    );
+    assert_eq!(bez.0, 0, "bez ispune: {bez:?}");
 }

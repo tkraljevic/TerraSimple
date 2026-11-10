@@ -148,6 +148,10 @@ struct Omotac {
     pocetak: Instant,
 }
 impl eframe::App for Omotac {
+    fn raw_input_hook(&mut self, ctx: &egui::Context, unos: &mut egui::RawInput) {
+        self.aplikacija.raw_input_hook(ctx, unos);
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         if self.provjera {
             self.crtaj_provjeru(ui, self.pocetak.elapsed());

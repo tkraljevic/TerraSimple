@@ -18,7 +18,7 @@ pub use model::{
     Stavka, Vrh, VrstaGeometrije,
 };
 pub use naredba::{IzmjenaObjekta, Naredba, NaredbaObjekta, NaredbaStabla, Novo};
-pub use stil::{Boja, OblikZnaka, Stil, StilObjekta};
+pub use stil::{Boja, OblikZnaka, Stil, StilObjekta, VrstaCrte, VrstaIspune};
 pub use uredjivac::{Skupina, Uredjivac};
 
 mod zapis;

@@ -169,6 +169,7 @@ pub struct Aplikacija {
     pub katalog: KatalogPoruka,
     pub datoteka: PodaciDatoteke,
     pub birac: Box<dyn BiracDatoteka>,
+    desni_klik_maca: crate::unos::DesniKlikMaca,
     pub qgis: Box<dyn crate::qgis_veza::PokretacQgisa>,
     pub aktivni_dijalog: Option<AktivniDijalog>,
     /// Korisnik je već odgovorio na pitanje pri zatvaranju, pa se prozor zatvara bez novog pitanja.
@@ -246,6 +247,7 @@ impl Aplikacija {
             katalog,
             datoteka: PodaciDatoteke::nova(),
             birac: Box::new(SustavskiBirac),
+            desni_klik_maca: crate::unos::DesniKlikMaca::default(),
             qgis: Box::new(crate::qgis_veza::SustavskiQgis),
             aktivni_dijalog,
             zatvaranje_potvrdjeno: false,
@@ -406,6 +408,10 @@ impl Aplikacija {
 
     fn izvrsi_precac(&mut self, key: Key, modifiers: &egui::Modifiers) {
         // `command` je ⌘ na Macu, a Ctrl drugdje, pa Ctrl na Macu nije prečac (Odluke (9. 11. 2026.)).
+        if je_precac_pomoci(key, modifiers.command) {
+            self.aktivni_dijalog = Some(AktivniDijalog::Precaci);
+            return;
+        }
         if self.smije_brisati_tipkom(key, modifiers.command) {
             self.pokreni_brisanje();
             return;
@@ -605,7 +611,7 @@ impl Aplikacija {
             labela: &self.katalog.tekst("gumb-pomoc"),
         };
         if gumb_ikona(ui, &mut self.ikone, &opis_pomoc, tamna, boje).clicked() {
-            self.aktivni_dijalog = Some(AktivniDijalog::OProgramu);
+            self.aktivni_dijalog = Some(AktivniDijalog::Precaci);
         }
     }
 
@@ -1256,6 +1262,11 @@ impl eframe::App for Aplikacija {
         self.crtaj_sucelje(ui);
         self.obradi_snimanje_zaslona(ui);
     }
+
+    /// Program sam prepoznaje sustav: na Macu je ⌃ + klik desni klik.
+    fn raw_input_hook(&mut self, ctx: &egui::Context, unos: &mut egui::RawInput) {
+        self.desni_klik_maca.obradi(ctx.os(), unos);
+    }
 }
 
 pub fn spremi_sliku_zaslona(slika: &egui::ColorImage, putanja: &Path) {
@@ -1274,6 +1285,11 @@ pub fn spremi_sliku_zaslona(slika: &egui::ColorImage, putanja: &Path) {
         slika.height() as u32,
         image::ColorType::Rgba8,
     );
+}
+
+/// F1 ili ⌘/ (Ctrl+/ drugdje) otvara popis prečaca.
+const fn je_precac_pomoci(key: Key, cmd: bool) -> bool {
+    matches!(key, Key::F1) || (cmd && matches!(key, Key::Slash))
 }
 
 #[cfg(test)]

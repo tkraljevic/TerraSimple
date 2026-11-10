@@ -16,6 +16,25 @@ pub enum OblikZnaka {
     Zvijezda,
 }
 
+/// Crta ili rub lika. Nazivi u QGIS-u su `solid`, `dash`, `dot` i `dash dot`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum VrstaCrte {
+    #[default]
+    Puna,
+    Isprekidana,
+    Tockasta,
+    CrtaTocka,
+}
+
+/// Ispuna lika. Šrafura su kose crte boje ispune.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum VrstaIspune {
+    #[default]
+    Puna,
+    Srafura,
+    Bez,
+}
+
 /// Stil sloja, koji ima sve vrijednosti.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Stil {
@@ -24,6 +43,8 @@ pub struct Stil {
     pub boja_ispune: Boja,
     pub oblik_znaka: OblikZnaka,
     pub velicina_znaka_mm: f64,
+    pub vrsta_crte: VrstaCrte,
+    pub vrsta_ispune: VrstaIspune,
 }
 
 impl Default for Stil {
@@ -45,6 +66,8 @@ impl Default for Stil {
             },
             oblik_znaka: OblikZnaka::Krug,
             velicina_znaka_mm: 3.0,
+            vrsta_crte: VrstaCrte::Puna,
+            vrsta_ispune: VrstaIspune::Puna,
         }
     }
 }
@@ -57,6 +80,8 @@ pub struct StilObjekta {
     pub boja_ispune: Option<Boja>,
     pub oblik_znaka: Option<OblikZnaka>,
     pub velicina_znaka_mm: Option<f64>,
+    pub vrsta_crte: Option<VrstaCrte>,
+    pub vrsta_ispune: Option<VrstaIspune>,
 }
 
 impl StilObjekta {
@@ -68,6 +93,8 @@ impl StilObjekta {
             boja_ispune: self.boja_ispune.unwrap_or(sloj.boja_ispune),
             oblik_znaka: self.oblik_znaka.unwrap_or(sloj.oblik_znaka),
             velicina_znaka_mm: self.velicina_znaka_mm.unwrap_or(sloj.velicina_znaka_mm),
+            vrsta_crte: self.vrsta_crte.unwrap_or(sloj.vrsta_crte),
+            vrsta_ispune: self.vrsta_ispune.unwrap_or(sloj.vrsta_ispune),
         }
     }
 }
@@ -92,6 +119,8 @@ mod testovi {
             boja_ispune: Some(plavo),
             oblik_znaka: Some(OblikZnaka::Zvijezda),
             velicina_znaka_mm: Some(5.0),
+            vrsta_crte: Some(VrstaCrte::Tockasta),
+            vrsta_ispune: Some(VrstaIspune::Srafura),
         };
         let r = svi.na_stilu_sloja(&sloj);
         assert_eq!(r.boja_crte, plavo);
@@ -99,5 +128,7 @@ mod testovi {
         assert_eq!(r.boja_ispune, plavo);
         assert_eq!(r.oblik_znaka, OblikZnaka::Zvijezda);
         assert_eq!(r.velicina_znaka_mm, 5.0);
+        assert_eq!(r.vrsta_crte, VrstaCrte::Tockasta);
+        assert_eq!(r.vrsta_ispune, VrstaIspune::Srafura);
     }
 }
