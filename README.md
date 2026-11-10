@@ -22,7 +22,7 @@ raspakira u svoju mapu i pokrene. Upute za svaki sustav su u [izdanje.md](docs/i
 
 ## Što radi
 
-Stanje 0.0.5 (u radu). Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
+Stanje 0.0.5. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
 
 - **Karta:** podloga OpenFreeMap ili DGU ortofoto, svijetla i tamna tema, mjerilo i koordinate pod mišem u
   HTRS96/TM.

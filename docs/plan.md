@@ -9,8 +9,8 @@ od prvog retka. Što smo isprobali i izmjerili, s odlukama koje su iz toga slije
 
 Stanje 10. 11. 2026.:
 
-- **Izdanja:** 0.0.1 do 0.0.4 alfa objavljena su 10. 11. 2026. kao probna, za Windows, macOS i Linux. Što je
-  ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). U radu je 0.0.5: uvoz iz Google Eartha, ploča Stil,
+- **Izdanja:** 0.0.1 do 0.0.5 alfa izašla su 10. 11. 2026. kao probna, za Windows, macOS i Linux. Što je
+  ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
   brisanje s ⌘ + delete i popis prečaca.
 - **Faze:** 0 i 1 su gotove. Iz faze 2 radi sve osim uvoza GeoPackagea, automatskog spremanja i oporavka. Iz
   faze 3 radi uvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta bez ikona i natpisa.
