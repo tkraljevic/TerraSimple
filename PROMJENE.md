@@ -1,5 +1,12 @@
 # Popis promjena
 
+## 0.0.5 alfa (u radu)
+
+- Objekte, slojeve i mape sad briše i ⌘ + delete na Macu (Ctrl + Backspace drugdje), kao u Finderu. Delete
+  i fn + delete rade kao i dosad.
+- Sam Backspace (na Macu tipka delete) briše samo točku: zadnju dok crtaš, a odabranu na gotovom objektu.
+  Dosad je bez odabrane točke brisao cijeli objekt, pa se lako moglo obrisati više nego što si htio.
+
 ## 0.0.4 alfa (probno, 10. 11. 2026.)
 
 - Mapa ili sloj premješta se u drugu mapu desnim klikom i stavkom „Premjesti u”, koja nudi sve mape i
