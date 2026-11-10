@@ -13,6 +13,8 @@ pub mod naziv_objekta;
 pub mod novi_sloj;
 pub mod ploca;
 pub mod poruke;
+#[cfg(test)]
+mod precaci_testovi;
 pub mod premjestanje;
 pub mod primjer;
 pub mod qgis_veza;
@@ -25,6 +27,7 @@ pub mod tema;
 pub mod trazilica;
 #[cfg(test)]
 mod trazilica_testovi;
+pub mod unos;
 pub mod uvoz;
 #[cfg(test)]
 mod uvoz_testovi;

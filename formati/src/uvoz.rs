@@ -5,7 +5,7 @@
 use crate::model::{DokumentKml, GeometrijaKml, Gubici, MapaKml, ObjektKml, StilKml};
 use slojevi::{
     Boja, Geometrija, Greska, IdMape, IdObjekta, IdSloja, IzmjenaObjekta, NaredbaObjekta,
-    NaredbaStabla, Novo, Skupina, Stil, StilObjekta, Uredjivac, VrstaGeometrije,
+    NaredbaStabla, Novo, Skupina, Stil, StilObjekta, Uredjivac, VrstaGeometrije, VrstaIspune,
 };
 
 /// Nazivi koje bira sučelje, da ovise o jeziku programa.
@@ -243,7 +243,7 @@ fn ispuna(s: &mut Stil, kml: &StilKml) {
         s.boja_ispune = b;
     }
     if kml.bez_ispune {
-        s.boja_ispune.a = 0;
+        s.vrsta_ispune = VrstaIspune::Bez;
     }
     if kml.bez_ruba {
         s.boja_crte.a = 0;
@@ -278,6 +278,8 @@ fn razlika(stil: &Stil, sloj: &Stil) -> StilObjekta {
         oblik_znaka: None,
         velicina_znaka_mm: ako(stil.velicina_znaka_mm == sloj.velicina_znaka_mm)
             .then_some(stil.velicina_znaka_mm),
+        vrsta_crte: None,
+        vrsta_ispune: ako(stil.vrsta_ispune == sloj.vrsta_ispune).then_some(stil.vrsta_ispune),
     }
 }
 
@@ -310,7 +312,7 @@ mod testovi {
         assert!((l.debljina_mm - 1.0).abs() < 1e-9);
         assert_eq!(l.boja_ispune, Stil::default().boja_ispune);
         let p = stil_za(&kml, VrstaGeometrije::Poligon);
-        assert_eq!(p.boja_ispune.a, 0, "fill 0 je bez ispune");
+        assert_eq!(p.vrsta_ispune, VrstaIspune::Bez, "fill 0 je bez ispune");
         assert_eq!(p.boja_crte.a, 255);
         let bez_ruba = StilKml {
             bez_ruba: true,
@@ -355,6 +357,11 @@ mod testovi {
         };
         let r = razlika(&c, &a);
         assert_eq!(r.velicina_znaka_mm, Some(5.0));
+        let bez = Stil {
+            vrsta_ispune: VrstaIspune::Bez,
+            ..Stil::default()
+        };
+        assert_eq!(razlika(&bez, &a).vrsta_ispune, Some(VrstaIspune::Bez));
         assert!(r.boja_ispune.is_some());
     }
 

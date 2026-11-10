@@ -50,6 +50,8 @@ pub enum AktivniDijalog {
     SukobSpremanja,
     /// Inačica, licenca i izvori karte.
     OProgramu,
+    /// Prečaci tipkovnice i miša.
+    Precaci,
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -236,6 +238,7 @@ pub fn crtaj_aktivni_dijalog(
         } => crtaj_upozorenja_otvaranja(ui, dostupan, upozorenja, otvoren_popis, boje, katalog),
         AktivniDijalog::SukobSpremanja => crtaj_sukob_spremanja(ui, dostupan, boje, katalog),
         AktivniDijalog::OProgramu => crtaj_o_programu(ui, dostupan, boje, katalog),
+        AktivniDijalog::Precaci => crtaj_precace(ui, dostupan, boje, katalog),
     }
 }
 
@@ -296,6 +299,142 @@ fn crtaj_o_programu(
         boje,
     );
     zatvori.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+}
+
+/// Skupine prečaca: naslov skupine i parovi (radnja, ključ prečaca). Lijevi stupac su Datoteka i
+/// Uređivanje, a desni crtanje, odabir i karta.
+const PRECACI: [(&str, &[(&str, &str)]); 5] = [
+    (
+        "precaci-datoteka",
+        &[
+            ("izbornik-datoteka-novi", "precac-novi"),
+            ("izbornik-datoteka-otvori", "precac-otvori"),
+            ("izbornik-datoteka-spremi", "precac-spremi"),
+            ("izbornik-datoteka-spremi-kao", "precac-spremi-kao"),
+        ],
+    ),
+    (
+        "precaci-uredjivanje",
+        &[
+            ("gumb-ponisti", "precac-ponisti"),
+            ("gumb-ponovi", "precac-ponovi"),
+            ("precaci-trazi", "precac-trazi"),
+            ("precaci-preimenuj", "precac-preimenuj"),
+            ("precaci-obrisi", "precac-obrisi"),
+            ("precaci-odustani", "precac-odustani"),
+            ("precaci-pomoc", "precac-pomoc"),
+        ],
+    ),
+    (
+        "precaci-crtanje",
+        &[
+            ("precaci-dodaj-tocku", "precac-klik"),
+            ("precaci-zavrsi", "precac-desni-klik"),
+            ("precaci-obrisi-tocku", "precac-obrisi-tocku"),
+            ("precaci-pomakni-tocku", "precac-povuci"),
+        ],
+    ),
+    (
+        "precaci-odabir",
+        &[
+            ("precaci-dodaj-u-odabir", "precac-klik"),
+            ("precaci-izbaci-iz-odabira", "precac-shift-klik"),
+            ("precaci-okvir", "precac-okvir"),
+            ("precaci-okvir-smjer", "precac-okvir-smjer"),
+        ],
+    ),
+    (
+        "precaci-karta",
+        &[
+            ("precaci-priblizi", "precac-kotacic"),
+            ("precaci-pomakni-kartu", "precac-povuci"),
+        ],
+    ),
+];
+
+/// Redak popisa prečaca: naslov skupine ili radnja s prečacem.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RedakPrecaca {
+    Skupina(String),
+    Precac { radnja: String, tipke: String },
+}
+
+/// Prečaci kako ih piše sustav: na Macu `⌘Z`, drugdje `Ctrl+Z`.
+#[must_use]
+pub fn retci_precaca(
+    katalog: &KatalogPoruka,
+    sustav: egui::os::OperatingSystem,
+) -> [Vec<RedakPrecaca>; 2] {
+    let stupac = |skupine: &[(&str, &[(&str, &str)])]| {
+        let mut retci = Vec::new();
+        for (naslov, parovi) in skupine {
+            retci.push(RedakPrecaca::Skupina(katalog.tekst(naslov)));
+            retci.extend(parovi.iter().map(|(radnja, tipke)| RedakPrecaca::Precac {
+                radnja: katalog.tekst(radnja),
+                tipke: oznaka_precaca(katalog, sustav, tipke),
+            }));
+        }
+        retci
+    };
+    [stupac(&PRECACI[..2]), stupac(&PRECACI[2..])]
+}
+
+fn crtaj_precace(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(900.0, 430.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 26.0),
+        &katalog.tekst("precaci-naslov"),
+        font_srednji(17.0),
+        boje.tekst,
+    );
+    let stupci = retci_precaca(katalog, ui.ctx().os());
+    for (i, stupac) in stupci.iter().enumerate() {
+        let x = okvir.min.x + 20.0 + i as f32 * 440.0;
+        let mut y = okvir.min.y + 62.0;
+        for redak in stupac {
+            y += crtaj_redak_precaca(ui, redak, x, y, boje);
+        }
+    }
+    let zatvori = gumb_dijaloga(
+        ui,
+        Rect::from_min_size(
+            pos2(okvir.max.x - 106.0, okvir.max.y - 42.0),
+            vec2(86.0, 30.0),
+        ),
+        &katalog.tekst("o-programu-zatvori"),
+        true,
+        false,
+        boje,
+    );
+    zatvori.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+}
+
+/// Vraća visinu retka.
+fn crtaj_redak_precaca(ui: &egui::Ui, redak: &RedakPrecaca, x: f32, y: f32, boje: &Boje) -> f32 {
+    match redak {
+        RedakPrecaca::Skupina(naslov) => {
+            tekst_lijevo(ui, pos2(x, y + 8.0), naslov, font_srednji(13.0), boje.tekst);
+            28.0
+        }
+        RedakPrecaca::Precac { radnja, tipke } => {
+            tekst_lijevo(ui, pos2(x, y), radnja, font_obicni(12.5), boje.tekst_2);
+            tekst_lijevo(
+                ui,
+                pos2(x + 212.0, y),
+                tipke,
+                font_srednji(12.5),
+                boje.tekst,
+            );
+            21.0
+        }
+    }
 }
 
 /// Odluke (9. 11. 2026.): nakon sukoba nudi se samo Spremi kao. Gumba koji bi pregazio izmjene

@@ -14,7 +14,7 @@ use eframe::egui::{
 };
 use slojevi::{
     Boja, IzmjenaObjekta, Naredba, NaredbaObjekta, NaredbaStabla, Projekt, Stil, StilObjekta,
-    Uredjivac, VrstaGeometrije,
+    Uredjivac, VrstaCrte, VrstaGeometrije, VrstaIspune,
 };
 
 /// Ponuđene boje, redom kao u nacrtu. Prva je zadana boja crteža.
@@ -41,6 +41,8 @@ pub enum IzmjenaStila {
     Prozirnost(f64),
     ProzirnostIspune(f64),
     Velicina(f64),
+    VrstaCrte(VrstaCrte),
+    VrstaIspune(VrstaIspune),
 }
 
 fn alfa(prozirnost: f64) -> u8 {
@@ -71,6 +73,8 @@ pub fn primijeni(stil: Stil, izmjena: IzmjenaStila) -> Stil {
         IzmjenaStila::Prozirnost(p) => s.boja_crte.a = alfa(p),
         IzmjenaStila::ProzirnostIspune(p) => s.boja_ispune.a = alfa(p),
         IzmjenaStila::Velicina(v) => s.velicina_znaka_mm = v,
+        IzmjenaStila::VrstaCrte(v) => s.vrsta_crte = v,
+        IzmjenaStila::VrstaIspune(v) => s.vrsta_ispune = v,
     }
     s
 }
@@ -89,6 +93,8 @@ pub fn primijeni_na_objekt(objekt: StilObjekta, sloj: &Stil, izmjena: IzmjenaSti
         IzmjenaStila::Prozirnost(_) => s.boja_crte = Some(novi.boja_crte),
         IzmjenaStila::ProzirnostIspune(_) => s.boja_ispune = Some(novi.boja_ispune),
         IzmjenaStila::Velicina(_) => s.velicina_znaka_mm = Some(novi.velicina_znaka_mm),
+        IzmjenaStila::VrstaCrte(v) => s.vrsta_crte = Some(v),
+        IzmjenaStila::VrstaIspune(v) => s.vrsta_ispune = Some(v),
     }
     s
 }
@@ -397,13 +403,195 @@ fn kontrole(
 ) -> Option<IzmjenaStila> {
     let x = okvir.min.x + 16.0;
     let sirina = okvir.width() - 32.0;
-    let mut izmjena = paleta(ui, katalog, p.stil.boja_crte, pos2(x, y), boje);
-    let mut y = y + 72.0;
-    for red in klizaci(p.vrsta, &p.stil) {
-        izmjena = izmjena.or(red_klizaca(ui, katalog, &red, pos2(x, y), sirina, boje));
-        y += 56.0;
+    let mut izmjena = None;
+    let mut y = y;
+    for red in redovi(p.vrsta, &p.stil) {
+        let pocetak = pos2(x, y);
+        let (nova, visina) = match red {
+            Red::Boja => (paleta(ui, katalog, p.stil.boja_crte, pocetak, boje), 72.0),
+            Red::Klizac(k) => (red_klizaca(ui, katalog, &k, pocetak, sirina, boje), 56.0),
+            Red::Vrsta(pregledi) => {
+                let izbor = izbor_vrste(ui, katalog, &p.stil, &pregledi, pocetak, boje);
+                (izbor, 104.0)
+            }
+        };
+        izmjena = izmjena.or(nova);
+        y += visina;
     }
     izmjena
+}
+
+/// Jedan red ploče, redom kao u nacrtu (C2–C4).
+enum Red {
+    Boja,
+    Klizac(RedKlizaca),
+    Vrsta(Vec<Pregled>),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Pregled {
+    Crta(VrstaCrte),
+    Ispuna(VrstaIspune),
+}
+
+const CRTE: [VrstaCrte; 4] = [
+    VrstaCrte::Puna,
+    VrstaCrte::Isprekidana,
+    VrstaCrte::Tockasta,
+    VrstaCrte::CrtaTocka,
+];
+const ISPUNE: [VrstaIspune; 3] = [VrstaIspune::Puna, VrstaIspune::Srafura, VrstaIspune::Bez];
+
+fn redovi(vrsta: VrstaGeometrije, s: &Stil) -> Vec<Red> {
+    let crte = || Red::Vrsta(CRTE.map(Pregled::Crta).to_vec());
+    let mut klizaci = klizaci(vrsta, s).into_iter().map(Red::Klizac);
+    match vrsta {
+        VrstaGeometrije::Tocka => std::iter::once(Red::Boja).chain(klizaci).collect(),
+        VrstaGeometrije::Linija => [crte(), Red::Boja].into_iter().chain(klizaci).collect(),
+        VrstaGeometrije::Poligon => {
+            let ispune = Red::Vrsta(ISPUNE.map(Pregled::Ispuna).to_vec());
+            let mut r = vec![ispune, Red::Boja];
+            r.extend(klizaci.next());
+            r.push(crte());
+            r.extend(klizaci);
+            r
+        }
+    }
+}
+
+impl Pregled {
+    fn kljuc(self) -> &'static str {
+        match self {
+            Self::Crta(VrstaCrte::Puna) => "crta-puna",
+            Self::Crta(VrstaCrte::Isprekidana) => "crta-isprekidana",
+            Self::Crta(VrstaCrte::Tockasta) => "crta-tockasta",
+            Self::Crta(VrstaCrte::CrtaTocka) => "crta-crta-tocka",
+            Self::Ispuna(VrstaIspune::Puna) => "ispuna-puna",
+            Self::Ispuna(VrstaIspune::Srafura) => "ispuna-srafura",
+            Self::Ispuna(VrstaIspune::Bez) => "ispuna-bez",
+        }
+    }
+
+    fn odabran(self, s: &Stil) -> bool {
+        match self {
+            Self::Crta(v) => s.vrsta_crte == v,
+            Self::Ispuna(v) => s.vrsta_ispune == v,
+        }
+    }
+
+    const fn izmjena(self) -> IzmjenaStila {
+        match self {
+            Self::Crta(v) => IzmjenaStila::VrstaCrte(v),
+            Self::Ispuna(v) => IzmjenaStila::VrstaIspune(v),
+        }
+    }
+
+    const fn naslov(self) -> &'static str {
+        match self {
+            Self::Crta(_) => "stil-vrsta-crte",
+            Self::Ispuna(_) => "stil-ispuna",
+        }
+    }
+}
+
+/// Gumbi s malim crtežom, npr. „Puna”, „Isprekidana”. Odabrani je istaknut.
+fn izbor_vrste(
+    ui: &mut egui::Ui,
+    katalog: &KatalogPoruka,
+    s: &Stil,
+    pregledi: &[Pregled],
+    pocetak: Pos2,
+    boje: &Boje,
+) -> Option<IzmjenaStila> {
+    let naslov = katalog.tekst(pregledi.first().map_or("stil-vrsta-crte", |p| p.naslov()));
+    tekst_lijevo(ui, pocetak, &naslov, font_obicni(13.0), boje.tekst_2);
+    let mut izmjena = None;
+    for (i, pregled) in pregledi.iter().enumerate() {
+        let okvir = Rect::from_min_size(
+            pos2(pocetak.x + i as f32 * 82.0, pocetak.y + 16.0),
+            vec2(76.0, 62.0),
+        );
+        let odabran = pregled.odabran(s);
+        let tekst = katalog.tekst(pregled.kljuc());
+        let (ispuna, obrub) = if odabran {
+            (boje.primarna_svijetla, boje.odabir_obrub)
+        } else {
+            (boje.ploca, boje.obrub)
+        };
+        zaobljeni_okvir(ui, okvir, ispuna, Some(obrub), 8.0);
+        nacrtaj_pregled(ui, *pregled, s, okvir);
+        tekst_sredina(
+            ui,
+            pos2(okvir.center().x, okvir.max.y - 14.0),
+            &tekst,
+            font_obicni(11.0),
+            boje.tekst_2,
+        );
+        let labela = format!("{naslov}: {tekst}");
+        let id = ui.make_persistent_id(("vrsta_stila", &labela));
+        let odgovor = ui.interact(okvir, id, Sense::click());
+        odgovor
+            .widget_info(|| WidgetInfo::selected(Role::Button, ui.is_enabled(), odabran, &labela));
+        if odgovor.clicked() && !odabran {
+            izmjena = Some(pregled.izmjena());
+        }
+    }
+    izmjena
+}
+
+/// Duljine crta i razmaka u pregledu, u točkama, kao u sjenčaru karte.
+const fn uzorak_pregleda(v: VrstaCrte) -> &'static [f32] {
+    match v {
+        VrstaCrte::Puna => &[52.0, 0.0],
+        VrstaCrte::Isprekidana => &[10.0, 5.0],
+        VrstaCrte::Tockasta => &[2.5, 4.0],
+        VrstaCrte::CrtaTocka => &[10.0, 5.0, 2.5, 5.0],
+    }
+}
+
+fn nacrtaj_pregled(ui: &egui::Ui, pregled: Pregled, s: &Stil, okvir: Rect) {
+    let srediste = pos2(okvir.center().x, okvir.min.y + 22.0);
+    let boja = |b: Boja, a: u8| Color32::from_rgba_unmultiplied(b.r, b.g, b.b, a);
+    let crtac = ui.painter();
+    match pregled {
+        Pregled::Crta(v) => {
+            let (mut x, kraj) = (srediste.x - 26.0, srediste.x + 26.0);
+            let crta = Stroke::new(2.5, boja(s.boja_crte, 255));
+            for (i, d) in uzorak_pregleda(v).iter().cycle().enumerate() {
+                if x >= kraj {
+                    break;
+                }
+                let do_ = (x + d).min(kraj);
+                if i % 2 == 0 {
+                    crtac.line_segment([pos2(x, srediste.y), pos2(do_, srediste.y)], crta);
+                }
+                x = do_;
+            }
+        }
+        Pregled::Ispuna(v) => {
+            let lik = Rect::from_center_size(srediste, vec2(40.0, 20.0));
+            let ispuna = boja(s.boja_ispune, 160);
+            if v == VrstaIspune::Puna {
+                crtac.rect_filled(lik, 2.0, ispuna);
+            }
+            if v == VrstaIspune::Srafura {
+                let unutra = crtac.with_clip_rect(lik);
+                for k in 0..8 {
+                    let x = lik.min.x - 20.0 + k as f32 * 8.0;
+                    unutra.line_segment(
+                        [pos2(x, lik.max.y), pos2(x + 20.0, lik.min.y)],
+                        Stroke::new(1.5, ispuna),
+                    );
+                }
+            }
+            crtac.rect_stroke(
+                lik,
+                2.0,
+                Stroke::new(1.5, boja(s.boja_crte, 255)),
+                egui::StrokeKind::Inside,
+            );
+        }
+    }
 }
 
 fn red_klizaca(

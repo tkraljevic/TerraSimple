@@ -65,7 +65,7 @@ pub fn sloj_baze(c: &Connection, b: &crate::citanje::SlojBaze) -> Result<(), Gre
 }
 fn stvori_tablicu(c: &Connection, b: &crate::citanje::SlojBaze) -> Result<(), Greska> {
     let nova = format!(
-        "CREATE TABLE {}({} INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,{} {},naziv TEXT,opis TEXT,stil_boja TEXT,stil_debljina REAL,stil_ispuna TEXT,stil_znak TEXT,stil_velicina REAL)",
+        "CREATE TABLE {}({} INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,{} {},naziv TEXT,opis TEXT,stil_boja TEXT,stil_debljina REAL,stil_ispuna TEXT,stil_znak TEXT,stil_velicina REAL,stil_crta TEXT,stil_uzorak TEXT)",
         navodnici(&b.tablica),
         navodnici(&b.fid),
         navodnici(&b.geom),

@@ -872,7 +872,7 @@ fn pregled_dijaloga_po_nazivu() {
     assert_eq!(dijalog_za_pregled(None, &k), None);
 }
 
-/// Izbornik Pomoć i gumb „?” otvaraju „O programu” s inačicom, licencom i izvorom karte.
+/// Izbornik Pomoć otvara „O programu” s inačicom, licencom i izvorom karte, a gumb „?” prečace.
 #[test]
 fn pomoc_otvara_o_programu() {
     let app = Aplikacija::nova(PostavkeAplikacije::default());
@@ -888,7 +888,10 @@ fn pomoc_otvara_o_programu() {
         .map(|n| n.rect().center())
         .collect();
     assert_eq!(pomoc.len(), 2, "stavka izbornika i gumb");
-    for mjesto in pomoc {
+    for (mjesto, ocekivano) in pomoc
+        .into_iter()
+        .zip([AktivniDijalog::OProgramu, AktivniDijalog::Precaci])
+    {
         assert!(h.state().aktivni_dijalog.is_none());
         h.input_mut().events.push(egui::Event::PointerMoved(mjesto));
         h.run_steps(1);
@@ -902,7 +905,13 @@ fn pomoc_otvara_o_programu() {
             h.run_steps(1);
         }
         cekaj_smirenje(&mut h, Duration::from_millis(500));
-        assert_eq!(h.state().aktivni_dijalog, Some(AktivniDijalog::OProgramu));
+        assert_eq!(h.state().aktivni_dijalog, Some(ocekivano.clone()));
+        if ocekivano == AktivniDijalog::Precaci {
+            assert!(nacrtani_tekstovi(&h).contains(&"Prečaci tipkovnice i miša".to_owned()));
+            h.get_by_label("Zatvori").click();
+            cekaj_smirenje(&mut h, Duration::from_millis(500));
+            continue;
+        }
         let t = nacrtani_tekstovi(&h);
         let naslov = format!("TerraSimple {} alfa", env!("CARGO_PKG_VERSION"));
         assert!(t.contains(&naslov), "{t:?}");

@@ -64,6 +64,15 @@ stil-debljina-ruba = Debljina ruba
 stil-prozirnost = Prozirnost
 stil-prozirnost-ispune = Prozirnost ispune
 stil-velicina = Veličina
+stil-vrsta-crte = Vrsta crte
+stil-ispuna = Ispuna
+crta-puna = Puna
+crta-isprekidana = Isprekidana
+crta-tockasta = Točkasta
+crta-crta-tocka = Crta-točka
+ispuna-puna = Puna
+ispuna-srafura = Šrafura
+ispuna-bez = Bez ispune
 stil-napomena = Stil se sprema uz sloj, pa ga QGIS otvara s njim.
 stil-zakljucano = Sloj je samo za čitanje, pa mu se stil ne može mijenjati.
 stil-vrati-zadano = Vrati zadano
@@ -246,6 +255,69 @@ precac-spremi-kao = { $sustav ->
     [mac] ⇧⌘S
    *[ostali] Ctrl+Shift+S
 }
+precac-ponisti = { $sustav ->
+    [mac] ⌘Z
+   *[ostali] Ctrl+Z
+}
+precac-ponovi = { $sustav ->
+    [mac] ⇧⌘Z ili ⌘Y
+   *[ostali] Ctrl+Y ili Ctrl+Shift+Z
+}
+precac-trazi = { $sustav ->
+    [mac] ⌘F
+   *[ostali] Ctrl+F
+}
+precac-preimenuj = F2
+precac-obrisi = { $sustav ->
+    [mac] ⌘ + delete ili fn + delete
+   *[ostali] Delete ili Ctrl+Backspace
+}
+precac-odustani = Esc
+precac-pomoc = { $sustav ->
+    [mac] ⌘/ ili fn + F1
+   *[ostali] Ctrl+/ ili F1
+}
+precac-klik = klik
+precac-desni-klik = { $sustav ->
+    [mac] desni klik, ⌃ + klik ili dva prsta
+   *[ostali] desni klik
+}
+precac-obrisi-tocku = { $sustav ->
+    [mac] delete
+   *[ostali] Backspace
+}
+precac-povuci = povuci mišem
+precac-shift-klik = { $sustav ->
+    [mac] ⇧ + klik
+   *[ostali] Shift+klik
+}
+precac-okvir = klik na prazno, pa klik
+precac-okvir-smjer = slijeva nadesno ili obratno
+precac-kotacic = { $sustav ->
+    [mac] dva prsta gore-dolje ili štipanje
+   *[ostali] kotačić miša
+}
+precaci-naslov = Prečaci tipkovnice i miša
+precaci-datoteka = Datoteka
+precaci-uredjivanje = Uređivanje
+precaci-crtanje = Crtanje i točke
+precaci-odabir = Odabir na karti
+precaci-karta = Karta
+precaci-trazi = Traži mjesto ili objekt
+precaci-preimenuj = Preimenuj odabrano
+precaci-obrisi = Obriši odabrano
+precaci-odustani = Odustani od crteža ili odabira
+precaci-pomoc = Ovaj popis prečaca
+precaci-dodaj-tocku = Dodaj točku
+precaci-zavrsi = Završi crtu ili lik
+precaci-obrisi-tocku = Obriši zadnju ili odabranu točku
+precaci-pomakni-tocku = Pomakni točku
+precaci-dodaj-u-odabir = Dodaj objekt u odabir
+precaci-izbaci-iz-odabira = Izbaci objekt iz odabira
+precaci-okvir = Odaberi okvirom
+precaci-okvir-smjer = Cijeli objekti ili sve što dotakne
+precaci-priblizi = Približi ili udalji
+precaci-pomakni-kartu = Pomakni kartu
 
 potvrda-naslov = Nespremljene izmjene
 potvrda-poruka = Želiš li spremiti izmjene u projektu prije nastavka?

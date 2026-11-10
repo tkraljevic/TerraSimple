@@ -9,7 +9,7 @@ use eframe::egui::{self, Event, Key, Modifiers, PointerButton, Pos2, pos2, vec2}
 use egui_kittest::{Harness, kittest::Queryable};
 use slojevi::{
     Boja, Geometrija, IdMape, IdObjekta, IdSloja, NaredbaObjekta, NaredbaStabla, Novo, Stavka,
-    Stil, StilObjekta, Uredjivac, Vrh, VrstaGeometrije,
+    Stil, StilObjekta, Uredjivac, Vrh, VrstaCrte, VrstaGeometrije, VrstaIspune,
 };
 
 const PLAVA: Boja = PONUDJENE_BOJE[3].0;
@@ -78,6 +78,12 @@ fn objekt_pamti_samo_izmijenjeno_a_ostalo_uzima_od_sloja() {
     assert_eq!(o.boja_ispune.map(|b| b.a), Some(0));
     let o = primijeni_na_objekt(o, &sloj, IzmjenaStila::Velicina(4.0));
     assert_eq!(o.velicina_znaka_mm, Some(4.0));
+    let o = primijeni_na_objekt(o, &sloj, IzmjenaStila::VrstaCrte(VrstaCrte::Tockasta));
+    assert_eq!(o.vrsta_crte, Some(VrstaCrte::Tockasta));
+    let o = primijeni_na_objekt(o, &sloj, IzmjenaStila::VrstaIspune(VrstaIspune::Bez));
+    assert_eq!(o.vrsta_ispune, Some(VrstaIspune::Bez));
+    let s = primijeni(sloj, IzmjenaStila::VrstaIspune(VrstaIspune::Srafura));
+    assert_eq!(s.vrsta_ispune, VrstaIspune::Srafura);
 }
 
 #[test]
@@ -222,6 +228,17 @@ fn stil_sloja_iz_izbornika_mijenja_boju_i_debljinu_a_potez_je_jedan_korak() {
 
     klik(&mut h, "Plava");
     assert_eq!(stil_sloja(&h, "Trase").boja_crte.b, 0xC0);
+    klik(&mut h, "Vrsta crte: Crta-točka");
+    assert_eq!(stil_sloja(&h, "Trase").vrsta_crte, VrstaCrte::CrtaTocka);
+    klik(&mut h, "Vrsta crte: Crta-točka");
+    assert_eq!(
+        h.state_mut().uredjivac.ponisti(),
+        Ok(true),
+        "isti izbor ne radi novi korak"
+    );
+    assert_eq!(stil_sloja(&h, "Trase").vrsta_crte, VrstaCrte::Puna);
+    h.state_mut().uredjivac.ponovi().expect("ponovi");
+    h.run_steps(2);
 
     let staza = h.get_by_label("Debljina").rect();
     let y = staza.center().y;
@@ -273,6 +290,16 @@ fn stil_objekta_samo_za_njega_ili_za_cijeli_sloj() {
     klik(&mut h, "Cijeli sloj");
     klik(&mut h, "Crvena");
     assert_eq!(stil_sloja(&h, "Parcele").boja_crte.r, 0xD3);
+    for (gumb, vrsta) in [
+        ("Ispuna: Šrafura", VrstaIspune::Srafura),
+        ("Ispuna: Bez ispune", VrstaIspune::Bez),
+        ("Ispuna: Puna", VrstaIspune::Puna),
+    ] {
+        klik(&mut h, gumb);
+        assert_eq!(stil_sloja(&h, "Parcele").vrsta_ispune, vrsta);
+    }
+    klik(&mut h, "Vrsta crte: Isprekidana");
+    assert_eq!(stil_sloja(&h, "Parcele").vrsta_crte, VrstaCrte::Isprekidana);
 
     klik(&mut h, "Samo ovaj objekt");
     assert!(h.state().stanje.stil.expect("stil").samo_objekt);

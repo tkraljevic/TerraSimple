@@ -4,10 +4,10 @@ use quick_xml::{
     events::{BytesStart, Event},
 };
 use rusqlite::types::Value;
-use slojevi::{Boja, OblikZnaka, Stil, StilObjekta, VrstaGeometrije};
+use slojevi::{Boja, OblikZnaka, Stil, StilObjekta, VrstaCrte, VrstaGeometrije, VrstaIspune};
 use std::collections::BTreeMap;
 
-pub const STUPCI: [&str; 7] = [
+pub const STUPCI: [&str; 9] = [
     "naziv",
     "opis",
     "stil_boja",
@@ -15,6 +15,8 @@ pub const STUPCI: [&str; 7] = [
     "stil_ispuna",
     "stil_znak",
     "stil_velicina",
+    "stil_crta",
+    "stil_uzorak",
 ];
 pub fn boja(b: Boja) -> String {
     format!("{},{},{},{}", b.r, b.g, b.b, b.a)
@@ -71,6 +73,40 @@ pub fn procitaj_znak(s: &str) -> Result<OblikZnaka, Greska> {
         _ => Err("Oblik znaka nije podržan.".into()),
     }
 }
+/// Nazivi QGIS-a za vrstu crte.
+pub const fn crta(v: VrstaCrte) -> &'static str {
+    match v {
+        VrstaCrte::Puna => "solid",
+        VrstaCrte::Isprekidana => "dash",
+        VrstaCrte::Tockasta => "dot",
+        VrstaCrte::CrtaTocka => "dash dot",
+    }
+}
+/// Ostale crte QGIS-a, npr. `dash dot dot`, čitaju se kao najsličnije, a ne kao greška.
+pub fn procitaj_crtu(s: &str) -> VrstaCrte {
+    match s {
+        "dash" => VrstaCrte::Isprekidana,
+        "dot" => VrstaCrte::Tockasta,
+        "dash dot" | "dash dot dot" => VrstaCrte::CrtaTocka,
+        _ => VrstaCrte::Puna,
+    }
+}
+/// Nazivi QGIS-a za ispunu. Šrafura je `f_diagonal`.
+pub const fn uzorak(v: VrstaIspune) -> &'static str {
+    match v {
+        VrstaIspune::Puna => "solid",
+        VrstaIspune::Srafura => "f_diagonal",
+        VrstaIspune::Bez => "no",
+    }
+}
+/// Svaki drugi uzorak QGIS-a, npr. križni, čita se kao šrafura.
+pub fn procitaj_uzorak(s: &str) -> VrstaIspune {
+    match s {
+        "solid" => VrstaIspune::Puna,
+        "no" => VrstaIspune::Bez,
+        _ => VrstaIspune::Srafura,
+    }
+}
 pub fn vrijednosti(naziv: &str, opis: &str, s: StilObjekta) -> Vec<Value> {
     vec![
         Value::Text(naziv.into()),
@@ -80,6 +116,8 @@ pub fn vrijednosti(naziv: &str, opis: &str, s: StilObjekta) -> Vec<Value> {
         s.boja_ispune.map(boja).into(),
         s.oblik_znaka.map(|z| znak(z).to_owned()).into(),
         s.velicina_znaka_mm.into(),
+        s.vrsta_crte.map(|v| crta(v).to_owned()).into(),
+        s.vrsta_ispune.map(|v| uzorak(v).to_owned()).into(),
     ]
 }
 fn tekst(v: Option<&Value>) -> Option<&str> {
@@ -103,6 +141,8 @@ pub fn objekt(v: &BTreeMap<String, Value>) -> Result<StilObjekta, Greska> {
         boja_ispune: tekst(v.get("stil_ispuna")).map(procitaj_boju).transpose()?,
         oblik_znaka: tekst(v.get("stil_znak")).map(procitaj_znak).transpose()?,
         velicina_znaka_mm: broj(v.get("stil_velicina"))?,
+        vrsta_crte: tekst(v.get("stil_crta")).map(procitaj_crtu),
+        vrsta_ispune: tekst(v.get("stil_uzorak")).map(procitaj_uzorak),
     })
 }
 fn opcija(n: &str, v: &str) -> String {
@@ -140,17 +180,33 @@ fn svojstva(v: VrstaGeometrije, s: Stil) -> String {
                 Some(format!("'{}'", znak(s.oblik_znaka))),
             );
         }
-        VrstaGeometrije::Linija => p += &svojstvo("outlineWidth", "stil_debljina", None),
+        VrstaGeometrije::Linija => {
+            p += &svojstvo("outlineWidth", "stil_debljina", None);
+            p += &svojstvo_crte(s);
+        }
         VrstaGeometrije::Poligon => {
             p += &svojstvo(
                 "outlineWidth",
                 "stil_debljina",
                 Some(s.debljina_mm.to_string()),
-            )
+            );
+            p += &svojstvo_crte(s);
+            p += &svojstvo(
+                "fillStyle",
+                "stil_uzorak",
+                Some(format!("'{}'", uzorak(s.vrsta_ispune))),
+            );
         }
     }
     format!(
         r#"<data_defined_properties><Option type="Map"><Option name="name" value="" type="QString"/><Option name="properties" type="Map">{p}</Option><Option name="type" value="collection" type="QString"/></Option></data_defined_properties>"#
+    )
+}
+fn svojstvo_crte(s: Stil) -> String {
+    svojstvo(
+        "outlineStyle",
+        "stil_crta",
+        Some(format!("'{}'", crta(s.vrsta_crte))),
     )
 }
 pub fn renderer(v: VrstaGeometrije, s: Stil) -> String {
@@ -168,14 +224,17 @@ pub fn renderer(v: VrstaGeometrije, s: Stil) -> String {
             "line",
             "SimpleLine",
             opcija("line_color", &boja(s.boja_crte))
-                + &opcija("line_width", &s.debljina_mm.to_string()),
+                + &opcija("line_width", &s.debljina_mm.to_string())
+                + &opcija("line_style", crta(s.vrsta_crte)),
         ),
         VrstaGeometrije::Poligon => (
             "fill",
             "SimpleFill",
             opcija("color", &boja(s.boja_ispune))
                 + &opcija("outline_color", &boja(s.boja_crte))
-                + &opcija("outline_width", &s.debljina_mm.to_string()),
+                + &opcija("outline_width", &s.debljina_mm.to_string())
+                + &opcija("outline_style", crta(s.vrsta_crte))
+                + &opcija("style", uzorak(s.vrsta_ispune)),
         ),
     };
     format!(
@@ -309,12 +368,21 @@ fn decimalni(s: &str) -> Result<f64, Greska> {
 fn linija(o: &BTreeMap<String, String>, mut s: Stil) -> Result<Stil, Greska> {
     s.boja_crte = uzmi(o, "line_color", s.boja_crte, procitaj_boju)?;
     s.debljina_mm = uzmi(o, "line_width", s.debljina_mm, decimalni)?;
+    s.vrsta_crte = o
+        .get("line_style")
+        .map_or(s.vrsta_crte, |v| procitaj_crtu(v));
     Ok(s)
 }
 fn poligon(o: &BTreeMap<String, String>, mut s: Stil) -> Result<Stil, Greska> {
     s.boja_crte = uzmi(o, "outline_color", s.boja_crte, procitaj_boju)?;
     s.boja_ispune = uzmi(o, "color", s.boja_ispune, procitaj_boju)?;
     s.debljina_mm = uzmi(o, "outline_width", s.debljina_mm, decimalni)?;
+    s.vrsta_crte = o
+        .get("outline_style")
+        .map_or(s.vrsta_crte, |v| procitaj_crtu(v));
+    s.vrsta_ispune = o
+        .get("style")
+        .map_or(s.vrsta_ispune, |v| procitaj_uzorak(v));
     Ok(s)
 }
 fn tocka(o: &BTreeMap<String, String>, mut s: Stil) -> Result<Stil, Greska> {
@@ -344,25 +412,51 @@ pub fn json(s: Stil) -> String {
         s.debljina_mm,
         boja(s.boja_ispune),
         znak(s.oblik_znaka),
-        s.velicina_znaka_mm
+        s.velicina_znaka_mm,
+        crta(s.vrsta_crte),
+        uzorak(s.vrsta_ispune)
     ])
     .to_string()
 }
+/// Datoteke prije 0.0.5 imaju pet vrijednosti, pa vrsta crte i ispune ostaje zadana.
 pub fn iz_json(s: &str) -> Result<Stil, Greska> {
-    let (crta, debljina, ispuna, oblik, velicina): (String, f64, String, String, f64) =
-        serde_json::from_str(s)?;
+    let sve: Vec<serde_json::Value> = serde_json::from_str(s)?;
+    let prvih_pet = serde_json::Value::Array(sve.iter().take(5).cloned().collect());
+    let (boja_crte, debljina, ispuna, oblik, velicina): (String, f64, String, String, f64) =
+        serde_json::from_value(prvih_pet)?;
+    let dodatak = |i: usize| sve.get(i).and_then(serde_json::Value::as_str);
     Ok(Stil {
-        boja_crte: procitaj_boju(&crta)?,
+        boja_crte: procitaj_boju(&boja_crte)?,
         debljina_mm: debljina,
         boja_ispune: procitaj_boju(&ispuna)?,
         oblik_znaka: procitaj_znak(&oblik)?,
         velicina_znaka_mm: velicina,
+        vrsta_crte: dodatak(5).map_or(VrstaCrte::Puna, procitaj_crtu),
+        vrsta_ispune: dodatak(6).map_or(VrstaIspune::Puna, procitaj_uzorak),
     })
 }
 
 #[cfg(test)]
 mod testovi {
     use super::*;
+    #[test]
+    fn nazivi_crta_i_uzoraka_kao_u_qgis_u() {
+        for v in [
+            VrstaCrte::Puna,
+            VrstaCrte::Isprekidana,
+            VrstaCrte::Tockasta,
+            VrstaCrte::CrtaTocka,
+        ] {
+            assert_eq!(procitaj_crtu(crta(v)), v);
+        }
+        assert_eq!(procitaj_crtu("dash dot dot"), VrstaCrte::CrtaTocka);
+        assert_eq!(procitaj_crtu("no"), VrstaCrte::Puna);
+        for v in [VrstaIspune::Puna, VrstaIspune::Srafura, VrstaIspune::Bez] {
+            assert_eq!(procitaj_uzorak(uzorak(v)), v);
+        }
+        assert_eq!(procitaj_uzorak("cross"), VrstaIspune::Srafura);
+    }
+
     #[test]
     fn svi_stilovi_i_qml_odabira() {
         let s = Stil {
@@ -379,6 +473,8 @@ mod testovi {
                 a: 80,
             },
             oblik_znaka: OblikZnaka::Zvijezda,
+            vrsta_crte: VrstaCrte::Isprekidana,
+            vrsta_ispune: VrstaIspune::Bez,
             ..Stil::default()
         };
         for v in [
@@ -396,6 +492,13 @@ mod testovi {
         }
         assert_eq!(iz_json(&json(s)).unwrap(), s);
         assert!(iz_json("[]").is_err());
+        // Datoteka prije 0.0.5 ima pet vrijednosti.
+        let staro = r#"["1,2,3,4",0.8,"5,6,7,8","circle",3.0]"#;
+        let st = iz_json(staro).unwrap();
+        assert_eq!(
+            (st.vrsta_crte, st.vrsta_ispune),
+            (VrstaCrte::Puna, VrstaIspune::Puna)
+        );
     }
     #[test]
     fn vlastiti_stil_i_prazni_stupci() {
@@ -411,6 +514,8 @@ mod testovi {
             debljina_mm: Some(1.5),
             oblik_znaka: Some(OblikZnaka::Trokut),
             velicina_znaka_mm: Some(5.),
+            vrsta_crte: Some(VrstaCrte::CrtaTocka),
+            vrsta_ispune: Some(VrstaIspune::Srafura),
         };
         let v = vrijednosti("Naziv", "Opis", s);
         let mapa = STUPCI

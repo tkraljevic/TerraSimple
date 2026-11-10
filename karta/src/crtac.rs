@@ -20,13 +20,19 @@ struct Izlaz {
     @location(0) boja: vec4<f32>,
     @location(1) lok: vec2<f32>,
     @location(2) krug: f32,
+    // Udaljenost od početka crte u točkama zaslona, uzorak i debljina crte.
+    @location(3) duz: f32,
+    @location(4) uzorak: f32,
+    @location(5) s: f32,
 };
 fn t_px(t: vec2<f32>) -> vec2<f32> { return t * p.mjerilo + p.pomak; }
-@vertex fn v_ispuna(@location(0) t: vec2<f32>, @location(1) b: vec4<f32>) -> Izlaz {
-    var i: Izlaz; i.pos = vec4(t_px(t) / p.pola, 0.0, 1.0); i.boja = b; i.lok = vec2(0.0); i.krug = 0.0; return i;
+@vertex fn v_ispuna(@location(0) t: vec2<f32>, @location(1) b: vec4<f32>, @location(2) uz: f32) -> Izlaz {
+    var i: Izlaz; i.pos = vec4(t_px(t) / p.pola, 0.0, 1.0); i.boja = b; i.lok = vec2(0.0); i.krug = 0.0;
+    i.duz = 0.0; i.uzorak = uz; i.s = 0.0; return i;
 }
 @vertex fn v_crta(@builtin(vertex_index) k: u32, @location(0) a: vec2<f32>, @location(1) c: vec2<f32>,
-                  @location(2) b: vec4<f32>, @location(3) s: f32) -> Izlaz {
+                  @location(2) b: vec4<f32>, @location(3) s: f32, @location(4) put: f32,
+                  @location(5) uz: f32) -> Izlaz {
     var kut = array<vec2<f32>, 6>(vec2(0.,-1.), vec2(1.,-1.), vec2(1.,1.), vec2(0.,-1.), vec2(1.,1.), vec2(0.,1.));
     let u = kut[k];
     let pa = t_px(a); let pc = t_px(c);
@@ -34,6 +40,9 @@ fn t_px(t: vec2<f32>) -> vec2<f32> { return t * p.mjerilo + p.pomak; }
     let dl = length(d);
     var i: Izlaz;
     i.boja = b;
+    i.uzorak = uz;
+    i.s = s;
+    i.duz = put * p.mjerilo + u.x * dl;
     if (dl < 0.0001) {
         // Točka je krug širine s, a lik manji od piksela postaje isto takav krug.
         let l = vec2(u.x * 2.0 - 1.0, u.y);
@@ -49,8 +58,21 @@ fn t_px(t: vec2<f32>) -> vec2<f32> { return t * p.mjerilo + p.pomak; }
     }
     return i;
 }
+// Isprekidana crta: 4 debljine crte i 2 razmaka. Točkasta: 1 i 1,5. Crta-točka: 4, 2, 1, 2.
+fn u_razmaku(duz: f32, uzorak: f32, s: f32) -> bool {
+    let j = max(s, 1.5);
+    if (uzorak < 0.5) { return false; }
+    if (uzorak < 1.5) { return duz % (6.0 * j) > 4.0 * j; }
+    if (uzorak < 2.5) { return duz % (2.5 * j) > j; }
+    let m = duz % (9.0 * j);
+    return (m > 4.0 * j && m < 6.0 * j) || m > 7.0 * j;
+}
 @fragment fn f(i: Izlaz) -> @location(0) vec4<f32> {
     if (i.krug > 0.5 && dot(i.lok, i.lok) > 1.0) { discard; }
+    // Šrafura su kose crte svakih 10 piksela zaslona, debele 2 piksela.
+    if (i.uzorak > 9.5) {
+        if ((i.pos.x + i.pos.y) % 10.0 > 2.0) { discard; }
+    } else if (u_razmaku(i.duz, i.uzorak, i.s)) { discard; }
     // `egui` crta s bojom već pomnoženom prozirnošću, a vrhovi nose običnu boju.
     return vec4(i.boja.rgb * i.boja.a, i.boja.a);
 }
@@ -71,17 +93,20 @@ const fn atribut(
 }
 
 /// Mora se slagati s `VrhIspune`.
-const ATRIBUTI_ISPUNE: [wgpu::VertexAttribute; 2] = [
+const ATRIBUTI_ISPUNE: [wgpu::VertexAttribute; 3] = [
     atribut(wgpu::VertexFormat::Float32x2, 0, 0),
     atribut(wgpu::VertexFormat::Unorm8x4, 8, 1),
+    atribut(wgpu::VertexFormat::Float32, 12, 2),
 ];
 
 /// Mora se slagati s `Odsjecak`.
-const ATRIBUTI_CRTE: [wgpu::VertexAttribute; 4] = [
+const ATRIBUTI_CRTE: [wgpu::VertexAttribute; 6] = [
     atribut(wgpu::VertexFormat::Float32x2, 0, 0),
     atribut(wgpu::VertexFormat::Float32x2, 8, 1),
     atribut(wgpu::VertexFormat::Unorm8x4, 16, 2),
     atribut(wgpu::VertexFormat::Float32, 20, 3),
+    atribut(wgpu::VertexFormat::Float32, 24, 4),
+    atribut(wgpu::VertexFormat::Float32, 28, 5),
 ];
 
 struct GpuKomad {
