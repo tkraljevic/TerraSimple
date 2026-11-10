@@ -13,6 +13,7 @@ pub enum StavkaIzbornikaDatoteka {
     Otvori,
     Spremi,
     SpremiKao,
+    Uvezi,
 }
 
 /// Svrha potvrde nespremljenih izmjena.
@@ -33,6 +34,11 @@ pub enum AktivniDijalog {
         broj_nepodrzanih: usize,
     },
     PorukaGreske {
+        naslov: String,
+        poruka: String,
+    },
+    /// Obavijest o uspjehu, npr. sažetak uvoza.
+    Obavijest {
         naslov: String,
         poruka: String,
     },
@@ -112,9 +118,14 @@ pub fn crtaj_padajuci_izbornik_datoteka(
             katalog.tekst("izbornik-datoteka-spremi-kao"),
             precac("precac-spremi-kao"),
         ),
+        (
+            StavkaIzbornikaDatoteka::Uvezi,
+            katalog.tekst("izbornik-datoteka-uvezi"),
+            String::new(),
+        ),
     ];
 
-    let sirina = 190.0;
+    let sirina = 220.0;
     let visina_retka = 28.0;
     let ukupna_visina = stavke.len() as f32 * visina_retka + 8.0;
     let okvir = Rect::from_min_size(pocetak, vec2(sirina, ukupna_visina));
@@ -214,7 +225,10 @@ pub fn crtaj_aktivni_dijalog(
             katalog,
         ),
         AktivniDijalog::PorukaGreske { naslov, poruka } => {
-            crtaj_poruku_greske(ui, dostupan, naslov, poruka, boje, katalog)
+            crtaj_poruku(ui, dostupan, (naslov, boje.crvena), poruka, boje, katalog)
+        }
+        AktivniDijalog::Obavijest { naslov, poruka } => {
+            crtaj_poruku(ui, dostupan, (naslov, boje.tekst), poruka, boje, katalog)
         }
         AktivniDijalog::UpozorenjaOtvaranja {
             upozorenja,
@@ -496,16 +510,27 @@ fn crtaj_upozorenje_brisanja(
     }
 }
 
-fn crtaj_poruku_greske(
+/// Poruka s naslovom i gumbom „U redu”. Visina prati duljinu teksta.
+fn crtaj_poruku(
     ui: &mut egui::Ui,
     dostupan: Rect,
-    naslov: &str,
+    (naslov, boja_naslova): (&str, egui::Color32),
     poruka: &str,
     boje: &Boje,
     katalog: &KatalogPoruka,
 ) -> Option<IshodDijaloga> {
     let sirina = 440.0;
-    let visina = 160.0;
+    let visina_teksta = ui
+        .painter()
+        .layout(
+            poruka.to_owned(),
+            font_obicni(13.0),
+            boje.tekst_2,
+            sirina - 40.0,
+        )
+        .size()
+        .y;
+    let visina = 105.0 + visina_teksta.max(55.0);
     let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, visina));
 
     zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
@@ -515,12 +540,12 @@ fn crtaj_poruku_greske(
         pos2(okvir.min.x + 20.0, okvir.min.y + 24.0),
         naslov,
         font_srednji(15.0),
-        boje.crvena,
+        boja_naslova,
     );
 
     let tekst_okvir = Rect::from_min_size(
         pos2(okvir.min.x + 20.0, okvir.min.y + 50.0),
-        vec2(sirina - 40.0, 55.0),
+        vec2(sirina - 40.0, visina - 105.0),
     );
     ui.put(
         tekst_okvir,

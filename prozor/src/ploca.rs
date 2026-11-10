@@ -537,7 +537,7 @@ fn crtaj_akcijske_gumbe_ploce(
     }
 
     let okvir_uvezi = Rect::from_min_size(pos2(pocetak.x + 130.0, pocetak.y), vec2(112.0, 32.0));
-    let _ = gumb_obrub(
+    if gumb_obrub(
         ui,
         ikone,
         okvir_uvezi,
@@ -545,7 +545,11 @@ fn crtaj_akcijske_gumbe_ploce(
         &katalog.tekst("gumb-uvezi-sloj"),
         tamna,
         boje,
-    );
+    )
+    .clicked()
+    {
+        stanje.zatrazen_uvoz = true;
+    }
 
     let okvir_mapa = Rect::from_min_size(pos2(pocetak.x + 248.0, pocetak.y), vec2(100.0, 32.0));
     if gumb_obrub(

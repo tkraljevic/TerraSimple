@@ -34,8 +34,11 @@ Izdanja su zasad probna (alfa), za Windows, macOS i Linux, na stranici **Release
   stilovima. Stil namješten u QGIS-u ostaje dok ga ne promijeniš u TerraSimpleu. Ako je QGIS u međuvremenu
   promijenio datoteku, TerraSimple je ne pregazi, a Spremi kao sprema tvoj crtež u novu datoteku.
 
-Još ne radi: ispis, KML i ostali formati, polja u slojevima i podloge iz vlastitih datoteka. Dolaze
-redom, po [planu rada](docs/plan.md).
+- **Uvoz iz Google Eartha:** KML i KMZ, gumbom „Uvezi sloj” ili iz izbornika Datoteka. Mape ostaju mape,
+  a objekti idu u slojeve Točke, Linije i Poligoni, s nazivima, opisima i bojama.
+
+Još ne radi: ispis, izvoz u KML, ostali formati, polja u slojevima i podloge iz vlastitih datoteka.
+Dolaze redom, po [planu rada](docs/plan.md).
 
 ## Pokretanje iz izvornog koda
 

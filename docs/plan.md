@@ -586,6 +586,12 @@ Osnovno spremanje i otvaranje u QGIS-u već su u izdanju 0.0.1.
 Zasloni A3, K, L. KML, KMZ, GeoJSON i SHP, pregled gubitaka pri izvozu, pitanje o
 koordinatnom sustavu, razmjena s Earth Proom.
 
+- **Uvoz KML-a i KMZ-a (10. 11. 2026., paket `formati`):** vlastiti čitač na `quick-xml`, po probi.
+  Odluke (10. 11. 2026.): svaka mapa Google Eartha ostaje mapa, a u njoj su slojevi Točke, Linije i
+  Poligoni; točka natpisa uz liniju uvozi se kao zaseban objekt. Stil u ugniježđenom `Document`-u vrijedi
+  samo u njemu. Pravi `myplaces.kml` (147 MB): čitanje 0,42 s, uvoz 0,06 s, 340 MB memorije, 251 mapa,
+  207 slojeva, 88 901 objekt, ništa odbijeno; spremanje u GeoPackage 1,0 s. Izvoz u KML još nije rađen.
+
 **Na kraju izlazi 0.1, prvo upotrebljivo izdanje:** zamjenjuje Earth Pro za crtanje,
 mjerenje i KML, a sve se otvara u QGIS-u. Do ovdje je 12–18 tjedana rada.
 
