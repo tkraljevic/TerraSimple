@@ -70,6 +70,28 @@ pub struct NoviSloj {
     pub prazan_naziv: bool,
 }
 
+/// Naziv upravo nacrtanog objekta, dok ga korisnik upisuje.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NazivNovog {
+    pub sloj: IdSloja,
+    pub objekt: IdObjekta,
+    pub naziv: String,
+    /// Prvi put se cijeli predloženi naziv označi, pa ga upisivanje zamijeni.
+    pub oznaci: bool,
+}
+
+impl NazivNovog {
+    #[must_use]
+    pub fn novi(sloj: IdSloja, objekt: IdObjekta, naziv: &str) -> Self {
+        Self {
+            sloj,
+            objekt,
+            naziv: naziv.to_owned(),
+            oznaci: true,
+        }
+    }
+}
+
 pub struct StanjePrikaza {
     zatvorene_mape: BTreeSet<IdMape>,
     otvoreni_slojevi: BTreeSet<IdSloja>,
@@ -81,6 +103,10 @@ pub struct StanjePrikaza {
     pub oznake_slojeva: BTreeMap<IdSloja, String>,
     pub ikone_slojeva: BTreeMap<IdSloja, (String, String)>,
     pub odabrano: Option<Odabir>,
+    /// Objekti odabrani na karti, da ih ploča istakne i kad ih je više.
+    pub odabrani_na_karti: Vec<(IdSloja, IdObjekta)>,
+    /// Prozorčić s nazivom upravo nacrtanog objekta.
+    pub naziv_novog: Option<NazivNovog>,
     pub preimenovanje: Option<(Odabir, String)>,
     /// Cijeli naziv u polju preimenovanja je označen, pa ga prvi upisani znak zamjenjuje.
     pub naziv_oznacen: bool,
@@ -120,6 +146,8 @@ impl StanjePrikaza {
             oznake_slojeva: BTreeMap::new(),
             ikone_slojeva: BTreeMap::new(),
             odabrano: None,
+            odabrani_na_karti: Vec::new(),
+            naziv_novog: None,
             preimenovanje: None,
             naziv_oznacen: false,
             zatrazeno_brisanje: false,

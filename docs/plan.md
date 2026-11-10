@@ -437,8 +437,13 @@ i ponavljanjem. Sučelje i MCP šalju iste naredbe.
 Primjer se pokreće s `cargo run -p karta --example prozor`. Pravim mišem isprobano je na macOS-u, uz ocjenu
 „sve radi što je potrebno dobro”.
 
-- **Crtanje:** točka, linija i poligon. Lijevi klik dodaje točku, povlačenje je pomiče, desni klik briše, a
-  dvoklik završava. Svaka promjena ide kroz naredbe iz paketa `slojevi`, pa se može poništiti.
+- **Crtanje:** točka, linija i poligon. Lijevi klik dodaje točku, povlačenje je pomiče, Backspace briše
+  zadnju ili odabranu točku, a desni klik završava (Odluke (10. 11. 2026.), prije dvoklik). Nakon crtanja
+  prozorčić traži naziv, a alat se vraća na Odaberi. Svaka promjena ide kroz naredbe iz paketa `slojevi`,
+  pa se može poništiti.
+- **Odabir (Odluke (10. 11. 2026.)):** kao u AutoCAD-u. Klik dodaje objekt u odabir, Shift + klik ga
+  izbacuje, klik na prazno počinje okvir koji drugi klik zatvara (slijeva nadesno cijeli objekti, zdesna
+  nalijevo sve što dotakne), Esc poništava, a Delete briše sve odabrane u jednom koraku.
 - **Nastavljanje linije (Odluke (7. 11. 2026.)):** klik na krajnju točku gotove linije nastavlja je s te
   strane. Objekt se mijenja tek na završetku, a cijelo produljenje je jedan korak za poništavanje.
 - **Mjerenje:** duljina i površina idu preko paketa `geometrija`, s pločom po zaslonu D. Ništa se ne sprema

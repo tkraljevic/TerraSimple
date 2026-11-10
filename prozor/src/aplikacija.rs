@@ -8,6 +8,7 @@ use crate::dijalozi::{
 };
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::karta_prozora::{KartaProzora, StatusKarte, tekst_mjerila, zaklon};
+use crate::naziv_objekta::crtaj_prozorcic_naziva;
 use crate::novi_sloj::crtaj_prozorcic_novog_sloja;
 use crate::ploca::{
     crtaj_plocu_slojeva, obrisi_odabrano, pokreni_preimenovanje_odabranog, potvrdi_preimenovanje,
@@ -297,6 +298,14 @@ impl Aplikacija {
                 &mut self.ikone,
                 &boje,
             );
+        } else if self.stanje.naziv_novog.is_some() {
+            crtaj_prozorcic_naziva(
+                ui,
+                &mut self.uredjivac,
+                &mut self.stanje,
+                &self.katalog,
+                &boje,
+            );
         } else if self.aktivni_dijalog.is_none() {
             // Dok dijalog čeka odgovor, Delete i prečaci ne smiju mijenjati projekt ispod njega.
             self.obradi_tipkovnicu(ui);
@@ -411,8 +420,13 @@ impl Aplikacija {
         }
     }
 
+    /// Backspace s odabranom točkom briše tu točku, a to radi karta.
     fn smije_brisati_tipkom(&mut self, key: Key) -> bool {
-        let tipka_brisanja = key == Key::Delete || key == Key::Backspace;
+        let tipka_brisanja = match key {
+            Key::Delete => true,
+            Key::Backspace => !self.karta.ima_odabranu_tocku(),
+            _ => false,
+        };
         tipka_brisanja && !self.karta.u_tijeku() && !self.trazilica.fokusirana
     }
 
@@ -1031,6 +1045,10 @@ impl Aplikacija {
     }
 
     fn pokreni_brisanje(&mut self) {
+        if self.karta.broj_odabranih() > 1 {
+            let _ = self.karta.obrisi_odabrane(&mut self.uredjivac);
+            return;
+        }
         let Some(cilj) = self.stanje.odabrano else {
             return;
         };

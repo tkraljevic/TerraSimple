@@ -43,6 +43,33 @@ fn klikni(h: &mut Harness<'_, Aplikacija>, m: Pos2) {
     h.run_steps(10);
 }
 
+fn desni_klik(h: &mut Harness<'_, Aplikacija>, m: Pos2) {
+    let tipka = |pressed| Event::PointerButton {
+        pos: m,
+        button: PointerButton::Secondary,
+        pressed,
+        modifiers: Modifiers::NONE,
+    };
+    h.input_mut().events.push(Event::PointerMoved(m));
+    h.run_steps(1);
+    h.input_mut().events.push(tipka(true));
+    h.run_steps(1);
+    h.input_mut().events.push(tipka(false));
+    h.run_steps(3);
+}
+
+/// Prozorčić s nazivom novog objekta zatvara se s Esc, a naziv ostaje predloženi.
+fn preskoci_naziv(h: &mut Harness<'_, Aplikacija>) {
+    assert!(
+        h.state().stanje.naziv_novog.is_some(),
+        "prozorčić s nazivom"
+    );
+    h.run_steps(2);
+    assert!(h.query_by_label("Naziv objekta").is_some());
+    pritisni(h, Key::Escape);
+    assert!(h.state().stanje.naziv_novog.is_none());
+}
+
 fn pritisni(h: &mut Harness<'_, Aplikacija>, key: Key) {
     for pressed in [true, false] {
         h.input_mut().events.push(Event::Key {
@@ -313,6 +340,7 @@ fn ploca_mjerenja_pokazuje_duljinu_sprema_liniju_i_zatvara_se() {
     h.get_by_label("Spremi kao liniju").click();
     h.run_steps(2);
     assert_eq!(broj_objekata(h.state()), 1);
+    preskoci_naziv(&mut h);
     let (_, sloj) = h
         .state()
         .uredjivac
@@ -337,21 +365,9 @@ fn premalo_tocaka_za_lik_javlja_poruku_na_karti() {
     let mut h = prozor(app);
     let m = sredina_karte();
     klikni(&mut h, m);
-    // Dvoklik na istom mjestu završava lik, a on ima samo jednu točku.
-    let tipka = |pressed| Event::PointerButton {
-        pos: m + vec2(60.0, 0.0),
-        button: PointerButton::Primary,
-        pressed,
-        modifiers: Modifiers::NONE,
-    };
-    h.input_mut()
-        .events
-        .push(Event::PointerMoved(m + vec2(60.0, 0.0)));
-    for p in [true, false, true, false] {
-        h.input_mut().events.push(tipka(p));
-        h.run_steps(1);
-    }
-    h.run_steps(2);
+    klikni(&mut h, m + vec2(60.0, 0.0));
+    // Desni klik završava lik, a on ima samo dvije točke.
+    desni_klik(&mut h, m + vec2(60.0, 0.0));
     assert!(
         tekstovi(&h)
             .iter()
@@ -445,8 +461,12 @@ fn nova_tocka_ide_u_sloj_odabran_u_ploci() {
     let m = sredina_karte();
     for (sloj, pomak) in [(a, 0.0), (b, 90.0), (a, 180.0)] {
         h.state_mut().stanje.odabrano = Some(Odabir::Sloj(sloj));
+        // Nakon svakog objekta alat se vraća na Odaberi, pa se Točka bira ponovno.
+        h.state_mut().stanje.alat = Alat::Tocka;
         h.run_steps(2);
         klikni(&mut h, m + vec2(pomak, 0.0));
+        preskoci_naziv(&mut h);
+        assert_eq!(h.state().stanje.alat, Alat::Odaberi);
     }
     let broj = |s| {
         h.state()
@@ -653,4 +673,108 @@ fn odabrana_osmica_dobiva_upozorenje_ispod_karte() {
         .postavi_odabrani(Some((sloj, kvadrat)));
     h.run_steps(2);
     assert!(!tekstovi(&h).iter().any(|t| t == upozorenje));
+}
+
+fn poligon_desnim_klikom(h: &mut Harness<'_, Aplikacija>, m: Pos2) {
+    h.state_mut().stanje.alat = Alat::Poligon;
+    h.run_steps(2);
+    for pomak in [
+        vec2(0.0, 0.0),
+        vec2(120.0, 0.0),
+        vec2(120.0, 90.0),
+        vec2(0.0, 90.0),
+    ] {
+        klikni(h, m + pomak);
+    }
+    desni_klik(h, m + vec2(60.0, 140.0));
+    h.run_steps(2);
+}
+
+fn ponisti(h: &mut Harness<'_, Aplikacija>) {
+    for pressed in [true, false] {
+        h.input_mut().events.push(Event::Key {
+            key: Key::Z,
+            physical_key: None,
+            pressed,
+            repeat: false,
+            modifiers: Modifiers::COMMAND,
+        });
+    }
+    h.run_steps(2);
+}
+
+fn jedini_objekt(app: &Aplikacija) -> slojevi::Objekt {
+    app.uredjivac
+        .projekt()
+        .slojevi()
+        .flat_map(|(_, s)| s.objekti.values())
+        .next()
+        .expect("objekt")
+        .clone()
+}
+
+#[test]
+fn nakon_crtanja_prozorcic_trazi_naziv_a_alat_se_vraca_na_odaberi() {
+    let mut h = prozor(Aplikacija::default());
+    poligon_desnim_klikom(&mut h, sredina_karte());
+    assert_eq!(broj_objekata(h.state()), 1, "desni klik je završio lik");
+    assert_eq!(h.state().stanje.alat, Alat::Odaberi);
+    assert!(h.query_by_label("Naziv objekta").is_some());
+    let predlozeni = jedini_objekt(h.state()).naziv;
+
+    // Predloženi naziv je sav označen, pa ga upisani tekst zamijeni.
+    h.input_mut().events.push(Event::Text("Parcela 9".into()));
+    h.run_steps(1);
+    pritisni(&mut h, Key::Enter);
+    assert!(h.state().stanje.naziv_novog.is_none());
+    assert_eq!(jedini_objekt(h.state()).naziv, "Parcela 9");
+
+    ponisti(&mut h);
+    assert_eq!(jedini_objekt(h.state()).naziv, predlozeni);
+    assert_eq!(broj_objekata(h.state()), 1, "poništen je samo naziv");
+}
+
+#[test]
+fn okvir_odabire_dva_objekta_a_delete_ih_brise_odjednom() {
+    let mut h = prozor(Aplikacija::default());
+    let m = sredina_karte();
+    for pomak in [0.0, 90.0] {
+        h.state_mut().stanje.alat = Alat::Tocka;
+        h.run_steps(2);
+        klikni(&mut h, m + vec2(pomak, 0.0));
+        preskoci_naziv(&mut h);
+    }
+    pritisni(&mut h, Key::Escape);
+    assert!(h.state().stanje.odabrani_na_karti.is_empty());
+
+    klikni(&mut h, m + vec2(-30.0, -30.0));
+    klikni(&mut h, m + vec2(150.0, 30.0));
+    assert_eq!(h.state().stanje.odabrani_na_karti.len(), 2);
+    assert_eq!(h.state().stanje.odabrano, None);
+
+    pritisni(&mut h, Key::Delete);
+    assert_eq!(broj_objekata(h.state()), 0);
+    ponisti(&mut h);
+    assert_eq!(broj_objekata(h.state()), 2, "brisanje je jedan korak");
+}
+
+#[test]
+fn backspace_brise_odabranu_tocku_lika_a_ne_cijeli_lik() {
+    let mut h = prozor(Aplikacija::default());
+    let m = sredina_karte();
+    poligon_desnim_klikom(&mut h, m);
+    preskoci_naziv(&mut h);
+    klikni(&mut h, m + vec2(120.0, 0.0));
+    pritisni(&mut h, Key::Backspace);
+    assert_eq!(broj_objekata(h.state()), 1);
+    let Geometrija::Poligon(p) = jedini_objekt(h.state()).geometrija else {
+        panic!("poligon");
+    };
+    assert_eq!(p[0].len(), 3);
+    pritisni(&mut h, Key::Backspace);
+    assert_eq!(
+        broj_objekata(h.state()),
+        0,
+        "bez odabrane točke briše se lik"
+    );
 }

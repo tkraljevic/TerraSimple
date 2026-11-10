@@ -607,7 +607,7 @@ fn crtaj_stablo_u_ploci(
             oznaka_formata: redak.oznaka_formata.as_deref(),
             zakljucano: redak.zakljucano,
             ukljuceno: Some(redak.ukljuceno),
-            odabrano: stanje.odabrano == Some(redak.odabir),
+            odabrano: je_odabran_redak(stanje, redak.odabir),
             labela_strelice: &labela_strelice,
             labela_vidljivosti: &labela_vidljivosti,
             uredjivanje: uredjivanje_retka(stanje, redak.odabir),
@@ -620,6 +620,12 @@ fn crtaj_stablo_u_ploci(
         obradi_premjestanje_retka(uredjivac, stanje, katalog, redak.odabir, odg);
     }
     obradi_ispustanje(ui, uredjivac, stanje, vidljivi, podrucje, boje);
+}
+
+/// Redak je odabran u ploči ili je njegov objekt jedan od više odabranih na karti.
+fn je_odabran_redak(stanje: &StanjePrikaza, odabir: Odabir) -> bool {
+    stanje.odabrano == Some(odabir)
+        || matches!(odabir, Odabir::Objekt(s, o) if stanje.odabrani_na_karti.contains(&(s, o)))
 }
 
 fn stavke_podizbornika(

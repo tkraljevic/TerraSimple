@@ -20,10 +20,10 @@ nastavi dalje ako može.
 ## 2. Crtanje
 
 1. Novi sloj „Točke” za točke. Nacrtaj tri točke. Pojavljuju se u ploči kao „Točka 1”, „Točka 2”, „Točka 3”.
-2. Novi sloj „Linije” za linije. Nacrtaj liniju od pet točaka i završi dvoklikom.
+2. Novi sloj „Linije” za linije. Nacrtaj liniju od pet točaka i završi desnim klikom.
 3. Klikni kraj linije i dodaj još dvije točke. Poništi jednom: nestanu obje nove točke odjednom.
-4. Novi sloj „Poligoni” za poligone. Nacrtaj poligon, pomakni mu jednu točku povlačenjem i obriši drugu
-   desnim klikom.
+4. Novi sloj „Poligoni” za poligone. Nacrtaj poligon, pomakni mu jednu točku povlačenjem, a drugu klikni
+   i obriši tipkom Backspace.
 5. Dok je u ploči odabran sloj „Linije”, nacrtaj točku. Točka ide u sloj „Točke”, a ispod karte piše zašto.
 6. Poništi i ponovi nekoliko puta (⌘Z i ⌘Y na Macu, Ctrl+Z i Ctrl+Y drugdje). Crtež se vraća točno.
 7. Napravi mapu, preimenuj je i isključi joj vidljivost. Slojevi u njoj nestaju s karte i vraćaju se.

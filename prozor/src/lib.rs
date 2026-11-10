@@ -9,6 +9,7 @@ mod datoteka_testovi;
 pub mod dijalozi;
 pub mod ikone;
 pub mod karta_prozora;
+pub mod naziv_objekta;
 pub mod novi_sloj;
 pub mod ploca;
 pub mod poruke;
