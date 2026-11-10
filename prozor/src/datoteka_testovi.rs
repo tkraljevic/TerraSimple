@@ -890,7 +890,8 @@ fn pomoc_otvara_o_programu() {
         cekaj_smirenje(&mut h, Duration::from_millis(500));
         assert_eq!(h.state().aktivni_dijalog, Some(AktivniDijalog::OProgramu));
         let t = nacrtani_tekstovi(&h);
-        assert!(t.iter().any(|t| t == "TerraSimple 0.0.1 alfa"), "{t:?}");
+        let naslov = format!("TerraSimple {} alfa", env!("CARGO_PKG_VERSION"));
+        assert!(t.contains(&naslov), "{t:?}");
         for redak in crate::dijalozi::retci_o_programu(&k) {
             assert!(t.contains(&redak), "nema retka {redak:?} u {t:?}");
         }

@@ -11,6 +11,7 @@ const IKONA: &[u8] = include_bytes!("../../resursi/ikone/terrasimple-64.png");
 
 pub fn pokreni(argumenti: Vec<String>) -> Result<(), String> {
     let (provjera, kvar) = zastavice(&argumenti);
+    crate::javljanje::ugradi(provjera);
     zastita_od_zastoja(provjera);
     let stanje = Arc::new(AtomicU8::new(0));
     prikazi(
@@ -18,8 +19,12 @@ pub fn pokreni(argumenti: Vec<String>) -> Result<(), String> {
         provjera,
         kvar,
         stanje.clone(),
-    )?;
-    provjeri_ishod(provjera, stanje.load(Ordering::SeqCst))
+    )
+    .and_then(|()| provjeri_ishod(provjera, stanje.load(Ordering::SeqCst)))
+    .inspect_err(|e| {
+        let tekst = crate::javljanje::zapisi(e, &crate::javljanje::datoteka_greske());
+        crate::javljanje::prikazi(&tekst, provjera);
+    })
 }
 
 fn zastavice(argumenti: &[String]) -> (bool, bool) {

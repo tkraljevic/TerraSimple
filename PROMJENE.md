@@ -1,6 +1,15 @@
 # Popis promjena
 
-## 0.0.1 alfa (u pripremi)
+## 0.0.2 alfa (probno, 10. 11. 2026.)
+
+- Program se na Windowsu nije pokretao: tražio je slike ikona na disku, po stazi s računala na kojem je
+  izgrađen. Slike su sad ugrađene u program, pa mu ne treba ništa osim njega samoga.
+- Kad se program ne može pokrenuti, sad to kaže u prozorčiću i opis greške zapiše u
+  `TerraSimple-greska.txt` u privremenoj mapi. Prije se na Windowsu samo ništa nije dogodilo.
+- Paketi se na stroju za izgradnju sad provjeravaju bez izvornog koda pri ruci, pa bi se ovakva greška
+  vidjela prije izdanja.
+
+## 0.0.1 alfa (probno, 10. 11. 2026.)
 
 Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
 

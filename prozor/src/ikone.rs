@@ -3,11 +3,31 @@ use eframe::egui::{
 };
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
 
 const MANIFEST_JSON: &str = include_str!("../../resursi/ikone/sucelje/efekti/manifest.json");
 const ZNAK_32_PNG: &[u8] = include_bytes!("../../resursi/ikone/terrasimple-32.png");
 const ZNAK_64_PNG: &[u8] = include_bytes!("../../resursi/ikone/terrasimple-64.png");
+
+// Slike ikona ugrađene su u program, jer staza s računala na kojem je program izgrađen na drugom
+// računalu ne postoji. Datoteke slaže `skripte/ugradi_ikone.py`.
+const SLIKE_IKONA: &[u8] = include_bytes!("../../resursi/ikone/sucelje/efekti/ugradjene.bin");
+const POPIS_IKONA: &str = include_str!("../../resursi/ikone/sucelje/efekti/ugradjene.txt");
+
+/// Slika iz popisa s recima `staza početak duljina`.
+fn trazi_sliku<'a>(popis: &str, slike: &'a [u8], staza: &str) -> Option<&'a [u8]> {
+    popis.lines().find_map(|redak| {
+        let mut dijelovi = redak.split(' ');
+        (dijelovi.next() == Some(staza)).then_some(())?;
+        let pocetak: usize = dijelovi.next()?.parse().ok()?;
+        let duljina: usize = dijelovi.next()?.parse().ok()?;
+        slike.get(pocetak..pocetak.checked_add(duljina)?)
+    })
+}
+
+/// Ugrađena slika po stazi iz popisa ikona, npr. `velicine/svijetla/obicno/18/ponisti@1x.png`.
+fn ugradjena_slika(staza: &str) -> Option<&'static [u8]> {
+    trazi_sliku(POPIS_IKONA, SLIKE_IKONA, staza)
+}
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct ProfilVelicine {
@@ -81,7 +101,6 @@ struct KljucTeksture {
 
 pub struct SkladisteIkona {
     manifest: ManifestIkona,
-    korijen: PathBuf,
     teksture: BTreeMap<KljucTeksture, TextureHandle>,
     znak_1x: Option<TextureHandle>,
     znak_2x: Option<TextureHandle>,
@@ -98,10 +117,8 @@ impl SkladisteIkona {
     pub fn novo() -> Self {
         let manifest: ManifestIkona =
             serde_json::from_str(MANIFEST_JSON).expect("neispravan manifest.json ikona");
-        let korijen = Path::new(env!("CARGO_MANIFEST_DIR")).join("../resursi/ikone/sucelje/efekti");
         Self {
             manifest,
-            korijen,
             teksture: BTreeMap::new(),
             znak_1x: None,
             znak_2x: None,
@@ -147,10 +164,12 @@ impl SkladisteIkona {
             SkalaIkone::JedanX => &izvoz.png_1x,
             SkalaIkone::DvaX => &izvoz.png_2x,
         };
-        let putanja = self.korijen.join(relativno);
-        let bajtovi = std::fs::read(&putanja)
-            .unwrap_or_else(|e| panic!("nije moguće pročitati ikonu {}: {e}", putanja.display()));
-        dekodiraj_png(&bajtovi)
+        // Popis i slike dolaze iz iste mape, pa slika ne može nedostajati; test to provjerava za
+        // svaku ikonu. Da ipak nedostaje, gumb ostaje bez slike, a program radi dalje.
+        ugradjena_slika(relativno).map_or_else(
+            || ColorImage::filled([1, 1], Color32::TRANSPARENT),
+            dekodiraj_png,
+        )
     }
 
     pub fn crtaj(
@@ -254,6 +273,49 @@ pub fn dekodiraj_png(bajtovi: &[u8]) -> ColorImage {
 #[cfg(test)]
 mod testovi {
     use super::*;
+
+    /// Svaka slika iz popisa ugrađena je u program, jednaka izvornoj i dekodira se. Pada i kad je
+    /// ugrađeni paket zastario: tada treba pokrenuti `skripte/ugradi_ikone.py`.
+    #[test]
+    fn sve_ikone_iz_popisa_su_ugradjene() {
+        let s = SkladisteIkona::novo();
+        let korijen = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../resursi/ikone/sucelje/efekti");
+        assert_eq!(POPIS_IKONA.lines().count(), 1440);
+        for izvoz in &s.manifest().izvozi {
+            for (staza, skala) in [
+                (&izvoz.png_1x, SkalaIkone::JedanX),
+                (&izvoz.png_2x, SkalaIkone::DvaX),
+            ] {
+                let izvorna = std::fs::read(korijen.join(staza)).unwrap();
+                assert_eq!(
+                    ugradjena_slika(staza),
+                    Some(&izvorna[..]),
+                    "zastarjelo: {staza}"
+                );
+                let slika = s.ucitaj_sliku(izvoz, skala);
+                assert!(slika.size[0] > 1 && slika.size[1] > 1, "{staza}");
+            }
+        }
+        assert_eq!(ugradjena_slika("velicine/nema.png"), None);
+        let mut nepostojeca = s.manifest().izvozi[0].clone();
+        nepostojeca.png_1x = "velicine/nema.png".into();
+        assert_eq!(
+            s.ucitaj_sliku(&nepostojeca, SkalaIkone::JedanX).size,
+            [1, 1]
+        );
+    }
+
+    #[test]
+    fn trazenje_slike_u_popisu() {
+        let slike = b"abcdefgh";
+        let popis = "a.png 0 3\nb.png 3 5\nkriva 1\nslovo x 1\nbroj 1 y\nvan 6 9\npreljev 1 18446744073709551615";
+        assert_eq!(trazi_sliku(popis, slike, "a.png"), Some(&b"abc"[..]));
+        assert_eq!(trazi_sliku(popis, slike, "b.png"), Some(&b"defgh"[..]));
+        for nema in ["c.png", "kriva", "slovo", "broj", "van", "preljev", ""] {
+            assert_eq!(trazi_sliku(popis, slike, nema), None, "{nema}");
+        }
+    }
 
     #[test]
     fn manifest_ima_sve_profile_i_platno_jednako_crtezu_plus_dva_ruba() {
