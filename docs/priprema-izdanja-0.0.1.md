@@ -1,8 +1,5 @@
 # Priprema izdanja 0.0.1 alfa
 
-Radna grana: `paket/izdanje`. Bez commita, pusha i oznake. Glavna radna mapa,
-`aplikacija.rs`, zabranjeni paketi i referenca kvalitete nisu mijenjani.
-
 ## Što je pripremljeno
 
 - `.github/workflows/izdanje.yml`: ručno pokretanje ili oznaka `v*`; macOS

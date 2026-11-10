@@ -146,7 +146,7 @@ pub struct Objekt {
     pub stil: StilObjekta,
 }
 
-/// Odakle sloj dolazi i smije li se mijenjati (docs/gocop-plugin.md).
+/// Odakle sloj dolazi i smije li se mijenjati.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StanjeSloja {
     Uredivo,

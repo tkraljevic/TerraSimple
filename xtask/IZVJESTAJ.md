@@ -8,9 +8,9 @@ CRAP 9,014. Formatiranje, Clippy, testovi, mjerenje i provjera ovisnosti završi
 su uspješno. Cijela `provjera` ipak vraća **1**: početna referenca još nije
 potvrđena. To nije prikazano kao prolaz.
 
-`quality/baseline.json` namjerno sadrži prazan popis mjerenja. Zadatak traži
-da čovjek namjerno pokrene posebnu naredbu za referencu. Nakon pregleda
-[izmjerenih podataka](dokazi/xtask.json), početna referenca potvrđuje se ovako:
+`quality/baseline.json` namjerno sadrži prazan popis mjerenja. Referencu
+čovjek namjerno zapisuje posebnom naredbom. Nakon pregleda
+izmjerenih podataka, početna referenca potvrđuje se ovako:
 
 ```text
 cargo xtask zapamti
@@ -110,7 +110,7 @@ pub async fn novi() {
 
 Ali `rust-code-analysis-cli -p async.rs -f ERROR` ispisao je `ERROR` na
 `async` ispred zatvaranja, uz izlazni kod **0**. Zato njegova uspješna naredba
-ne dokazuje da je mjerenje valjano. Prema dopuštenju iz zadatka koristi se
+ne dokazuje da je mjerenje valjano. Zato se koristi
 `syn` i vlastiti mali brojač, uz testove novije sintakse.
 
 Početna složenost je 1. `if`, `for`, `while`, `loop`, `?`, `&&`, `||`,
@@ -143,9 +143,9 @@ nad ovisnostima, a ne dokaz iskorištivosti baš u ovoj probi.
 Probe nisu popravljane. Njihova pokrivenost također ne zadovoljava ciljeve;
 brojke nisu proglašene dovoljnima zato što postojeći testovi prolaze.
 
-Cijeli izlazi i mjerenja su u [dokazi/](dokazi/):
-[koordinate](dokazi/koordinate.log), [GeoPackage](dokazi/geopaket.log),
-[xtask](dokazi/xtask.log) i [18 testova xtask-a](dokazi/xtask-testovi.log).
+Cijeli izlazi i mjerenja čuvaju se lokalno u `xtask/dokazi/`, izvan repozitorija, jer sadrže
+lokalne staze: koordinate, GeoPackage,
+xtask i 18 testova xtask-a.
 Testovi same naredbe koriste i probni izvršivi alat za provjeru obrade padova;
 sljedeći pokusi zasebno koriste stvarne Cargo alate.
 
@@ -183,11 +183,11 @@ Iznimka rizik:primjer istekla je 2000-01-01.
 ```
 
 Puni dijagnostički retci za složenost, pad pokrivenosti i istek iznimke nalaze
-se u pripadajućim zapisima. Poveznice na svih šest izlaza:
-[test](dokazi/pokvaren-test.log), [Clippy](dokazi/clippy.log),
-[složenost](dokazi/slozena-funkcija.log),
-[pokrivenost](dokazi/pad-pokrivenosti.log),
-[istek](dokazi/istekla-iznimka.log), [nedostajući alat](dokazi/nedostaje-alat.log).
+se u pripadajućim lokalnim zapisima:
+test, Clippy,
+složenost,
+pokrivenost,
+istek, nedostajući alat.
 
 Odvojena mala kontrolna proba s jednom funkcijom i testom obiju grana,
 bez ovisnosti, nakon izričitog `zapamti` prošla je **iste stvarne alate**,
@@ -197,9 +197,9 @@ uz izlazni kod **0**:
 Redovna provjera je prošla. Duboka provjera nije izvršena.
 ```
 
-Time je provjeren i prolaz, a ne samo odbijanje. Sačuvani su
-[kontrolni prolaz](dokazi/kontrola-prolazi.log) i
-[pad duboke provjere](dokazi/duboka.log).
+Time je provjeren i prolaz, a ne samo odbijanje. Lokalno su sačuvani
+kontrolni prolaz i
+pad duboke provjere.
 
 ## Okruženje i ograničenja
 
@@ -214,14 +214,6 @@ duplikacija, svi oblici Rust sintakse, prekid procesa usred zapisivanja
 reference ni istodobna dva poziva `zapamti`. Naredba čeka završetak vanjskih
 alata; ne uvodi vlastiti rok za test koji se zaglavi.
 
-Nisu mijenjani `docs/plan.md`, `docs/kvaliteta.md`, ostali postojeći dokumenti,
-`dizajn/` ni goCOP. U ovom zadatku nije pokretan `git init`, nisu mijenjane
-grane i nisu rađeni commitovi ili CI promjene. Pri završnom pregledu postoji
-Git repozitorij i druge izmjene u `probe/kml/`; ostavljene su netaknute.
-SHA-256 sažeci obiju izvornih proba ostali su isti prije i nakon završnih
-provjera; popis je u [sazeci-proba.json](dokazi/sazeci-proba.json).
-Privremene radne kopije ostaju u `/tmp/terrasimple-pokus-kvalitete` i
-`/tmp/terrasimple-sintaksa` radi pregleda pokusa.
 
 ## Što predlažem dopisati u docs/kvaliteta.md
 
