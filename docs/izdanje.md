@@ -62,7 +62,8 @@ fonta Inter, ISC ikona, automatski popis licenci biblioteka i izvore karte.
 
 Odluke (10. 11. 2026.): probna izdanja idu s grane `proba`. Gotov posao spaja se najprije u `proba`, a
 oznaka probnog izdanja, npr. `v0.0.1`, stavlja se na nju. Kad probno izdanje prođe na pravim
-računalima, `proba` se spaja u `master`. Tako `master` ima samo isprobano.
+računalima, `proba` se spaja u `master`. Tako `master` ima samo isprobano. Proba na pravim računalima ide korak
+po korak po [proba-izdanja.md](proba-izdanja.md).
 
 Tijek `.github/workflows/izdanje.yml` gradi tri sustava na oznaku `v*` ili ručno.
 Inačicu uzima iz `prozor/Cargo.toml`. Ručno pokretanje sprema samo artefakte;
