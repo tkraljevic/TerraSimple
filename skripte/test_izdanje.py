@@ -23,6 +23,19 @@ class Provjere(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Isteklo vrijeme"):
             izdanje.izvedi([sys.executable, "-c", "import time; time.sleep(60)"], 0.1)
 
+    def test_provjera_ide_bez_izvornih_resursa(self):
+        with tempfile.TemporaryDirectory(dir=izdanje.KORIJEN / ".quality") as d:
+            korijen = Path(d)
+            (korijen / "resursi").mkdir()
+            (korijen / "resursi" / "ikona.png").write_bytes(b"x")
+            with izdanje.bez_izvora(korijen):
+                self.assertFalse((korijen / "resursi").exists())
+            self.assertTrue((korijen / "resursi" / "ikona.png").is_file())
+            with self.assertRaises(RuntimeError):
+                with izdanje.bez_izvora(korijen):
+                    raise RuntimeError("pad provjere")
+            self.assertTrue((korijen / "resursi").is_dir(), "vraća se i kad provjera padne")
+
     def test_arhive_cuvaju_program_ikonu_i_dozvole(self):
         with tempfile.TemporaryDirectory(dir=izdanje.KORIJEN / ".quality") as d:
             korijen=Path(d)

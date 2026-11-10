@@ -1,6 +1,24 @@
 # Popis promjena
 
-## 0.0.1 alfa (u pripremi)
+## 0.0.3 alfa (probno, 10. 11. 2026.)
+
+- Pri zatvaranju programa „Ne spremaj” nije zatvaralo prozor, nego je pitanje stalno dolazilo ponovno, pa se
+  izaći moglo samo spremanjem. Sad se prozor zatvori, a izmjene se ne spreme.
+- Desni klik na mapu, sloj ili objekt u ploči Slojevi otvara izbornik s „Preimenuj” i „Obriši”. Preimenovati se
+  moglo i prije, ali samo dvoklikom ili tipkom F2, pa se to teško nalazilo.
+- Naziv koji mijenjaš sad je u polju i sav je označen, pa ga upisivanje zamijeni. Strelica skida oznaku i
+  upisano ide na kraj. Enter sprema novi naziv, a Esc ga odbacuje.
+
+## 0.0.2 alfa (probno, 10. 11. 2026.)
+
+- Program se na Windowsu nije pokretao: tražio je slike ikona na disku, po stazi s računala na kojem je
+  izgrađen. Slike su sad ugrađene u program, pa mu ne treba ništa osim njega samoga.
+- Kad se program ne može pokrenuti, sad to kaže u prozorčiću i opis greške zapiše u
+  `TerraSimple-greska.txt` u privremenoj mapi. Prije se na Windowsu samo ništa nije dogodilo.
+- Paketi se na stroju za izgradnju sad provjeravaju bez izvornog koda pri ruci, pa bi se ovakva greška
+  vidjela prije izdanja.
+
+## 0.0.1 alfa (probno, 10. 11. 2026.)
 
 Prvo izdanje. Program je još u ranoj fazi, pa podatke čuvaj i drugdje.
 
