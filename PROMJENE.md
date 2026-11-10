@@ -1,5 +1,12 @@
 # Popis promjena
 
+## 0.0.4 alfa (probno, 10. 11. 2026.)
+
+- Mapa ili sloj premješta se u drugu mapu desnim klikom i stavkom „Premjesti u”, koja nudi sve mape i
+  „Izvan mapa”. Mapa ne nudi samu sebe ni svoje podmape.
+- Isto se može povlačenjem mišem: ispušteno na mapu ide na kraj te mape, a ispušteno na sloj ide ispred
+  njega. Premještanje se poništava kao i svaka druga izmjena.
+
 ## 0.0.3 alfa (probno, 10. 11. 2026.)
 
 - Pri zatvaranju programa „Ne spremaj” nije zatvaralo prozor, nego je pitanje stalno dolazilo ponovno, pa se

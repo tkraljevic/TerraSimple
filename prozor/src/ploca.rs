@@ -1,13 +1,19 @@
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::poruke::{KatalogPoruka, mjera_duljine, mjera_povrsine};
+use crate::premjestanje::{
+    naziv_stavke, odredista_premjestanja, odrediste_ispustanja, premjesti_stavku, stavka_odabira,
+};
 use crate::primjer::ukupno_slojeva_u_mapi;
 use crate::sastavnice::{
-    OpisGumbaIkone, OpisRetkaStabla, cip, gumb_ikona, gumb_obrub, redak_stabla, tekst_lijevo,
-    zaobljeni_okvir,
+    OpisGumbaIkone, OpisRetkaStabla, PodizbornikRetka, StavkaPodizbornika, cip, gumb_ikona,
+    gumb_obrub, redak_stabla, tekst_lijevo, zaobljeni_okvir,
 };
 use crate::stanje::{NoviSloj, Odabir, StanjePrikaza};
-use crate::tema::{Boje, Razmaci, font_srednji};
-use eframe::egui::{self, Pos2, Rect, Role, Sense, WidgetInfo, pos2, vec2};
+use crate::tema::{Boje, Razmaci, font_obicni, font_srednji};
+use eframe::egui::{
+    self, CursorIcon, Id, LayerId, Order, Pos2, Rect, Role, Sense, Stroke, StrokeKind, WidgetInfo,
+    pos2, vec2,
+};
 use slojevi::{
     IdMape, IdSloja, IzmjenaObjekta, Mjere, NaredbaObjekta, NaredbaStabla, Novo, Objekt, Projekt,
     Sloj, StanjeSloja, Stavka, Uredjivac, VrstaGeometrije,
@@ -570,12 +576,22 @@ fn crtaj_stablo_u_ploci(
     let preimenuj = katalog.tekst("gumb-preimenuj");
     let obrisi = katalog.tekst("gumb-obrisi");
     let stavke_izbornika = [preimenuj.as_str(), obrisi.as_str()];
+    let premjesti_u = katalog.tekst("izbornik-premjesti-u");
     let tamna = stanje.tema_tamna;
     let visina_retka = crate::tema::Razmaci::VISINA_RETKA_STABLA;
     let maks_redaka = ((podrucje.height() / visina_retka).floor() as usize).max(1);
 
-    for (indeks, redak) in redci.iter().take(maks_redaka).enumerate() {
+    let vidljivi = &redci[..redci.len().min(maks_redaka)];
+    for (indeks, redak) in vidljivi.iter().enumerate() {
         let y = podrucje.min.y + indeks as f32 * visina_retka;
+        let stavka = stavka_odabira(redak.odabir);
+        let projekt = uredjivac.projekt();
+        let odredista = || stavke_podizbornika(projekt, stavka, katalog);
+        let podizbornik = stavka.map(|_| PodizbornikRetka {
+            naslov: &premjesti_u,
+            iza_stavke: STAVKA_PREIMENUJ,
+            stavke: &odredista,
+        });
         let okvir = Rect::from_min_size(
             pos2(podrucje.min.x, y),
             vec2(podrucje.width(), visina_retka - 2.0),
@@ -599,10 +615,138 @@ fn crtaj_stablo_u_ploci(
             labela_vidljivosti: &labela_vidljivosti,
             uredjivanje: uredjivanje_retka(stanje, redak.odabir),
             stavke_izbornika: &stavke_izbornika,
+            podizbornik,
+            povlacenje: stavka.is_some() && stanje.preimenovanje.is_none(),
         };
         let odg = redak_stabla(ui, ikone, &opis, tamna, boje);
         obradi_odgovor_retka(uredjivac.projekt(), stanje, redak.odabir, odg);
+        obradi_premjestanje_retka(uredjivac, stanje, katalog, redak.odabir, odg);
     }
+    obradi_ispustanje(ui, uredjivac, stanje, vidljivi, podrucje, boje);
+}
+
+fn stavke_podizbornika(
+    projekt: &Projekt,
+    stavka: Option<Stavka>,
+    katalog: &KatalogPoruka,
+) -> Vec<StavkaPodizbornika> {
+    let Some(stavka) = stavka else {
+        return Vec::new();
+    };
+    odredista_premjestanja(projekt, stavka, katalog)
+        .into_iter()
+        .map(|o| StavkaPodizbornika {
+            naziv: o.naziv,
+            uvlaka: o.uvlaka,
+            omogucena: !o.trenutna,
+        })
+        .collect()
+}
+
+/// Početak povlačenja retka i odabir mape u podizborniku „Premjesti u”.
+fn obradi_premjestanje_retka(
+    uredjivac: &mut Uredjivac,
+    stanje: &mut StanjePrikaza,
+    katalog: &KatalogPoruka,
+    odabir: Odabir,
+    odgovor: crate::sastavnice::OdgovorRetkaStabla,
+) {
+    let Some(stavka) = stavka_odabira(odabir) else {
+        return;
+    };
+    if odgovor.povlacenje_pocelo {
+        stanje.povuceno = Some(stavka);
+    }
+    let Some(redni) = odgovor.stavka_podizbornika else {
+        return;
+    };
+    let odrediste = odredista_premjestanja(uredjivac.projekt(), stavka, katalog)
+        .into_iter()
+        .nth(redni)
+        .filter(|o| !o.trenutna);
+    if let Some(o) = odrediste {
+        let _ = premjesti_stavku(uredjivac, stanje, stavka, o.mapa, usize::MAX);
+    }
+}
+
+/// Dok se redak povlači, označava kamo bi otišao i ispisuje njegov naziv uz miš. Kad korisnik
+/// pusti tipku, stavka se premješta, a izvan stabla ili na nedopušteno mjesto ostaje gdje je bila.
+fn obradi_ispustanje(
+    ui: &egui::Ui,
+    uredjivac: &mut Uredjivac,
+    stanje: &mut StanjePrikaza,
+    redci: &[RedakZaPrikaz],
+    podrucje: Rect,
+    boje: &Boje,
+) {
+    let Some(povuceno) = stanje.povuceno else {
+        return;
+    };
+    let (pokazivac, pusteno) = ui.input(|i| (i.pointer.interact_pos(), !i.pointer.primary_down()));
+    let cilj = pokazivac.and_then(|p| redak_pod_pokazivacem(redci, podrucje, p));
+    let odrediste = cilj.and_then(|(indeks, odabir)| {
+        odrediste_ispustanja(uredjivac.projekt(), povuceno, odabir).map(|o| (indeks, odabir, o))
+    });
+    if pusteno {
+        stanje.povuceno = None;
+        if let Some((_, _, (u, polozaj))) = odrediste {
+            let _ = premjesti_stavku(uredjivac, stanje, povuceno, u, polozaj);
+        }
+        return;
+    }
+    ui.ctx().set_cursor_icon(CursorIcon::Grabbing);
+    if let Some((indeks, odabir, _)) = odrediste {
+        crtaj_cilj_ispustanja(ui, podrucje, indeks, odabir, boje);
+    }
+    if let (Some(p), Some(naziv)) = (pokazivac, naziv_stavke(uredjivac.projekt(), povuceno)) {
+        crtaj_natpis_povlacenja(ui, p, naziv, boje);
+    }
+}
+
+fn redak_pod_pokazivacem(
+    redci: &[RedakZaPrikaz],
+    podrucje: Rect,
+    pokazivac: Pos2,
+) -> Option<(usize, Odabir)> {
+    if !podrucje.contains(pokazivac) {
+        return None;
+    }
+    let indeks = ((pokazivac.y - podrucje.min.y) / Razmaci::VISINA_RETKA_STABLA).floor() as usize;
+    redci.get(indeks).map(|r| (indeks, r.odabir))
+}
+
+/// Mapa dobije okvir, jer stavka ide u nju, a iznad sloja se crta crta, jer stavka ide ispred njega.
+fn crtaj_cilj_ispustanja(ui: &egui::Ui, podrucje: Rect, indeks: usize, cilj: Odabir, boje: &Boje) {
+    let y = podrucje.min.y + indeks as f32 * Razmaci::VISINA_RETKA_STABLA;
+    let okvir = Rect::from_min_size(
+        pos2(podrucje.min.x, y),
+        vec2(podrucje.width(), Razmaci::VISINA_RETKA_STABLA - 2.0),
+    );
+    let potez = Stroke::new(2.0, boje.primarna);
+    if matches!(cilj, Odabir::Mapa(_)) {
+        ui.painter()
+            .rect_stroke(okvir, Razmaci::ZAOBLJENJE_RETKA, potez, StrokeKind::Inside);
+    } else {
+        ui.painter().line_segment(
+            [
+                pos2(okvir.min.x + 4.0, y - 1.0),
+                pos2(okvir.max.x - 4.0, y - 1.0),
+            ],
+            potez,
+        );
+    }
+}
+
+fn crtaj_natpis_povlacenja(ui: &egui::Ui, pokazivac: Pos2, naziv: &str, boje: &Boje) {
+    let slikar = ui
+        .ctx()
+        .layer_painter(LayerId::new(Order::Tooltip, Id::unique("povlacenje_retka")));
+    let tocka = pokazivac + vec2(14.0, 6.0);
+    let natpis = slikar.layout_no_wrap(naziv.to_owned(), font_obicni(13.0), boje.tekst);
+    let okvir = Rect::from_min_size(tocka, natpis.size()).expand(4.0);
+    slikar.rect_filled(okvir, 4.0, boje.ploca);
+    slikar.rect_stroke(okvir, 4.0, Stroke::new(1.0, boje.obrub), StrokeKind::Inside);
+    slikar.galley(tocka, natpis, boje.tekst);
 }
 
 fn obradi_odgovor_retka(

@@ -51,6 +51,8 @@ gumb-uvezi-sloj = Uvezi sloj
 gumb-nova-mapa = Mapa
 gumb-preimenuj = Preimenuj
 gumb-obrisi = Obriši
+izbornik-premjesti-u = Premjesti u
+premjesti-izvan-mapa = Izvan mapa
 
 podloga-naslov = Podloga
 podloga-karta = Karta

@@ -1380,6 +1380,94 @@ mod testovi {
         assert!(harness.state().uredjivac.je_li_izmijenjen());
     }
 
+    /// Mapa na vrhu stabla.
+    fn mapa_po_nazivu(app: &Aplikacija, naziv: &str) -> slojevi::IdMape {
+        let projekt = app.uredjivac.projekt();
+        projekt
+            .korijen()
+            .iter()
+            .find_map(|s| match *s {
+                Stavka::Mapa(id) if projekt.mapa(id).is_some_and(|m| m.naziv == naziv) => Some(id),
+                _ => None,
+            })
+            .expect("mapa")
+    }
+
+    fn mapa_sloja(app: &Aplikacija, naziv: &str) -> Option<slojevi::IdMape> {
+        app.uredjivac
+            .projekt()
+            .slojevi()
+            .find(|(_, s)| s.naziv == naziv)
+            .and_then(|(_, s)| s.roditelj)
+    }
+
+    #[test]
+    fn desni_klik_premjesta_sloj_u_drugu_mapu() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+        let uvezeno = mapa_po_nazivu(harness.state(), "Uvezeno");
+
+        izbornik_retka(&mut harness, "Trase", "Premjesti u");
+        // „Uvezeno” je i redak u stablu, pa se uzima onaj u stupcu podizbornika, uz „Izvan mapa”.
+        let stupac = harness.get_by_label("Izvan mapa").rect().min.x;
+        harness
+            .get_all_by_label("Uvezeno")
+            .find(|n| (n.rect().min.x - stupac).abs() < 1.0)
+            .expect("Uvezeno u podizborniku")
+            .click();
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+
+        assert_eq!(mapa_sloja(harness.state(), "Trase"), Some(uvezeno));
+        assert!(harness.query_by_label("Izvan mapa").is_none());
+        assert!(harness.state().uredjivac.je_li_izmijenjen());
+    }
+
+    #[test]
+    fn povlacenje_premjesta_sloj_a_mapu_ne_pusta_u_vlastitu_podmapu() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+        let uvezeno = mapa_po_nazivu(harness.state(), "Uvezeno");
+        let teren = mapa_po_nazivu(harness.state(), "Teren 2026");
+
+        let pocetak = harness.get_by_label("Točke").rect().center();
+        let cilj = harness.get_by_label("Uvezeno").rect().center();
+        harness.drag_at(pocetak);
+        harness.hover_at(pocetak + vec2(0.0, 20.0));
+        harness.hover_at(cilj);
+        harness.run();
+        assert!(harness.state().stanje.povuceno.is_some());
+        harness.drop_at(cilj);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert_eq!(mapa_sloja(harness.state(), "Točke"), Some(uvezeno));
+        assert!(harness.state().stanje.povuceno.is_none());
+
+        // Teren 2026 ispušten na svoj sloj Parcele ostaje gdje je bio.
+        let pocetak = harness.get_by_label("Teren 2026").rect().center();
+        let cilj = harness.get_by_label("Parcele").rect().center();
+        harness.drag_at(pocetak);
+        harness.hover_at(pocetak + vec2(0.0, 20.0));
+        harness.hover_at(cilj);
+        harness.drop_at(cilj);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let projekt = harness.state().uredjivac.projekt();
+        assert_eq!(projekt.mapa(teren).and_then(|m| m.roditelj), None);
+        assert_eq!(mapa_sloja(harness.state(), "Parcele"), Some(teren));
+    }
+
     #[test]
     fn sucelje_podrzava_dodavanje_preimenovanje_brisanje_ponisti_i_ponovi() {
         let app = Aplikacija::nova(PostavkeAplikacije {
