@@ -1,5 +1,14 @@
 # Popis promjena
 
+## 0.0.3 alfa (probno, 10. 11. 2026.)
+
+- Pri zatvaranju programa „Ne spremaj” nije zatvaralo prozor, nego je pitanje stalno dolazilo ponovno, pa se
+  izaći moglo samo spremanjem. Sad se prozor zatvori, a izmjene se ne spreme.
+- Desni klik na mapu, sloj ili objekt u ploči Slojevi otvara izbornik s „Preimenuj” i „Obriši”. Preimenovati se
+  moglo i prije, ali samo dvoklikom ili tipkom F2, pa se to teško nalazilo.
+- Naziv koji mijenjaš sad je u polju i sav je označen, pa ga upisivanje zamijeni. Strelica skida oznaku i
+  upisano ide na kraj. Enter sprema novi naziv, a Esc ga odbacuje.
+
 ## 0.0.2 alfa (probno, 10. 11. 2026.)
 
 - Program se na Windowsu nije pokretao: tražio je slike ikona na disku, po stazi s računala na kojem je

@@ -82,6 +82,10 @@ pub struct StanjePrikaza {
     pub ikone_slojeva: BTreeMap<IdSloja, (String, String)>,
     pub odabrano: Option<Odabir>,
     pub preimenovanje: Option<(Odabir, String)>,
+    /// Cijeli naziv u polju preimenovanja je označen, pa ga prvi upisani znak zamjenjuje.
+    pub naziv_oznacen: bool,
+    /// Izbornik retka u ploči traži brisanje odabranog; prozor ga izvodi, s upozorenjem ako treba.
+    pub zatrazeno_brisanje: bool,
     pub novi_sloj: Option<NoviSloj>,
     pub alat: Alat,
     pub podloga: usize,
@@ -115,6 +119,8 @@ impl StanjePrikaza {
             ikone_slojeva: BTreeMap::new(),
             odabrano: None,
             preimenovanje: None,
+            naziv_oznacen: false,
+            zatrazeno_brisanje: false,
             novi_sloj: None,
             alat: Alat::Odaberi,
             podloga: 0,
@@ -221,6 +227,30 @@ impl StanjePrikaza {
     pub fn zapocni_preimenovanje(&mut self, ciljani: Odabir, trenutni_naziv: &str) {
         self.odabrano = Some(ciljani);
         self.preimenovanje = Some((ciljani, trenutni_naziv.to_owned()));
+        self.naziv_oznacen = true;
+    }
+
+    /// Upisani znakovi zamjenjuju označeni naziv, a inače se dodaju na kraj.
+    pub fn upisi_u_naziv(&mut self, uneseno: &str) {
+        let oznacen = std::mem::take(&mut self.naziv_oznacen);
+        if let Some((_, tekst)) = &mut self.preimenovanje {
+            if oznacen {
+                tekst.clear();
+            }
+            tekst.extend(uneseno.chars().filter(|znak| !znak.is_control()));
+        }
+    }
+
+    /// Backspace briše označeni naziv cijeli, a inače zadnji znak.
+    pub fn obrisi_znak_naziva(&mut self) {
+        let oznacen = std::mem::take(&mut self.naziv_oznacen);
+        if let Some((_, tekst)) = &mut self.preimenovanje {
+            if oznacen {
+                tekst.clear();
+            } else {
+                let _ = tekst.pop();
+            }
+        }
     }
 
     pub fn otkazi_preimenovanje(&mut self) {
@@ -305,6 +335,30 @@ mod testovi {
         );
         stanje.otkazi_preimenovanje();
         assert!(stanje.preimenovanje.is_none());
+    }
+
+    #[test]
+    fn oznaceni_naziv_se_zamjenjuje_a_inace_dopisuje() {
+        let mut stanje = StanjePrikaza::novo();
+        // Bez preimenovanja upis ne radi ništa.
+        stanje.upisi_u_naziv("x");
+        stanje.obrisi_znak_naziva();
+        assert!(stanje.preimenovanje.is_none());
+
+        let cilj = Odabir::Mapa(IdMape(1));
+        stanje.zapocni_preimenovanje(cilj, "Mapa 1");
+        assert!(stanje.naziv_oznacen);
+        stanje.upisi_u_naziv("Kanali\n");
+        assert_eq!(stanje.preimenovanje, Some((cilj, "Kanali".into())));
+        assert!(!stanje.naziv_oznacen);
+        stanje.upisi_u_naziv(" 2");
+        stanje.obrisi_znak_naziva();
+        assert_eq!(stanje.preimenovanje, Some((cilj, "Kanali ".into())));
+
+        stanje.zapocni_preimenovanje(cilj, "Mapa 1");
+        stanje.obrisi_znak_naziva();
+        assert_eq!(stanje.preimenovanje, Some((cilj, String::new())));
+        assert!(!stanje.naziv_oznacen);
     }
 
     #[test]

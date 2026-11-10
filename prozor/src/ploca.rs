@@ -567,6 +567,9 @@ fn crtaj_stablo_u_ploci(
     let redci = izgradi_retke_stabla(uredjivac.projekt(), stanje, katalog);
     let labela_strelice = katalog.tekst("oznaka-prosiri");
     let labela_vidljivosti = katalog.tekst("oznaka-vidljivost");
+    let preimenuj = katalog.tekst("gumb-preimenuj");
+    let obrisi = katalog.tekst("gumb-obrisi");
+    let stavke_izbornika = [preimenuj.as_str(), obrisi.as_str()];
     let tamna = stanje.tema_tamna;
     let visina_retka = crate::tema::Razmaci::VISINA_RETKA_STABLA;
     let maks_redaka = ((podrucje.height() / visina_retka).floor() as usize).max(1);
@@ -594,6 +597,8 @@ fn crtaj_stablo_u_ploci(
             odabrano: stanje.odabrano == Some(redak.odabir),
             labela_strelice: &labela_strelice,
             labela_vidljivosti: &labela_vidljivosti,
+            uredjivanje: uredjivanje_retka(stanje, redak.odabir),
+            stavke_izbornika: &stavke_izbornika,
         };
         let odg = redak_stabla(ui, ikone, &opis, tamna, boje);
         obradi_odgovor_retka(uredjivac.projekt(), stanje, redak.odabir, odg);
@@ -613,6 +618,41 @@ fn obradi_odgovor_retka(
         obradi_klik_prekidaca(stanje, odabir);
     }
     obradi_klik_retka(projekt, stanje, odabir, odgovor);
+    obradi_izbornik_retka(projekt, stanje, odabir, odgovor);
+}
+
+/// Redak čiji se naziv upravo mijenja crta se kao polje.
+fn uredjivanje_retka(stanje: &StanjePrikaza, odabir: Odabir) -> Option<bool> {
+    match &stanje.preimenovanje {
+        Some((cilj, _)) if *cilj == odabir => Some(stanje.naziv_oznacen),
+        _ => None,
+    }
+}
+
+const STAVKA_PREIMENUJ: usize = 0;
+
+/// Desni klik odabire redak; izbornik ga zatim preimenuje ili traži brisanje.
+fn obradi_izbornik_retka(
+    projekt: &Projekt,
+    stanje: &mut StanjePrikaza,
+    odabir: Odabir,
+    odgovor: crate::sastavnice::OdgovorRetkaStabla,
+) {
+    if odgovor.desni_klik {
+        stanje.odabrano = Some(odabir);
+    }
+    match odgovor.stavka_izbornika {
+        Some(STAVKA_PREIMENUJ) => {
+            stanje.odabrano = Some(odabir);
+            let _ = pokreni_preimenovanje_odabranog(projekt, stanje);
+        }
+        Some(_) => {
+            stanje.odabrano = Some(odabir);
+            stanje.preimenovanje = None;
+            stanje.zatrazeno_brisanje = true;
+        }
+        None => {}
+    }
 }
 
 fn obradi_klik_strelice(stanje: &mut StanjePrikaza, odabir: Odabir) {

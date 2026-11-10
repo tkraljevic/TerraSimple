@@ -258,14 +258,21 @@ pub struct OpisRetkaStabla<'a> {
     pub odabrano: bool,
     pub labela_strelice: &'a str,
     pub labela_vidljivosti: &'a str,
+    /// `Some(oznaceno)` dok se naziv mijenja: naslov se crta u polju, sav označen ili s kursorom.
+    pub uredjivanje: Option<bool>,
+    /// Stavke izbornika na desni klik; prazno znači bez izbornika.
+    pub stavke_izbornika: &'a [&'a str],
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct OdgovorRetkaStabla {
     pub kliknut_redak: bool,
     pub dvokliknut_redak: bool,
+    pub desni_klik: bool,
     pub kliknuta_strelica: bool,
     pub kliknut_prekidac: bool,
+    /// Redni broj stavke koju je korisnik odabrao u izborniku retka.
+    pub stavka_izbornika: Option<usize>,
 }
 
 pub fn redak_stabla(
@@ -299,38 +306,9 @@ pub fn redak_stabla(
     );
     x += 24.0;
 
-    let font_naslova = if opis.naglasen_naslov {
-        font_srednji(13.0)
-    } else {
-        font_obicni(13.0)
-    };
-    if opis.podnaslov.is_empty() {
-        tekst_lijevo(
-            ui,
-            pos2(x, sredina_y),
-            opis.naslov,
-            font_naslova,
-            boje.tekst,
-        );
-    } else {
-        tekst_lijevo(
-            ui,
-            pos2(x, sredina_y - 8.0),
-            opis.naslov,
-            font_naslova,
-            boje.tekst,
-        );
-        tekst_lijevo(
-            ui,
-            pos2(x, sredina_y + 8.0),
-            opis.podnaslov,
-            font_obicni(11.0),
-            boje.tekst_3,
-        );
-    }
-
     let (desna_granica, kliknut_prekidac) =
         crtaj_desnu_stranu_retka(ui, ikone, opis, sredina_y, tamna, boje);
+    crtaj_tekst_retka(ui, opis, x, sredina_y, desna_granica, boje);
 
     let okvir_tijela = Rect::from_min_max(
         pos2(x - 24.0, opis.okvir.min.y),
@@ -345,9 +323,109 @@ pub fn redak_stabla(
     OdgovorRetkaStabla {
         kliknut_redak: odgovor_tijela.clicked(),
         dvokliknut_redak: odgovor_tijela.double_clicked(),
+        desni_klik: odgovor_tijela.secondary_clicked(),
         kliknuta_strelica,
         kliknut_prekidac,
+        stavka_izbornika: izbornik_retka(&odgovor_tijela, opis.stavke_izbornika),
     }
+}
+
+fn crtaj_tekst_retka(
+    ui: &egui::Ui,
+    opis: &OpisRetkaStabla<'_>,
+    x: f32,
+    sredina_y: f32,
+    desna_granica: f32,
+    boje: &Boje,
+) {
+    let font_naslova = if opis.naglasen_naslov {
+        font_srednji(13.0)
+    } else {
+        font_obicni(13.0)
+    };
+    let y_naslova = if opis.podnaslov.is_empty() {
+        sredina_y
+    } else {
+        tekst_lijevo(
+            ui,
+            pos2(x, sredina_y + 8.0),
+            opis.podnaslov,
+            font_obicni(11.0),
+            boje.tekst_3,
+        );
+        sredina_y - 8.0
+    };
+    if let Some(oznaceno) = opis.uredjivanje {
+        let polje = Rect::from_min_max(
+            pos2(x - 4.0, y_naslova - 10.0),
+            pos2(desna_granica.max(x + 40.0) - 4.0, y_naslova + 10.0),
+        );
+        polje_naziva(ui, polje, opis.naslov, &font_naslova, oznaceno, boje);
+    }
+    tekst_lijevo(
+        ui,
+        pos2(x, y_naslova),
+        opis.naslov,
+        font_naslova,
+        boje.tekst,
+    );
+}
+
+/// Polje oko naziva koji se mijenja: označen naziv dobije pozadinu, a inače se iza njega vidi kursor.
+fn polje_naziva(
+    ui: &egui::Ui,
+    polje: Rect,
+    naslov: &str,
+    font: &FontId,
+    oznaceno: bool,
+    boje: &Boje,
+) {
+    let slikar = ui.painter();
+    slikar.rect_filled(polje, 4.0, boje.ploca);
+    slikar.rect_stroke(
+        polje,
+        4.0,
+        Stroke::new(1.5, boje.primarna),
+        StrokeKind::Inside,
+    );
+    let sirina = slikar
+        .layout_no_wrap(naslov.to_owned(), font.clone(), boje.tekst)
+        .size()
+        .x;
+    let lijevo = polje.min.x + 4.0;
+    if oznaceno {
+        let oznaka = Rect::from_min_max(
+            pos2(lijevo - 1.0, polje.min.y + 3.0),
+            pos2(lijevo + sirina + 1.0, polje.max.y - 3.0),
+        );
+        slikar.rect_filled(oznaka, 2.0, boje.primarna_svijetla);
+    } else {
+        let kursor_x = lijevo + sirina + 1.0;
+        slikar.line_segment(
+            [
+                pos2(kursor_x, polje.min.y + 4.0),
+                pos2(kursor_x, polje.max.y - 4.0),
+            ],
+            Stroke::new(1.0, boje.tekst),
+        );
+    }
+}
+
+/// Izbornik na desni klik. Vraća redni broj odabrane stavke.
+fn izbornik_retka(odgovor: &Response, stavke: &[&str]) -> Option<usize> {
+    if stavke.is_empty() {
+        return None;
+    }
+    let mut odabrana = None;
+    let _ = odgovor.context_menu(|ui| {
+        for (redni, stavka) in stavke.iter().enumerate() {
+            if ui.button(*stavka).clicked() {
+                odabrana = Some(redni);
+                ui.close();
+            }
+        }
+    });
+    odabrana
 }
 
 fn crtaj_strelicu_retka(
@@ -524,6 +602,8 @@ mod testovi {
                         odabrano: true,
                         labela_strelice: "Proširi ili skupi",
                         labela_vidljivosti: "Vidljivost",
+                        uredjivanje: None,
+                        stavke_izbornika: &[],
                     };
                     let odg = redak_stabla(ui, &mut ikone, &opis, false, &SVIJETLA);
                     if odg.kliknuta_strelica {
