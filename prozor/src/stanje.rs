@@ -147,6 +147,8 @@ pub struct StanjePrikaza {
     pub naziv_oznacen: bool,
     /// Izbornik retka u ploči traži brisanje odabranog; prozor ga izvodi, s upozorenjem ako treba.
     pub zatrazeno_brisanje: bool,
+    /// Gumb „Uvezi sloj” traži uvoz; prozor otvara birač datoteka.
+    pub zatrazen_uvoz: bool,
     /// Mapa, sloj ili objekt koji korisnik upravo povlači mišem u ploči Slojevi.
     pub povuceno: Option<Odabir>,
     pub novi_sloj: Option<NoviSloj>,
@@ -188,6 +190,7 @@ impl StanjePrikaza {
             preimenovanje: None,
             naziv_oznacen: false,
             zatrazeno_brisanje: false,
+            zatrazen_uvoz: false,
             povuceno: None,
             novi_sloj: None,
             stil: None,

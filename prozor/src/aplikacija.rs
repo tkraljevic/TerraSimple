@@ -333,6 +333,9 @@ impl Aplikacija {
         if std::mem::take(&mut self.stanje.zatrazeno_brisanje) {
             self.pokreni_brisanje();
         }
+        if std::mem::take(&mut self.stanje.zatrazen_uvoz) {
+            self.izvrsi_uvoz();
+        }
         self.crtaj_statusnu_traku(ui, w, h, &boje);
         self.crtaj_slojeve_dijaloga(ui, &boje);
 
@@ -936,7 +939,38 @@ impl Aplikacija {
                 }
             }
             StavkaIzbornikaDatoteka::SpremiKao => self.izvrsi_spremi_kao(),
+            StavkaIzbornikaDatoteka::Uvezi => self.izvrsi_uvoz(),
         }
+    }
+
+    /// KML ili KMZ ide u novu mapu, a karta se pomiče na uvezeno.
+    fn izvrsi_uvoz(&mut self) {
+        let Some(staza) = self.birac.uvezi_datoteku() else {
+            return;
+        };
+        let ishod = crate::uvoz::uvezi_datoteku(
+            &mut self.uredjivac,
+            &mut self.stanje,
+            &self.katalog,
+            &staza,
+        );
+        self.aktivni_dijalog = Some(match ishod {
+            Ok(sazetak) => {
+                if let Some((d, s, zum)) =
+                    crate::uvoz::obuhvat_mape(self.uredjivac.projekt(), sazetak.mapa)
+                {
+                    self.karta.karta().idi_na(d, s, zum);
+                }
+                AktivniDijalog::Obavijest {
+                    naslov: self.katalog.tekst("uvoz-naslov"),
+                    poruka: crate::uvoz::poruka_sazetka(&self.katalog, &sazetak),
+                }
+            }
+            Err(poruka) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("uvoz-greska-naslov"),
+                poruka,
+            },
+        });
     }
 
     fn pokreni_novi(&mut self) {

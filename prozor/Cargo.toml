@@ -10,6 +10,7 @@ chrono = "0.4"
 eframe = { version = "0.37.0", default-features = false, features = ["wgpu", "wayland", "x11"] }
 fluent-bundle = "0.16"
 image = { version = "0.25.10", default-features = false, features = ["png"] }
+formati = { path = "../formati", version = "0.0.0" }
 karta = { path = "../karta", version = "0.0.0" }
 koordinate = { path = "../koordinate", version = "0.0.0" }
 qgis = { path = "../qgis", version = "0.0.0" }

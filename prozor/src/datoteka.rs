@@ -11,6 +11,8 @@ use std::sync::{Arc, Mutex};
 pub trait BiracDatoteka: Send + Sync {
     fn otvori_datoteku(&self) -> Option<PathBuf>;
     fn spremi_datoteku(&self, predlozeno_ime: Option<&str>) -> Option<PathBuf>;
+    /// KML ili KMZ iz Google Eartha.
+    fn uvezi_datoteku(&self) -> Option<PathBuf>;
 }
 
 /// Sustavski birač datoteka preko biblioteke `rfd`.
@@ -35,6 +37,12 @@ impl BiracDatoteka for SustavskiBirac {
         }
         d.save_file()
     }
+
+    fn uvezi_datoteku(&self) -> Option<PathBuf> {
+        rfd::FileDialog::new()
+            .add_filter("Google Earth (KML, KMZ)", &["kml", "kmz"])
+            .pick_file()
+    }
 }
 
 /// Lažni birač za automatske testove koji ne otvara stvarni prozor sustava.
@@ -42,6 +50,7 @@ impl BiracDatoteka for SustavskiBirac {
 pub struct LazniBirac {
     sljedeca_za_otvaranje: Arc<Mutex<Option<PathBuf>>>,
     sljedeca_za_spremanje: Arc<Mutex<Option<PathBuf>>>,
+    sljedeca_za_uvoz: Arc<Mutex<Option<PathBuf>>>,
 }
 
 impl LazniBirac {
@@ -52,6 +61,12 @@ impl LazniBirac {
 
     pub fn postavi_otvaranje(&self, staza: impl Into<PathBuf>) {
         if let Ok(mut g) = self.sljedeca_za_otvaranje.lock() {
+            *g = Some(staza.into());
+        }
+    }
+
+    pub fn postavi_uvoz(&self, staza: impl Into<PathBuf>) {
+        if let Ok(mut g) = self.sljedeca_za_uvoz.lock() {
             *g = Some(staza.into());
         }
     }
@@ -76,6 +91,10 @@ impl BiracDatoteka for LazniBirac {
             .lock()
             .ok()
             .and_then(|mut g| g.take())
+    }
+
+    fn uvezi_datoteku(&self) -> Option<PathBuf> {
+        self.sljedeca_za_uvoz.lock().ok().and_then(|mut g| g.take())
     }
 }
 

@@ -197,6 +197,38 @@ izbornik-datoteka-novi = Novi
 izbornik-datoteka-otvori = Otvori…
 izbornik-datoteka-spremi = Spremi
 izbornik-datoteka-spremi-kao = Spremi kao…
+izbornik-datoteka-uvezi = Uvezi KML ili KMZ…
+uvoz-sloj-tocke = Točke
+uvoz-sloj-linije = Linije
+uvoz-sloj-poligoni = Poligoni
+uvoz-mapa-bez-naziva = Mapa bez naziva
+uvoz-naslov = Uvoz je gotov
+uvoz-greska-naslov = Uvoz nije uspio
+uvoz-sazetak = Uvezeno je { $objekata } u { $slojeva } i { $mapa }. Sve je u novoj mapi na dnu ploče Slojevi, a uvoz se poništava jednim korakom.
+uvoz-broj-mapa =
+    { $broj ->
+        [one] { $broj } mapu
+        [few] { $broj } mape
+       *[other] { $broj } mapa
+    }
+uvoz-nije-uvezeno = Nije uvezeno ono što karta zasad ne prikazuje: { $popis }.
+uvoz-preskoceno-mrezne-veze = mrežne veze
+uvoz-preskoceno-slike = slike preko karte
+uvoz-preskoceno-slike-zaslona = slike na zaslonu
+uvoz-preskoceno-fotografije = fotografije
+uvoz-preskoceno-obilasci = obilasci
+uvoz-preskoceno-modeli = 3D modeli
+uvoz-preskoceno-prazne = prazne ili nepotpune geometrije
+uvoz-preskoceno-koordinate = geometrije s neispravnim koordinatama
+uvoz-preskoceno-odbijeno = geometrije koje projekt ne prima
+uvoz-greska-citanje = Datoteka se ne može pročitati. Provjeri postoji li još i smiješ li je otvoriti.
+uvoz-greska-xml = Datoteka nije ispravan KML, pa ništa nije uvezeno. Otvori je u Google Earthu i spremi ponovno.
+uvoz-greska-duboko = Datoteka ima previše razina mapa jedne u drugoj, pa ništa nije uvezeno.
+uvoz-greska-arhiva = KMZ datoteka nije ispravna arhiva, pa ništa nije uvezeno.
+uvoz-greska-nema-kml = U KMZ datoteci nema KML-a, pa nema što uvesti.
+uvoz-greska-putanja = KMZ datoteka sadrži putanju izvan arhive, pa se radi sigurnosti ne otvara.
+uvoz-greska-prevelika = KMZ datoteka se raspakira u neočekivano veliku datoteku, pa se radi sigurnosti ne otvara.
+uvoz-greska-projekt = Uvezeno nije moglo ući u projekt: { $opis }. Projekt je ostao kakav je bio.
 # Prečaci: na Macu ⌘, drugdje Ctrl (Odluke (9. 11. 2026.)).
 precac-novi = { $sustav ->
     [mac] ⌘N
