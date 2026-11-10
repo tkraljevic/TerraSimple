@@ -1429,6 +1429,53 @@ mod testovi {
         assert!(harness.state().uredjivac.je_li_izmijenjen());
     }
 
+    fn sloj_objekta(app: &Aplikacija, naziv: &str) -> Option<String> {
+        app.uredjivac
+            .projekt()
+            .slojevi()
+            .find(|(_, s)| s.objekti.values().any(|o| o.naziv == naziv))
+            .map(|(_, s)| s.naziv.clone())
+    }
+
+    #[test]
+    fn objekt_prelazi_u_drugi_sloj_izbornikom_i_povlacenjem() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+
+        // Mapa Parcele 2025 je zatvorena, pa „Stare parcele” postoji samo u podizborniku.
+        izbornik_retka(&mut harness, "Parcela 1126", "Premjesti u");
+        harness.get_by_label("Stare parcele").click();
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let stare = Some("Stare parcele".to_owned());
+        assert_eq!(sloj_objekta(harness.state(), "Parcela 1126"), stare);
+
+        // Na sloj linija poligon ne ide, a na sloj poligona ide.
+        let parcela = harness.get_by_label("Parcela 1118/2").rect().center();
+        let trase = harness.get_by_label("Trase").rect().center();
+        harness.drag_at(parcela);
+        harness.hover_at(parcela + vec2(0.0, 20.0));
+        harness.drop_at(trase);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let parcele = Some("Parcele".to_owned());
+        assert_eq!(sloj_objekta(harness.state(), "Parcela 1118/2"), parcele);
+
+        let parcela = harness.get_by_label("Parcela 1118/2").rect().center();
+        let cilj = harness.get_by_label("Stare parcele").rect().center();
+        harness.drag_at(parcela);
+        harness.hover_at(parcela + vec2(0.0, 20.0));
+        harness.hover_at(cilj);
+        harness.drop_at(cilj);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert_eq!(sloj_objekta(harness.state(), "Parcela 1118/2"), stare);
+    }
+
     #[test]
     fn povlacenje_premjesta_sloj_a_mapu_ne_pusta_u_vlastitu_podmapu() {
         let app = Aplikacija::nova(PostavkeAplikacije {
