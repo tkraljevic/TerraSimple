@@ -16,13 +16,14 @@ QGIS-u, pa profesionalac nastavlja tamo gdje je običan korisnik stao.
 
 ## Što zasad radi
 
-Program se priprema za prvo izdanje, 0.0.1 alfa. Paketi za Windows, macOS i Linux grade se na GitHubu, ali
-izdanja još nema. Upute su u [izdanje.md](docs/izdanje.md).
+Izdanja su zasad probna (alfa), za Windows, macOS i Linux, na stranici **Releases**. Upute su u
+[izdanje.md](docs/izdanje.md).
 
 - **Karta:** podloga OpenFreeMap ili DGU ortofoto, svijetla i tamna tema, mjerilo i koordinate pod mišem u
   HTRS96/TM.
-- **Crtanje:** točke, linije i poligoni u slojevima i mapama. Klik dodaje točku, povlačenje je pomiče, a desni
-  klik briše. Svaka izmjena može se poništiti.
+- **Crtanje:** točke, linije i poligoni u slojevima i mapama. Klik dodaje točku, povlačenje je pomiče, Backspace
+  briše zadnju, a desni klik završava crtu ili lik. Nakon crtanja upisuje se naziv. Objekti se biraju
+  klikom ili okvirom, kao u AutoCAD-u, a Delete ih briše. Svaka izmjena može se poništiti.
 - **Mjerenje:** udaljenost i površina na elipsoidu WGS84, kao u QGIS-u. Izmjereno se može spremiti kao
   linija ili poligon.
 - **Tražilica:** koordinate u stupnjevima i u HTRS96/TM te slojevi i objekti po nazivu.
@@ -62,8 +63,6 @@ cargo xtask provjera
 - [Specifikacija, nacrt v1.0 (25. 10. 2026.)](docs/specifikacija.md)
 - [Kvaliteta koda (6. 11. 2026.)](docs/kvaliteta.md)
 - [Pregled podloga i uvjeta (7. 11. 2026.)](docs/podloge.md)
-- [Primjedbe i veza s goCOP-om (27. 10. 2026.)](docs/primjedbe.md)
-- [Most prema goCOP-u preko plugina (27. 10. 2026.)](docs/gocop-plugin.md)
 - Nacrt sučelja: `dizajn/TerraSimple.figcraft`
 - Nacrt s ikonama u stilu satin glass (stil: Odluke (7. 11. 2026.)): `dizajn/TerraSimple-ikone-efekti.figcraft`
 - [Veličine i stanja ikona](resursi/ikone/sucelje/efekti/README.md) i [pregledi](dizajn/pregledi-ikona/README.md)

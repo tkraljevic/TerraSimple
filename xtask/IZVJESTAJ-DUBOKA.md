@@ -81,8 +81,7 @@ Duboka provjera ne dodaje minute svakom slanju.
 
 **Nisu pokrenuti Windows, Linux ni stvarni CI. Fuzz nije uveden niti pokrenut**:
 još nema paketa za čitanje nepouzdanih datoteka. Nije provjerena svaka moguća
-pogreška ili svaka buduća struktura projekta. Nije bilo commita, pusha ni mergea.
-Zabranjene mape, korijenski Cargo.toml i referenca ostali su netaknuti.
+pogreška ili svaka buduća struktura projekta.
 
 Čovjek treba pregledati prvo mjerenje, odlučiti o budućem praćenju duplikacije
 i nakon pregleda uključiti CI. Eventualna buduća iznimka za ekvivalentnu ili

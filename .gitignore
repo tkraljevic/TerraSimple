@@ -1,6 +1,7 @@
 target/
 .quality/
 .DS_Store
+Thumbs.db
 
 # Zapisi pokusa sadrže lokalne staze.
 xtask/dokazi/

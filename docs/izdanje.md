@@ -1,4 +1,4 @@
-# TerraSimple 0.0.1 alfa
+# Izdanja TerraSimplea
 
 Program je probno izdanje. Paketi ne traže administratorske ovlasti: raspakiraju
 se u tvoju korisničku mapu. Računalo treba podržanu grafičku karticu i njezin
@@ -7,10 +7,9 @@ programa.
 
 ## Preuzimanje
 
-U privatnom repozitoriju otvori **Actions → Paketi izdanja**, odaberi uspješno
-pokretanje i preuzmi artefakt za svoj sustav. GitHubov artefakt prvo raspakiraj;
-u njemu je paket programa. Treba ti pristup repozitoriju. Nacrt izdanja još nije
-javno izdanje. U datoteci JSON uz paket su inačica, veličina i SHA-256.
+Na stranici **Releases** repozitorija odaberi izdanje i preuzmi paket za svoj
+sustav. Izdanja su zasad probna (alfa). U datoteci JSON uz paket su inačica,
+veličina i SHA-256.
 
 ## macOS
 
@@ -67,8 +66,7 @@ računalima, `proba` se spaja u `master`. Tako `master` ima samo isprobano.
 
 Tijek `.github/workflows/izdanje.yml` gradi tri sustava na oznaku `v*` ili ručno.
 Inačicu uzima iz `prozor/Cargo.toml`. Ručno pokretanje sprema samo artefakte;
-na oznaku nastaje samo **nacrt** izdanja. Tijek ne objavljuje izdanje i ne mijenja
-privatnost repozitorija. Oznaka mora odgovarati inačici, npr. `v0.0.1`.
+na oznaku nastaje samo **nacrt** izdanja. Tijek ne objavljuje izdanje. Oznaka mora odgovarati inačici, npr. `v0.0.1`.
 
 Isti postupak lokalno: `python3 skripte/izdanje.py macos` (odnosno `windows`
 ili `linux`). Trebaju odgovarajući Rust ciljevi, cargo-deny 0.20.2 i cargo-about
@@ -87,4 +85,4 @@ Profil izdanja uklanja simbole (`strip = "symbols"`); ostale optimizacije ostaju
 Identifikator `org.terrasimple.TerraSimple` zasad je prijedlog za potvrdu.
 Može se zadati varijablom `TERRASIMPLE_BUNDLE_ID`. Za ovo izdanje pripremljeni su
 ZIP za Mac i Windows te tar.gz za Linux; DMG i AppImage ostaju odluka za kasnije.
-Stvarno izvedene provjere i mjerenja su u [REZULTAT-izdanje.md](../REZULTAT-izdanje.md).
+Stvarno izvedene provjere i mjerenja su u [priprema-izdanja-0.0.1.md](priprema-izdanja-0.0.1.md).

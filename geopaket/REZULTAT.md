@@ -102,9 +102,8 @@ Izvoz HDKS-a ispisao je upozorenje o zastarjelom EPSG:3908.
 izlaze pri kopiranju; poziv ima test. XML ovisnost podignuta je na 0.42 zbog
 upozorenja cargo-denyja, bez iznimaka.
 
-Windows, Linux, stvarni CI, pravi QGIS prozor i fuzz nisu pokrenuti. Nema commita,
-pusha, instalacije alata ni privatnih testnih podataka. Zabranjene mape i postojeće
-naredbe nisu mijenjane. Puni lokalni dnevnici su u zanemarenoj mapi `.quality`.
+Windows, Linux, stvarni CI, pravi QGIS prozor i fuzz nisu pokrenuti. Privatnih testnih
+podataka nema. Puni dnevnici ostaju lokalno u mapi `.quality`, izvan repozitorija.
 
 ## QGIS projekt
 

@@ -4,10 +4,8 @@ Odluke (7. 11. 2026.). Satin glass stil ostaje.
 
 ## Nacrt i granice rada
 
-Izmijenjen je samo `TerraSimple-ikone-efekti.figcraft` iz mape `dizajn`.
-Korišten je zaseban FigCraft na portu 7980. Prethodni nacrt
-`TerraSimple.figcraft` ostao je nepromijenjen. Rust kod i probe nisu mijenjani.
-Nije napravljen commit ni push. Putanje u spremljenim popisima su relativne.
+Izmijenjen je samo `TerraSimple-ikone-efekti.figcraft` iz mape `dizajn`. Prethodni nacrt
+`TerraSimple.figcraft` ostao je isti. Putanje u spremljenim popisima su relativne.
 
 ## Što je popravljeno
 
@@ -110,8 +108,7 @@ za platno od 32 px. Svih 24 ranijih PNG pregleda zaslona također je osvježeno.
   na vanjskom rubu bila je 0;
 - završetke unutarnjih crta tablice na okviru u svih pet veličina;
 - svih 40 rasterskih ploča i 40 povećanja, piksel po piksel, za najbližeg susjeda;
-- 24 zaslona i 24 logotipa T u spremljenom nacrtu;
-- sažetke izvorne zaštićene FigCraft datoteke i 60 Rust datoteka: bez promjene.
+- 24 zaslona i 24 logotipa T u spremljenom nacrtu.
 
 Vizualno su pregledane usporedne ploče svih 60 ikona pri 1× u svih pet
 veličina i obje teme, posebni povećani prikazi važnih ikona pri 1×/2×,

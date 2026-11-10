@@ -12,13 +12,13 @@ Stanje 9. 11. 2026.: faza 0 je gotova, osim glatkoće karte u prozoru, a faza 1 
 [PROMJENE.md](../PROMJENE.md).
 
 Tražilica i paketi za preuzimanje spojeni su 9. 11. 2026. Tijek paketa na GitHubu prošao je na sva tri sustava, s
-provjerom pokretanja; rezultati su u [REZULTAT-izdanje.md](../REZULTAT-izdanje.md). Do
+provjerom pokretanja; rezultati su u [priprema-izdanja-0.0.1.md](priprema-izdanja-0.0.1.md). Do
 izdanja 0.0.1 ostaje proba od početka do kraja s pravim QGIS-om; prozor „O programu” gotov je 10. 11. 2026. Upozorenje
 za lik koji siječe sam sebe gotovo je 9. 11. 2026. (`geometrija/REZULTAT.md`, `karta/REZULTAT.md`); traži
 odluku smije li se takav lik spremiti, a sad se sprema uz upozorenje. Poruka nakon sukoba koja nudi Spremi kao i skriven gumb Ispis gotovi su 9. 11. 2026. Odluke su u
 odjeljku „Gumb Otvori u QGIS-u” niže.
 
-Rust 1.99.1 je instaliran, a git repozitorij je privatan na GitHubu, bez javne objave. Isprobani su `egui`,
+Razvijamo na Rustu 1.99.1, a repozitorij je javan na GitHubu. Isprobani su `egui`,
 `walkers`, `lyon`, `geographiclib-rs`, `rusqlite`, `geozero`, `proj4rs`, `krilla`, `tiff` i `quick-xml`. Ostale
 biblioteke provjerene su samo po podacima s crates.io i njihovim uputama.
 
@@ -78,7 +78,7 @@ gotov C++ prikaz karte, teži za isporuku.
 ## Faze
 
 Trajanje je gruba procjena iz specifikacije, uz dodano što smo dogovorili, i to uz
-neprekidan rad na ovom projektu. Rad uz goCOP traje dulje.
+neprekidan rad na ovom projektu.
 
 ### Faza 0: proba (2–3 tjedna)
 
@@ -89,7 +89,7 @@ mjerilo i na kraju se zapiše odluka. Ako neka padne, plan se mijenja prije faze
 |---|---|
 | Može li `egui` izgledati kao nacrt? | Glavni prozor (A) izgleda kao nacrt, u obje teme, na sve tri platforme. |
 | Vuče li `walkers` kartu? | OpenFreeMap sa stilom i PMTiles Sektora B glatko se pomiču. Običan laptop nije uvjet (Odluke (7. 11. 2026.)). |
-| Radi li crtanje kako smo rekli? | Lijevi klik, povlačenje, desni klik i dvoklik rade i uz 10 000 vrhova, a povlačenje točke ne pomiče kartu. |
+| Radi li crtanje kako smo rekli? | Lijevi klik, povlačenje i desni klik (do 10. 11. 2026. dvoklik) rade i uz 10 000 vrhova, a povlačenje točke ne pomiče kartu. |
 | Radi li DGU WMS kao podloga? | DOF se vidi u mjerilu 1 : 4 500. |
 | Jesu li koordinate točne? | Kontrolne točke za 3765, 4326, 3857, 3907 i 3908 slažu se s QGIS-om unutar 1 mm. |
 | Čita li QGIS naš GeoPackage? | Slojevi, stupci i stil sloja otvaraju se u QGIS-u, a izmjena u QGIS-u vidi se kod nas. |
@@ -670,9 +670,9 @@ xtask/        # provjere kvalitete
 
 ## Što ne ulazi do 1.0
 
-Veza s goCOP-om i plugin API dolaze poslije, a sada se samo pazi da im model sloja ne
-smeta. Isto vrijedi za vremenski klizač, reljef i poplavljeno područje, izvoz u QGIS
-projekt (`.qgz`) i 3D. Globusa nema.
+Plugin API dolazi poslije, a sada se samo pazi da mu model sloja ne smeta. Isto vrijedi
+za vremenski klizač, reljef i poplavljeno područje, izvoz u QGIS projekt (`.qgz`) i 3D.
+Globusa nema.
 
 ## Za kasnije, bez žurbe
 
