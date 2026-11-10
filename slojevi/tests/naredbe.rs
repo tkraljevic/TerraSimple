@@ -805,3 +805,46 @@ fn slucajni_nizovi_se_vracaju_tocno_unatrag_i_unaprijed() {
         }
     }
 }
+
+#[test]
+fn povlacenje_klizaca_je_jedan_korak_ponistavanja() {
+    let mut u = Uredjivac::novi();
+    let s = sloj(&mut u, None, VrstaGeometrije::Linija);
+    let debljina = |u: &Uredjivac| u.projekt().sloj(s).expect("sloj").stil.debljina_mm;
+    let stil = |d| NaredbaStabla::PostaviStil {
+        sloj: s,
+        stil: Stil {
+            debljina_mm: d,
+            ..Stil::default()
+        },
+    };
+    u.izvrsi(stil(1.0)).expect("prvi pomak");
+    let oznaka = u.oznaka_stanja();
+    u.izvrsi_uz_zadnji(stil(1.5)).expect("drugi");
+    u.izvrsi_uz_zadnji(stil(2.0)).expect("treći");
+    assert_eq!(debljina(&u), 2.0);
+    assert_ne!(u.oznaka_stanja(), oznaka, "spojeni korak je nova izmjena");
+
+    assert_eq!(u.ponisti(), Ok(true));
+    assert_eq!(
+        debljina(&u),
+        Stil::default().debljina_mm,
+        "cijelo povlačenje odjednom"
+    );
+    assert!(u.projekt().sloj(s).is_some(), "sloj ostaje");
+    assert_eq!(u.ponovi(), Ok(true));
+    assert_eq!(debljina(&u), 2.0);
+
+    // Bez prethodnog koraka spajanje je obična naredba.
+    let mut prazan = Uredjivac::novi();
+    let Ok(Some(Novo::Sloj(t))) = prazan.izvrsi_uz_zadnji(NaredbaStabla::DodajSloj {
+        u: None,
+        naziv: "T".into(),
+        vrsta: VrstaGeometrije::Tocka,
+    }) else {
+        panic!("sloj");
+    };
+    assert!(prazan.projekt().sloj(t).is_some());
+    assert_eq!(prazan.ponisti(), Ok(true));
+    assert!(prazan.projekt().sloj(t).is_none());
+}

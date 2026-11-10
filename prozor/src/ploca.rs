@@ -6,7 +6,7 @@ use crate::sastavnice::{
     OpisGumbaIkone, OpisRetkaStabla, PodizbornikRetka, StavkaPodizbornika, cip, gumb_ikona,
     gumb_obrub, redak_stabla, tekst_lijevo, zaobljeni_okvir,
 };
-use crate::stanje::{NoviSloj, Odabir, StanjePrikaza};
+use crate::stanje::{NoviSloj, Odabir, StanjePrikaza, UredjivanjeStila};
 use crate::tema::{Boje, Razmaci, font_obicni, font_srednji};
 use eframe::egui::{
     self, CursorIcon, Id, LayerId, Order, Pos2, Rect, Role, Sense, Stroke, StrokeKind, WidgetInfo,
@@ -403,6 +403,10 @@ pub fn crtaj_plocu_slojeva(
         Some(boje.obrub),
         Razmaci::ZAOBLJENJE_PLOCE,
     );
+    if stanje.stil.is_some() {
+        crate::stil::crtaj_plocu_stila(ui, uredjivac, stanje, ikone, katalog, okvir_ploce, boje);
+        return;
+    }
     crtaj_zaglavlje_ploce(
         ui,
         stanje,
@@ -573,7 +577,9 @@ fn crtaj_stablo_u_ploci(
     let labela_vidljivosti = katalog.tekst("oznaka-vidljivost");
     let preimenuj = katalog.tekst("gumb-preimenuj");
     let obrisi = katalog.tekst("gumb-obrisi");
-    let stavke_izbornika = [preimenuj.as_str(), obrisi.as_str()];
+    let stil = katalog.tekst("izbornik-stil");
+    let stavke_mape = [preimenuj.as_str(), obrisi.as_str()];
+    let stavke_sloja = [preimenuj.as_str(), stil.as_str(), obrisi.as_str()];
     let premjesti_u = katalog.tekst("izbornik-premjesti-u");
     let tamna = stanje.tema_tamna;
     let visina_retka = crate::tema::Razmaci::VISINA_RETKA_STABLA;
@@ -611,7 +617,11 @@ fn crtaj_stablo_u_ploci(
             labela_strelice: &labela_strelice,
             labela_vidljivosti: &labela_vidljivosti,
             uredjivanje: uredjivanje_retka(stanje, redak.odabir),
-            stavke_izbornika: &stavke_izbornika,
+            stavke_izbornika: if matches!(redak.odabir, Odabir::Mapa(_)) {
+                &stavke_mape
+            } else {
+                &stavke_sloja
+            },
             podizbornik,
             povlacenje: stanje.preimenovanje.is_none(),
         };
@@ -780,6 +790,8 @@ fn uredjivanje_retka(stanje: &StanjePrikaza, odabir: Odabir) -> Option<bool> {
 }
 
 const STAVKA_PREIMENUJ: usize = 0;
+/// Mapa nema stil, pa joj je „Obriši” odmah iza „Preimenuj”.
+const STAVKA_STIL: usize = 1;
 
 /// Desni klik odabire redak; izbornik ga zatim preimenuje ili traži brisanje.
 fn obradi_izbornik_retka(
@@ -791,10 +803,16 @@ fn obradi_izbornik_retka(
     if odgovor.desni_klik {
         stanje.odabrano = Some(odabir);
     }
+    let stil = !matches!(odabir, Odabir::Mapa(_));
     match odgovor.stavka_izbornika {
         Some(STAVKA_PREIMENUJ) => {
             stanje.odabrano = Some(odabir);
             let _ = pokreni_preimenovanje_odabranog(projekt, stanje);
+        }
+        Some(STAVKA_STIL) if stil => {
+            stanje.odabrano = Some(odabir);
+            stanje.preimenovanje = None;
+            stanje.stil = UredjivanjeStila::za(odabir);
         }
         Some(_) => {
             stanje.odabrano = Some(odabir);

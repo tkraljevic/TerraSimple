@@ -553,6 +553,68 @@ fn crtaj_desnu_stranu_retka(
     (desno, kliknut_prekidac)
 }
 
+/// Klizač po nacrtu: tanka staza, obojeni dio do vrijednosti i kružić.
+pub struct OpisKlizaca<'a> {
+    pub okvir: Rect,
+    pub vrijednost: f64,
+    pub najmanje: f64,
+    pub najvise: f64,
+    pub korak: f64,
+    pub labela: &'a str,
+}
+
+impl OpisKlizaca<'_> {
+    fn udio(&self) -> f32 {
+        ((self.vrijednost - self.najmanje) / (self.najvise - self.najmanje)).clamp(0.0, 1.0) as f32
+    }
+
+    fn zaokruzi(&self, v: f64) -> f64 {
+        ((v / self.korak).round() * self.korak).clamp(self.najmanje, self.najvise)
+    }
+}
+
+/// Vraća novu vrijednost dok korisnik drži miš na klizaču ili ga pomiče strelicama.
+pub fn klizac(ui: &mut egui::Ui, opis: &OpisKlizaca<'_>, boje: &Boje) -> Option<f64> {
+    let id = ui.make_persistent_id(("klizac", opis.labela));
+    let odgovor = ui.interact(opis.okvir, id, Sense::click_and_drag());
+    odgovor.widget_info(|| WidgetInfo::slider(ui.is_enabled(), opis.vrijednost, opis.labela));
+    let (x0, x1) = (opis.okvir.min.x + 7.0, opis.okvir.max.x - 7.0);
+    let y = opis.okvir.center().y;
+    let xk = x0 + (x1 - x0) * opis.udio();
+    let crtac = ui.painter();
+    crtac.line_segment([pos2(x0, y), pos2(x1, y)], Stroke::new(4.0, boje.obrub));
+    crtac.line_segment([pos2(x0, y), pos2(xk, y)], Stroke::new(4.0, boje.primarna));
+    crtac.circle_filled(pos2(xk, y), 7.0, boje.primarna);
+    let misem = odgovor
+        .is_pointer_button_down_on()
+        .then(|| odgovor.interact_pointer_pos())
+        .flatten()
+        .map(|p| {
+            let u = f64::from(((p.x - x0) / (x1 - x0)).clamp(0.0, 1.0));
+            opis.najmanje + u * (opis.najvise - opis.najmanje)
+        });
+    let strelicom = odgovor
+        .has_focus()
+        .then(|| pomak_strelicom(ui, opis.korak))
+        .flatten();
+    misem
+        .or_else(|| strelicom.map(|d| opis.vrijednost + d))
+        .map(|v| opis.zaokruzi(v))
+        .filter(|v| (v - opis.vrijednost).abs() > opis.korak / 2.0)
+}
+
+fn pomak_strelicom(ui: &egui::Ui, korak: f64) -> Option<f64> {
+    ui.input(|i| {
+        if i.key_pressed(egui::Key::ArrowRight) {
+            Some(korak)
+        } else if i.key_pressed(egui::Key::ArrowLeft) {
+            Some(-korak)
+        } else {
+            None
+        }
+    })
+}
+
 fn interakcija_gumba(ui: &mut egui::Ui, okvir: Rect, labela: &str) -> Response {
     let id = ui.make_persistent_id(("gumb", labela, okvir.min.x.to_bits(), okvir.min.y.to_bits()));
     let odgovor = ui.interact(okvir, id, Sense::click());
