@@ -383,10 +383,10 @@ fn dokument(pisac: &Pisac<'_>, naziv: &str) -> String {
     )
 }
 
-fn je_kmz(staza: &Path) -> bool {
+fn nastavak(staza: &Path, n: &[&str]) -> bool {
     staza
         .extension()
-        .is_some_and(|e| e.eq_ignore_ascii_case("kmz"))
+        .is_some_and(|e| n.iter().any(|n| e.eq_ignore_ascii_case(n)))
 }
 
 /// KMZ je ZIP s jednom datotekom `doc.kml`.
@@ -403,8 +403,8 @@ fn zapakiraj<W: std::io::Write + std::io::Seek>(
         .map_err(GreskaIzvoza::from)
 }
 
-/// Piše KML, ili KMZ ako datoteka završava s `.kmz`. Piše se u privremenu datoteku pa se
-/// preimenuje, da prekid usred pisanja ne ostavi pola datoteke pod pravim imenom.
+/// Piše KML, KMZ ili GeoJSON, prema nastavku datoteke (`.kmz`, `.geojson` ili `.json`).
+/// Piše se u privremenu datoteku pa se preimenuje, da prekid usred pisanja ne ostavi pola datoteke pod pravim imenom.
 pub fn izvezi(
     p: &Projekt,
     opseg: OpsegIzvoza,
@@ -413,11 +413,13 @@ pub fn izvezi(
     staza: &Path,
 ) -> Result<PregledIzvoza, GreskaIzvoza> {
     let pisac = napisi(p, opseg, nazivi);
-    let sadrzaj = dokument(&pisac, naziv);
-    let bajtovi = if je_kmz(staza) {
-        zapakiraj(std::io::Cursor::new(Vec::new()), sadrzaj.as_bytes())?.into_inner()
+    let bajtovi = if nastavak(staza, &["geojson", "json"]) {
+        crate::geojson::napisi(p, opseg, naziv).into_bytes()
+    } else if nastavak(staza, &["kmz"]) {
+        let kml = dokument(&pisac, naziv);
+        zapakiraj(std::io::Cursor::new(Vec::new()), kml.as_bytes())?.into_inner()
     } else {
-        sadrzaj.into_bytes()
+        dokument(&pisac, naziv).into_bytes()
     };
     let privremena = staza.with_extension("izvoz-u-tijeku");
     let ishod = std::fs::File::create(&privremena)

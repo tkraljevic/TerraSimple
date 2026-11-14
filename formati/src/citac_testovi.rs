@@ -217,3 +217,33 @@ fn naziv_izvan_mape_i_objekta_se_ne_pamti() {
         "točka izvan objekta se ne broji"
     );
 }
+
+#[test]
+fn svaka_greska_ima_opis_a_pukla_datoteka_je_greska_citanja() {
+    let greske = [
+        GreskaKml::Citanje,
+        GreskaKml::NeispravanXml { polozaj: 7 },
+        GreskaKml::PreDuboko,
+        GreskaKml::NeispravnaArhiva,
+        GreskaKml::NemaKmlUArhivi,
+        GreskaKml::NedopustenaPutanja,
+        GreskaKml::PrevelikaArhiva,
+        GreskaKml::NeispravanJson,
+        GreskaKml::NepoznatSustav,
+    ];
+    let mut opisi: Vec<String> = greske.iter().map(ToString::to_string).collect();
+    assert!(opisi.iter().all(|o| !o.is_empty()));
+    opisi.dedup();
+    assert_eq!(opisi.len(), greske.len());
+    assert_eq!(GreskaKml::Citanje.opis_arhive(), None);
+
+    struct Pukla;
+    impl std::io::Read for Pukla {
+        fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::other("pukla"))
+        }
+    }
+    assert_eq!(procitaj_json(Pukla).unwrap_err(), GreskaKml::Citanje);
+    assert!(je_json(b"\xEF\xBB\xBF {"));
+    assert!(!je_json(b"<kml"));
+}

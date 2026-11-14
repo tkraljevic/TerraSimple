@@ -1,7 +1,7 @@
 use crate::aplikacija::{Aplikacija, PostavkeAplikacije};
 use crate::datoteka::LazniBirac;
 use crate::dijalozi::{AktivniDijalog, StavkaIzbornikaDatoteka};
-use crate::izvoz::{Prolaz, naziv_izvoza, pripremi, stavke_pregleda};
+use crate::izvoz::{FormatIzvoza, Prolaz, naziv_izvoza, pripremi, stavke_geojson, stavke_pregleda};
 use crate::poruke::KatalogPoruka;
 use crate::tema::Razmaci;
 use eframe::egui::vec2;
@@ -75,7 +75,7 @@ fn naziv_je_mapa_sloj_ili_datoteka_projekta() {
     );
     let nema = OpsegIzvoza::Stavka(Stavka::Mapa(slojevi::IdMape(999)));
     assert_eq!(naziv_izvoza(p, nema, None, &k), "TerraSimple");
-    assert!(!pripremi(p, sloj, None, &k).moze, "prazan sloj");
+    assert!(!pripremi(p, sloj, None, &k).moze(), "prazan sloj");
 }
 
 fn prozor(birac: &LazniBirac) -> Harness<'static, Aplikacija> {
@@ -110,7 +110,7 @@ fn desni_klik_na_mapu_izvozi_je_u_kmz() {
 
     h.get_by_label("Ispit podjele na slojeve").click_secondary();
     h.run_steps(4);
-    h.get_by_label("Izvezi u KML…").click();
+    h.get_by_label("Izvezi…").click();
     h.run_steps(4);
     assert!(matches!(
         h.state().aktivni_dijalog,
@@ -158,7 +158,7 @@ fn odustajanje_i_prazan_projekt_ne_pisu_nista() {
     let Some(AktivniDijalog::Izvoz(p)) = &h.state().aktivni_dijalog else {
         panic!("izvoz");
     };
-    assert!(!p.moze);
+    assert!(!p.moze());
     h.get_by_label("Izvezi…").click();
     h.run_steps(3);
     assert!(matches!(
@@ -194,6 +194,73 @@ fn pregled_izvoza_otvara_se_i_za_snimku() {
     let Some(AktivniDijalog::Izvoz(p)) = &app.aktivni_dijalog else {
         panic!("izvoz");
     };
-    assert!(p.moze);
+    assert!(p.moze());
     assert_eq!(p.naziv, "TerraSimple");
+}
+
+#[test]
+fn geojson_ima_svoj_pregled() {
+    let k = KatalogPoruka::hrvatski();
+    assert_eq!(stavke_geojson(&k, &PregledIzvoza::default()).len(), 1);
+    let p = PregledIzvoza {
+        linija: 2,
+        mapa: 1,
+        isprekidane: 1,
+        drugi_sustav: true,
+        izostavljene_vrijednosti: 1,
+        atributi: ["oznaka".to_owned()].into(),
+        ..PregledIzvoza::default()
+    };
+    let s = stavke_geojson(&k, &p);
+    let naslovi: Vec<&str> = s.iter().map(|s| s.naslov.as_str()).collect();
+    assert_eq!(
+        naslovi,
+        [
+            "Sve geometrije, nazivi, opisi i mape",
+            "Atributi",
+            "Neke vrijednosti ne idu u KML",
+            "Mape postaju svojstvo",
+            "Stil ide kao simplestyle",
+            "Vrsta crte, šrafura i natpisi ne idu u GeoJSON",
+            "Koordinate se pretvaraju u WGS84",
+        ]
+    );
+    let samo = PregledIzvoza {
+        tocaka: 1,
+        ..PregledIzvoza::default()
+    };
+    assert_eq!(stavke_geojson(&k, &samo).len(), 2);
+    let nazivi: Vec<&str> = FormatIzvoza::SVI.iter().map(|f| f.nastavak()).collect();
+    assert_eq!(nazivi, ["kml", "kmz", "geojson"]);
+}
+
+#[test]
+fn izbor_geojsona_u_prozorcicu_pise_geojson() {
+    let birac = LazniBirac::novi();
+    let mut h = prozor(&birac);
+    birac.postavi_uvoz(podatak("mijesani_slojevi.kml"));
+    h.get_by_label("Uvezi sloj").click();
+    h.run_steps(4);
+    h.get_by_label("U redu").click();
+    h.run_steps(3);
+    h.state_mut()
+        .pokreni_radnju_datoteke(StavkaIzbornikaDatoteka::Izvezi);
+    h.run_steps(3);
+    h.get_by_label("GeoJSON").click();
+    h.run_steps(3);
+    let Some(AktivniDijalog::Izvoz(p)) = &h.state().aktivni_dijalog else {
+        panic!("izvoz");
+    };
+    assert_eq!(p.format, FormatIzvoza::GeoJson);
+    let mapa = std::env::temp_dir().join(format!("terrasimple-geojson-ui-{}", std::process::id()));
+    std::fs::create_dir_all(&mapa).unwrap();
+    let staza = mapa.join("ispit.geojson");
+    birac.postavi_izvoz(&staza);
+    h.get_by_label("Izvezi…").click();
+    h.run_steps(4);
+    let tekst = std::fs::read_to_string(&staza).unwrap();
+    assert!(tekst.contains("\"type\":\"FeatureCollection\""));
+    let d = formati::procitaj(&staza).unwrap();
+    assert!(d.korijen.broj_objekata() > 0);
+    std::fs::remove_dir_all(&mapa).unwrap();
 }

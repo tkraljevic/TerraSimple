@@ -1,5 +1,5 @@
-//! Izvoz u KML ili KMZ za Google Earth (zaslon K). Prije izvoza prozorčić kaže što ide u datoteku i
-//! što se usput mijenja ili gubi, jer KML ne zna sve što zna projekt.
+//! Izvoz u KML ili KMZ za Google Earth i u GeoJSON (zaslon K). Prije izvoza prozorčić kaže što ide
+//! u datoteku i što se usput mijenja ili gubi, jer nijedan od tih formata ne zna sve što zna projekt.
 
 use crate::poruke::KatalogPoruka;
 use formati::{OpsegIzvoza, PregledIzvoza};
@@ -24,14 +24,60 @@ pub struct StavkaPregleda {
     pub opis: String,
 }
 
-/// Prozorčić izvoza: što se izvozi, pod kojim nazivom i što pregled kaže.
+/// U što se izvozi. Bira se u prozorčiću, a o njemu ovise pregled i nastavak datoteke.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum FormatIzvoza {
+    #[default]
+    Kml,
+    Kmz,
+    GeoJson,
+}
+
+impl FormatIzvoza {
+    pub const SVI: [Self; 3] = [Self::Kml, Self::Kmz, Self::GeoJson];
+
+    #[must_use]
+    pub const fn nastavak(self) -> &'static str {
+        match self {
+            Self::Kml => "kml",
+            Self::Kmz => "kmz",
+            Self::GeoJson => "geojson",
+        }
+    }
+
+    #[must_use]
+    pub const fn naziv(self) -> &'static str {
+        match self {
+            Self::Kml => "KML",
+            Self::Kmz => "KMZ",
+            Self::GeoJson => "GeoJSON",
+        }
+    }
+}
+
+/// Prozorčić izvoza: što se izvozi, pod kojim nazivom, u kojem formatu i što pregled kaže.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PripremaIzvoza {
     pub opseg: OpsegIzvoza,
     pub naziv: String,
-    pub stavke: Vec<StavkaPregleda>,
+    pub pregled: PregledIzvoza,
+    pub format: FormatIzvoza,
+}
+
+impl PripremaIzvoza {
     /// Bez ijednog objekta nema što izvesti.
-    pub moze: bool,
+    #[must_use]
+    pub const fn moze(&self) -> bool {
+        self.pregled.objekata() > 0
+    }
+
+    #[must_use]
+    pub fn stavke(&self, katalog: &KatalogPoruka) -> Vec<StavkaPregleda> {
+        match self.format {
+            FormatIzvoza::GeoJson => stavke_geojson(katalog, &self.pregled),
+            FormatIzvoza::Kml | FormatIzvoza::Kmz => stavke_pregleda(katalog, &self.pregled),
+        }
+    }
 }
 
 fn stavka(katalog: &KatalogPoruka, prolaz: Prolaz, kljuc: &str, opis: String) -> StavkaPregleda {
@@ -43,14 +89,7 @@ fn stavka(katalog: &KatalogPoruka, prolaz: Prolaz, kljuc: &str, opis: String) ->
 }
 
 fn gubici(katalog: &KatalogPoruka, p: &PregledIzvoza) -> Vec<StavkaPregleda> {
-    let pazi = |kljuc: &str| {
-        stavka(
-            katalog,
-            Prolaz::Pazi,
-            kljuc,
-            katalog.tekst(&format!("{kljuc}-opis")),
-        )
-    };
+    let pazi = |kljuc: &str| pazi(katalog, kljuc);
     let mut s = Vec::new();
     if p.drugi_sustav {
         s.push(pazi("izvoz-sustav"));
@@ -97,6 +136,37 @@ pub fn stavke_pregleda(katalog: &KatalogPoruka, p: &PregledIzvoza) -> Vec<Stavka
     s
 }
 
+fn pazi(katalog: &KatalogPoruka, kljuc: &str) -> StavkaPregleda {
+    stavka(
+        katalog,
+        Prolaz::Pazi,
+        kljuc,
+        katalog.tekst(&format!("{kljuc}-opis")),
+    )
+}
+
+/// GeoJSON nema mapa ni stila kakav čita QGIS, ali ima svojstva za sve stupce.
+#[must_use]
+pub fn stavke_geojson(katalog: &KatalogPoruka, p: &PregledIzvoza) -> Vec<StavkaPregleda> {
+    let mut s = stavke_pregleda(katalog, p);
+    if p.objekata() == 0 {
+        return s;
+    }
+    s.retain(|st| st.prolaz != Prolaz::Pazi);
+    if p.mapa > 0 {
+        s.push(pazi(katalog, "izvoz-geojson-mape"));
+    }
+    s.push(pazi(katalog, "izvoz-geojson-stil"));
+    if p.isprekidane + p.srafure + p.natpisi_bez_tocaka + p.kurziv > 0 {
+        s.push(pazi(katalog, "izvoz-geojson-crte"));
+    }
+    if p.drugi_sustav {
+        s.push(pazi(katalog, "izvoz-sustav"));
+    }
+    s.sort_by_key(|st| st.prolaz != Prolaz::Da);
+    s
+}
+
 /// Naziv dokumenta i predložene datoteke: naziv mape ili sloja, a za cijeli projekt naziv datoteke.
 #[must_use]
 pub fn naziv_izvoza(
@@ -124,12 +194,11 @@ pub fn pripremi(
     staza_projekta: Option<&Path>,
     katalog: &KatalogPoruka,
 ) -> PripremaIzvoza {
-    let pregled = formati::pregledaj(projekt, opseg, &crate::uvoz::nazivi(katalog));
     PripremaIzvoza {
         opseg,
         naziv: naziv_izvoza(projekt, opseg, staza_projekta, katalog),
-        stavke: stavke_pregleda(katalog, &pregled),
-        moze: pregled.objekata() > 0,
+        pregled: formati::pregledaj(projekt, opseg, &crate::uvoz::nazivi(katalog)),
+        format: FormatIzvoza::default(),
     }
 }
 

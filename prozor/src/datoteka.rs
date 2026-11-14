@@ -11,10 +11,10 @@ use std::sync::{Arc, Mutex};
 pub trait BiracDatoteka: Send + Sync {
     fn otvori_datoteku(&self) -> Option<PathBuf>;
     fn spremi_datoteku(&self, predlozeno_ime: Option<&str>) -> Option<PathBuf>;
-    /// KML ili KMZ iz Google Eartha ili GeoPackage, npr. iz QGIS-a.
+    /// KML ili KMZ iz Google Eartha, GeoJSON ili GeoPackage, npr. iz QGIS-a.
     fn uvezi_datoteku(&self) -> Option<PathBuf>;
-    /// Kamo ide izvoz u KML ili KMZ. Vrsta ovisi o nastavku koji korisnik odabere.
-    fn izvezi_datoteku(&self, predlozeno_ime: &str) -> Option<PathBuf>;
+    /// Kamo ide izvoz. Format je već odabran u prozorčiću, pa birač nudi samo njegov nastavak.
+    fn izvezi_datoteku(&self, predlozeno_ime: &str, nastavak: &str) -> Option<PathBuf>;
 }
 
 /// Sustavski birač datoteka preko biblioteke `rfd`.
@@ -42,16 +42,19 @@ impl BiracDatoteka for SustavskiBirac {
 
     fn uvezi_datoteku(&self) -> Option<PathBuf> {
         rfd::FileDialog::new()
-            .add_filter("KML, KMZ, GeoPackage", &["kml", "kmz", "gpkg"])
+            .add_filter(
+                "KML, KMZ, GeoJSON, GeoPackage",
+                &["kml", "kmz", "geojson", "json", "gpkg"],
+            )
             .add_filter("Google Earth (KML, KMZ)", &["kml", "kmz"])
+            .add_filter("GeoJSON", &["geojson", "json"])
             .add_filter("GeoPackage", &["gpkg"])
             .pick_file()
     }
 
-    fn izvezi_datoteku(&self, predlozeno_ime: &str) -> Option<PathBuf> {
+    fn izvezi_datoteku(&self, predlozeno_ime: &str, nastavak: &str) -> Option<PathBuf> {
         rfd::FileDialog::new()
-            .add_filter("KML", &["kml"])
-            .add_filter("KMZ", &["kmz"])
+            .add_filter(nastavak.to_uppercase(), &[nastavak])
             .set_file_name(predlozeno_ime)
             .save_file()
     }
@@ -116,7 +119,7 @@ impl BiracDatoteka for LazniBirac {
         self.sljedeca_za_uvoz.lock().ok().and_then(|mut g| g.take())
     }
 
-    fn izvezi_datoteku(&self, _predlozeno_ime: &str) -> Option<PathBuf> {
+    fn izvezi_datoteku(&self, _predlozeno_ime: &str, _nastavak: &str) -> Option<PathBuf> {
         self.sljedeca_za_izvoz
             .lock()
             .ok()

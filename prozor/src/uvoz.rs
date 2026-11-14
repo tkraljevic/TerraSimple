@@ -1,4 +1,4 @@
-//! Uvoz KML-a i KMZ-a iz Google Eartha u otvoreni projekt: poruke, mapa za uvezeno i pogled na nju.
+//! Uvoz KML-a, KMZ-a i GeoJSON-a u otvoreni projekt: poruke, mapa za uvezeno i pogled na nju.
 
 use crate::karta_prozora::obuhvat_vrhova;
 use crate::poruke::KatalogPoruka;
@@ -37,6 +37,8 @@ pub fn poruka_greske(katalog: &KatalogPoruka, greska: GreskaKml) -> String {
         GreskaKml::NemaKmlUArhivi => "uvoz-greska-nema-kml",
         GreskaKml::NedopustenaPutanja => "uvoz-greska-putanja",
         GreskaKml::PrevelikaArhiva => "uvoz-greska-prevelika",
+        GreskaKml::NeispravanJson => "uvoz-greska-json",
+        GreskaKml::NepoznatSustav => "uvoz-greska-sustav",
     };
     katalog.tekst(kljuc)
 }
@@ -75,6 +77,14 @@ fn popis_gubitaka(katalog: &KatalogPoruka, s: &SazetakUvoza) -> Vec<String> {
         .map(|(kljuc, n)| format!("{}: {n}", katalog.tekst(kljuc)))
         .collect();
     popis.dedup();
+    if !g.izostavljena_svojstva.is_empty() {
+        let svojstva = g.izostavljena_svojstva.iter().cloned().collect::<Vec<_>>();
+        let tekst = katalog.s_tekstovima(
+            "uvoz-izostavljena-svojstva",
+            &[("popis", svojstva.join(", "))],
+        );
+        popis.push(tekst);
+    }
     popis
 }
 

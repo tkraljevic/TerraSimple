@@ -52,42 +52,74 @@ const PRESKOCI: [&str; 14] = [
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GreskaKml {
     Citanje,
-    NeispravanXml { polozaj: u64 },
+    NeispravanXml {
+        polozaj: u64,
+    },
     PreDuboko,
     NeispravnaArhiva,
     NemaKmlUArhivi,
     NedopustenaPutanja,
     PrevelikaArhiva,
+    NeispravanJson,
+    /// GeoJSON je u koordinatnom sustavu koji program ne zna.
+    NepoznatSustav,
+}
+
+impl GreskaKml {
+    /// Opis greške u KMZ arhivi, a za ostale ništa.
+    const fn opis_arhive(self) -> Option<&'static str> {
+        match self {
+            Self::NeispravnaArhiva => Some("KMZ nije ispravna ZIP arhiva"),
+            Self::NemaKmlUArhivi => Some("u KMZ arhivi nema KML datoteke"),
+            Self::NedopustenaPutanja => Some("KMZ arhiva ima nedopuštenu putanju"),
+            Self::PrevelikaArhiva => Some("KMZ arhiva se raspakira u preveliku datoteku"),
+            _ => None,
+        }
+    }
 }
 
 impl fmt::Display for GreskaKml {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let opis = match self {
-            Self::NeispravanXml { polozaj } => {
-                return write!(f, "neispravan XML na bajtu {polozaj}");
-            }
-            Self::Citanje => "datoteka se ne može pročitati",
-            Self::PreDuboko => "oznake su ugniježđene predubok",
-            Self::NeispravnaArhiva => "KMZ nije ispravna ZIP arhiva",
-            Self::NemaKmlUArhivi => "u KMZ arhivi nema KML datoteke",
-            Self::NedopustenaPutanja => "KMZ arhiva ima nedopuštenu putanju",
-            Self::PrevelikaArhiva => "KMZ arhiva se raspakira u preveliku datoteku",
-        };
-        f.write_str(opis)
+        match self {
+            Self::NeispravanXml { polozaj } => write!(f, "neispravan XML na bajtu {polozaj}"),
+            Self::Citanje => f.write_str("datoteka se ne može pročitati"),
+            Self::PreDuboko => f.write_str("oznake su ugniježđene predubok"),
+            Self::NeispravanJson => f.write_str("GeoJSON nije ispravan"),
+            Self::NepoznatSustav => f.write_str("koordinatni sustav nije poznat"),
+            ostalo => f.write_str(ostalo.opis_arhive().unwrap_or_default()),
+        }
     }
 }
 
 impl std::error::Error for GreskaKml {}
 
-/// Čita KML ili KMZ. KMZ se prepoznaje po potpisu ZIP-a, pa ni krivi nastavak ne smeta.
+/// Čita KML, KMZ ili GeoJSON. Vrsta se prepoznaje po sadržaju, pa ni krivi nastavak ne smeta: KMZ
+/// po potpisu ZIP-a, a GeoJSON po prvoj vitičastoj zagradi.
 pub fn procitaj(staza: &Path) -> Result<DokumentKml, GreskaKml> {
     let datoteka = File::open(staza).map_err(|_| GreskaKml::Citanje)?;
     let mut ulaz = BufReader::with_capacity(64 * 1024, datoteka);
+    let pocetak = ulaz.fill_buf().map(<[u8]>::to_vec).unwrap_or_default();
     // ZIP sam traži svoj popis na kraju datoteke, pa mu ne smeta što je početak već pročitan.
-    if ulaz.fill_buf().is_ok_and(|b| b.starts_with(b"PK\x03\x04")) {
+    if pocetak.starts_with(b"PK\x03\x04") {
         return kmz::procitaj(ulaz.into_inner());
     }
+    if je_json(&pocetak) {
+        return procitaj_json(ulaz);
+    }
     procitaj_iz(ulaz)
+}
+
+/// Prvi znak nakon razmaka i oznake UTF-8 (BOM) je vitičasta zagrada.
+fn je_json(pocetak: &[u8]) -> bool {
+    let bez_bom = pocetak.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(pocetak);
+    bez_bom.iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'{')
+}
+
+fn procitaj_json(mut ulaz: impl std::io::Read) -> Result<DokumentKml, GreskaKml> {
+    let mut sve = Vec::new();
+    ulaz.read_to_end(&mut sve).map_err(|_| GreskaKml::Citanje)?;
+    let bez_bom = sve.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(&sve);
+    crate::geojson::procitaj(bez_bom)
 }
 
 pub fn procitaj_tekst(tekst: &str) -> Result<DokumentKml, GreskaKml> {

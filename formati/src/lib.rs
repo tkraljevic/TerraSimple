@@ -1,8 +1,9 @@
-//! Uvoz i izvoz drugih formata. Zasad KML i KMZ za Google Earth.
+//! Uvoz i izvoz drugih formata: KML i KMZ za Google Earth te GeoJSON.
 
 #![forbid(unsafe_code)]
 
 mod citac;
+mod geojson;
 mod izvoz;
 mod kmz;
 mod model;

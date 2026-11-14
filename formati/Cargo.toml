@@ -9,6 +9,7 @@ publish = false
 slojevi = { path = "../slojevi", version = "0.0.0" }
 koordinate = { path = "../koordinate", version = "0.0.0" }
 quick-xml = "0.42"
+serde_json = "1"
 zip = { version = "9.4", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]

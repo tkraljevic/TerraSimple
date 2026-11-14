@@ -522,35 +522,63 @@ fn crtaj_stavku_pregleda(
     visina + 34.0
 }
 
-/// Zaslon K: datoteka, popis onoga što ide u KML i gumbi.
+/// Gumbi za format izvoza. Klik na drugi format mijenja pregled.
+fn izbor_formata(
+    ui: &mut egui::Ui,
+    priprema: &mut crate::izvoz::PripremaIzvoza,
+    pocetak: egui::Pos2,
+    boje: &Boje,
+) {
+    for (i, f) in crate::izvoz::FormatIzvoza::SVI.into_iter().enumerate() {
+        let okvir = Rect::from_min_size(
+            pos2(pocetak.x + i as f32 * 96.0, pocetak.y),
+            vec2(88.0, 28.0),
+        );
+        if gumb_dijaloga(ui, okvir, f.naziv(), priprema.format == f, false, boje).clicked() {
+            priprema.format = f;
+        }
+    }
+}
+
+/// Zaslon K: format, datoteka, popis onoga što ide u datoteku i gumbi.
 fn crtaj_izvoz(
     ui: &mut egui::Ui,
     dostupan: Rect,
-    priprema: &crate::izvoz::PripremaIzvoza,
+    priprema: &mut crate::izvoz::PripremaIzvoza,
     boje: &Boje,
     katalog: &KatalogPoruka,
 ) -> Option<IshodDijaloga> {
+    let stavke = priprema.stavke(katalog);
     let sirina = 560.0;
-    let visina = 170.0 + 60.0 * priprema.stavke.len() as f32;
+    let visina = 210.0 + 60.0 * stavke.len() as f32;
     let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, visina));
     zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
     let x = okvir.min.x + 24.0;
+    let naslov = katalog.s_tekstovima(
+        "izvoz-naslov",
+        &[("format", priprema.format.naziv().to_owned())],
+    );
     tekst_lijevo(
         ui,
         pos2(x, okvir.min.y + 30.0),
-        &katalog.tekst("izvoz-naslov"),
+        &naslov,
         font_srednji(18.0),
         boje.tekst,
     );
-    let datoteka = katalog.s_tekstovima("izvoz-datoteka", &[("naziv", priprema.naziv.clone())]);
+    izbor_formata(ui, priprema, pos2(x, okvir.min.y + 52.0), boje);
+    let tekstovi = [
+        ("naziv", priprema.naziv.clone()),
+        ("nastavak", priprema.format.nastavak().to_owned()),
+    ];
+    let datoteka = katalog.s_tekstovima("izvoz-datoteka", &tekstovi);
     tekst_lijevo(
         ui,
-        pos2(x, okvir.min.y + 60.0),
+        pos2(x, okvir.min.y + 100.0),
         &datoteka,
         font_obicni(13.0),
         boje.tekst_2,
     );
-    let crta = okvir.min.y + 80.0;
+    let crta = okvir.min.y + 120.0;
     ui.painter().line_segment(
         [pos2(x, crta), pos2(okvir.max.x - 24.0, crta)],
         egui::Stroke::new(1.0, boje.obrub),
@@ -563,7 +591,7 @@ fn crtaj_izvoz(
         boje.tekst_2,
     );
     let mut y = crta + 38.0;
-    for stavka in &priprema.stavke {
+    for stavka in &stavke {
         y += crtaj_stavku_pregleda(ui, stavka, pos2(x, y), sirina - 48.0, boje);
     }
     let by = okvir.max.y - 48.0;
@@ -578,12 +606,13 @@ fn crtaj_izvoz(
         boje,
     );
     let gumb = katalog.tekst("izvoz-gumb");
+    let moze = priprema.moze();
     let izvezi = ui
-        .add_enabled_ui(priprema.moze, |ui| {
+        .add_enabled_ui(moze, |ui| {
             gumb_dijaloga(ui, izvezi, &gumb, true, false, boje)
         })
         .inner;
-    if izvezi.clicked() && priprema.moze {
+    if izvezi.clicked() && moze {
         Some(IshodDijaloga::Prihvati)
     } else {
         odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
