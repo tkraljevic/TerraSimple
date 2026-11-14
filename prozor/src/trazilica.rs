@@ -2,7 +2,7 @@
 
 use crate::karta_prozora::{KartaProzora, obuhvat_vrhova};
 use crate::poruke::KatalogPoruka;
-use crate::sastavnice::zaobljeni_okvir;
+use crate::sastavnice::{tekst_lijevo_skraceno, zaobljeni_okvir};
 use crate::stanje::{Odabir, StanjePrikaza};
 use crate::tema::{Boje, font_obicni, font_srednji};
 use eframe::egui::{self, Key, Painter, Pos2, Rect, Sense, Stroke, TextEdit, Ui, pos2, vec2};
@@ -288,6 +288,7 @@ pub fn primijeni_odabir(
                 stanje.postavi_otvorenost_sloja(*sloj_id, true);
                 otvori_roditeljske_mape(projekt, stanje, *sloj_id);
                 stanje.odabrano = Some(Odabir::Objekt(*sloj_id, *objekt_id));
+                stanje.pokazi_odabrano = true;
                 karta
                     .karta()
                     .crtanje()
@@ -301,6 +302,7 @@ pub fn primijeni_odabir(
                 }
                 otvori_roditeljske_mape(projekt, stanje, *id);
                 stanje.odabrano = Some(Odabir::Sloj(*id));
+                stanje.pokazi_odabrano = true;
             }
         }
     }
@@ -436,6 +438,7 @@ fn nacrtaj_redak_rezultata(
     katalog: &KatalogPoruka,
     boje: &Boje,
 ) {
+    let sirina = okvir.width() - 16.0;
     match rez {
         RezultatPretrage::Koordinata { tekst, .. } => {
             s.text(
@@ -448,12 +451,13 @@ fn nacrtaj_redak_rezultata(
         }
         RezultatPretrage::Sloj { naziv, .. } => {
             let tekst = katalog.s_tekstovima("trazi-sloj", &[("naziv", naziv.clone())]);
-            s.text(
+            tekst_lijevo_skraceno(
+                s,
                 pos2(okvir.min.x + 8.0, okvir.center().y),
-                egui::Align2::LEFT_CENTER,
-                tekst,
+                &tekst,
                 font_srednji(13.0),
                 boje.tekst,
+                sirina,
             );
         }
         RezultatPretrage::Objekt {
@@ -461,20 +465,22 @@ fn nacrtaj_redak_rezultata(
             naziv_sloja,
             ..
         } => {
-            s.text(
+            tekst_lijevo_skraceno(
+                s,
                 pos2(okvir.min.x + 8.0, okvir.center().y - 7.0),
-                egui::Align2::LEFT_CENTER,
                 naziv_objekta,
                 font_obicni(13.0),
                 boje.tekst,
+                sirina,
             );
             let u_sloju = katalog.s_tekstovima("trazi-u-sloju", &[("sloj", naziv_sloja.clone())]);
-            s.text(
+            tekst_lijevo_skraceno(
+                s,
                 pos2(okvir.min.x + 8.0, okvir.center().y + 8.0),
-                egui::Align2::LEFT_CENTER,
-                u_sloju,
+                &u_sloju,
                 font_obicni(10.0),
                 boje.tekst_3,
+                sirina,
             );
         }
     }

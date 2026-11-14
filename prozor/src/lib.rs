@@ -12,6 +12,8 @@ pub mod karta_prozora;
 pub mod naziv_objekta;
 pub mod novi_sloj;
 pub mod ploca;
+#[cfg(test)]
+mod ploca_testovi;
 pub mod poruke;
 #[cfg(test)]
 mod precaci_testovi;

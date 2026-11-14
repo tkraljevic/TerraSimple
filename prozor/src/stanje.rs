@@ -149,6 +149,12 @@ pub struct StanjePrikaza {
     pub zatrazeno_brisanje: bool,
     /// Gumb „Uvezi sloj” traži uvoz; prozor otvara birač datoteka.
     pub zatrazen_uvoz: bool,
+    /// Koliko je stablo u ploči Slojevi pomaknuto prema dolje, u točkama.
+    pub pomak_stabla: f32,
+    /// Kotačić ili dodirna ploha iznad ploče Slojevi u ovom okviru; karta ga tada ne dobije.
+    pub klizanje_ploce: f32,
+    /// Tražilica je odabrala sloj ili objekt, pa ga stablo treba dovesti u vidno polje.
+    pub pokazi_odabrano: bool,
     /// Mapa, sloj ili objekt koji korisnik upravo povlači mišem u ploči Slojevi.
     pub povuceno: Option<Odabir>,
     pub novi_sloj: Option<NoviSloj>,
@@ -191,6 +197,9 @@ impl StanjePrikaza {
             naziv_oznacen: false,
             zatrazeno_brisanje: false,
             zatrazen_uvoz: false,
+            pomak_stabla: 0.0,
+            klizanje_ploce: 0.0,
+            pokazi_odabrano: false,
             povuceno: None,
             novi_sloj: None,
             stil: None,

@@ -116,6 +116,13 @@ broj-slojeva =
        *[other] { $broj } slojeva
     }
 
+broj-mapa =
+    { $broj ->
+        [one] { $broj } mapa
+        [few] { $broj } mape
+       *[other] { $broj } mapa
+    }
+
 broj-objekata =
     { $broj ->
         [one] { $broj } objekt
