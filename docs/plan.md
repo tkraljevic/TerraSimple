@@ -131,7 +131,12 @@ razmjena s Earth Proom.
   stilom `simplestyle` i starim `crs`-om (HTRS96/TM i HDKS se preračunaju, nepoznat sustav se odbije).
   Svojstva koja projekt ne pamti navedu se nakon uvoza. Izvoz u istom prozorčiću kao KML, s izborom formata
   KML, KMZ ili GeoJSON; mapa i sloj idu u svojstva `mapa` i `sloj`.
-- Nedostaje: SHP i pitanje o sustavu (zaslon L).
+- **Uvoz SHP-a i pitanje o sustavu (14. 11. 2026.):** vlastiti čitač `.shp`, `.dbf` i `.prj` (točke,
+  skupine točaka, linije i likovi, s visinom ili bez nje, rupe po smjeru prstena). Tekst u `.dbf` čita se kao
+  UTF-8, a ako nije ispravan kao kodna stranica 1250, jer `.cpg` zna lagati. Sustav se prepoznaje iz `.prj`
+  (HTRS96/TM, HDKS zone 5 i 6, WGS84, Web Mercator). Bez njega, i za GeoJSON s metrima bez `crs`-a,
+  prozorčić (zaslon L) pita sustav i predlaže ga po koordinatama. „Drugi sustav (EPSG broj)” još nema.
+- Nedostaje: izvoz u SHP.
 
 **Na kraju izlazi 0.1, prvo upotrebljivo izdanje:** zamjenjuje Earth Pro za crtanje, mjerenje i KML, a sve se
 otvara u QGIS-u. Do ovdje je 12–18 tjedana rada.

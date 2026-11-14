@@ -4,6 +4,7 @@ use crate::karta_prozora::obuhvat_vrhova;
 use crate::poruke::KatalogPoruka;
 use crate::stanje::{Odabir, StanjePrikaza};
 use formati::{GreskaKml, NaziviSlojeva, SazetakUvoza};
+use koordinate::Sustav;
 use slojevi::{Geometrija, IdMape, Projekt, Stavka, Uredjivac};
 use std::path::Path;
 
@@ -39,6 +40,7 @@ pub fn poruka_greske(katalog: &KatalogPoruka, greska: GreskaKml) -> String {
         GreskaKml::PrevelikaArhiva => "uvoz-greska-prevelika",
         GreskaKml::NeispravanJson => "uvoz-greska-json",
         GreskaKml::NepoznatSustav => "uvoz-greska-sustav",
+        GreskaKml::BezSustava { .. } => "uvoz-greska-bez-sustava",
     };
     katalog.tekst(kljuc)
 }
@@ -88,21 +90,38 @@ fn popis_gubitaka(katalog: &KatalogPoruka, s: &SazetakUvoza) -> Vec<String> {
     popis
 }
 
+/// Zašto uvoz datoteke nije uspio.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GreskaUvozaDatoteke {
+    Poruka(String),
+    /// Datoteka ne kaže koordinatni sustav, pa treba pitati. Uz to ide prijedlog po koordinatama.
+    BezSustava(Sustav),
+}
+
 /// Čita datoteku i uvozi je u novu mapu, kao jedan korak poništavanja. Nova mapa je odabrana i
-/// otvorena, a njezine podmape zatvorene, da veliko stablo ne zatrpa ploču.
+/// otvorena, a njezine podmape zatvorene, da veliko stablo ne zatrpa ploču. `sustav` vrijedi za
+/// datoteku koja ga sama ne zapisuje.
 pub fn uvezi_datoteku(
     uredjivac: &mut Uredjivac,
     stanje: &mut StanjePrikaza,
     katalog: &KatalogPoruka,
     staza: &Path,
-) -> Result<SazetakUvoza, String> {
-    let dokument = formati::procitaj(staza).map_err(|g| poruka_greske(katalog, g))?;
+    sustav: Option<Sustav>,
+) -> Result<SazetakUvoza, GreskaUvozaDatoteke> {
+    let dokument = formati::procitaj_u_sustavu(staza, sustav).map_err(|g| match g {
+        GreskaKml::BezSustava { istok, sjever } => {
+            GreskaUvozaDatoteke::BezSustava(formati::prijedlog_sustava(istok, sjever))
+        }
+        g => GreskaUvozaDatoteke::Poruka(poruka_greske(katalog, g)),
+    })?;
     let ime = staza
         .file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let sazetak = formati::uvezi(uredjivac, &dokument, &ime, &nazivi(katalog))
-        .map_err(|g| katalog.s_tekstovima("uvoz-greska-projekt", &[("opis", g.to_string())]))?;
+    let sazetak = formati::uvezi(uredjivac, &dokument, &ime, &nazivi(katalog)).map_err(|g| {
+        let opis = katalog.s_tekstovima("uvoz-greska-projekt", &[("opis", g.to_string())]);
+        GreskaUvozaDatoteke::Poruka(opis)
+    })?;
     let projekt = uredjivac.projekt();
     for podmapa in podmape(projekt, sazetak.mapa) {
         stanje.postavi_otvorenost_mape(podmapa, false);

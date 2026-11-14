@@ -230,6 +230,10 @@ fn svaka_greska_ima_opis_a_pukla_datoteka_je_greska_citanja() {
         GreskaKml::PrevelikaArhiva,
         GreskaKml::NeispravanJson,
         GreskaKml::NepoznatSustav,
+        GreskaKml::BezSustava {
+            istok: 1,
+            sjever: 2,
+        },
     ];
     let mut opisi: Vec<String> = greske.iter().map(ToString::to_string).collect();
     assert!(opisi.iter().all(|o| !o.is_empty()));
@@ -243,7 +247,7 @@ fn svaka_greska_ima_opis_a_pukla_datoteka_je_greska_citanja() {
             Err(std::io::Error::other("pukla"))
         }
     }
-    assert_eq!(procitaj_json(Pukla).unwrap_err(), GreskaKml::Citanje);
+    assert_eq!(procitaj_json(Pukla, None).unwrap_err(), GreskaKml::Citanje);
     assert!(je_json(b"\xEF\xBB\xBF {"));
     assert!(!je_json(b"<kml"));
 }

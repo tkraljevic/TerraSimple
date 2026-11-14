@@ -3,7 +3,7 @@ use crate::uvoz::{NaziviSlojeva, uvezi};
 use slojevi::{IdMape, IzmjenaObjekta, NaredbaObjekta, NaredbaStabla, Uredjivac, VrstaGeometrije};
 
 fn citaj(t: &str) -> DokumentKml {
-    procitaj(t.as_bytes()).unwrap()
+    procitaj(t.as_bytes(), None).unwrap()
 }
 
 #[test]
@@ -77,11 +77,11 @@ fn jedan_objekt_gola_geometrija_i_greske() {
     let d = citaj(r#"{"type":"Point","coordinates":[18,45]}"#);
     assert_eq!(d.korijen.objekti.len(), 1);
     assert_eq!(
-        procitaj(b"{nije json").unwrap_err(),
+        procitaj(b"{nije json", None).unwrap_err(),
         GreskaKml::NeispravanJson
     );
     assert_eq!(
-        procitaj(b"{\"a\":1}").unwrap_err(),
+        procitaj(b"{\"a\":1}", None).unwrap_err(),
         GreskaKml::NeispravanJson
     );
     let d = citaj(r#"{"type":"FeatureCollection"}"#);
@@ -106,12 +106,12 @@ fn stari_crs_se_preracunava_a_nepoznati_odbija() {
     assert_eq!(citaj(&wgs).korijen.objekti.len(), 1);
     let nepoznat = htrs.replace("3765", "31276");
     assert_eq!(
-        procitaj(nepoznat.as_bytes()).unwrap_err(),
+        procitaj(nepoznat.as_bytes(), None).unwrap_err(),
         GreskaKml::NepoznatSustav
     );
     let los = htrs.replace("EPSG::3765", "nesto");
     assert_eq!(
-        procitaj(los.as_bytes()).unwrap_err(),
+        procitaj(los.as_bytes(), None).unwrap_err(),
         GreskaKml::NepoznatSustav
     );
 }
@@ -226,7 +226,7 @@ fn izvoz_i_ponovni_uvoz_cuvaju_nazive_geometriju_i_mapu() {
         4
     );
 
-    let d = procitaj(tekst.as_bytes()).unwrap();
+    let d = procitaj(tekst.as_bytes(), None).unwrap();
     let mut novi = Uredjivac::novi();
     let s = uvezi(&mut novi, &d, "Teren", &nazivi()).unwrap();
     assert_eq!(s.objekata, 3);
@@ -355,4 +355,30 @@ fn stupci_iz_geopackagea_idu_u_svojstva() {
     assert_eq!(svojstva["dubina"], 12.5);
     assert_eq!(svojstva["name"], "B1");
     assert!(svojstva.get("slika").is_none());
+}
+
+#[test]
+fn bez_crs_s_metrima_trazi_sustav_a_sa_zadanim_preracunava() {
+    let t = br#"{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[661000,5047000]}}]}"#;
+    assert_eq!(
+        procitaj(t, None).unwrap_err(),
+        GreskaKml::BezSustava {
+            istok: 661_000,
+            sjever: 5_047_000
+        }
+    );
+    let d = procitaj(t, Some(Sustav::Htrs96Tm)).unwrap();
+    assert_eq!(d.korijen.objekti.len(), 1);
+    let stupnjevi = br#"{"type":"Point","coordinates":[18,45]}"#;
+    assert_eq!(
+        procitaj(stupnjevi, Some(Sustav::Wgs84))
+            .unwrap()
+            .korijen
+            .objekti
+            .len(),
+        1
+    );
+    assert_eq!(prvi_polozaj(&json!({"type": "Point"})), None);
+    assert_eq!(prvi_polozaj(&json!([1])), None);
+    assert_eq!(prvi_polozaj(&json!(["a", 1])), None);
 }
