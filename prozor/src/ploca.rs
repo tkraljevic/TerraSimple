@@ -698,6 +698,18 @@ fn pomak_do_retka(indeks: usize, visina_podrucja: f32, pomak: f32) -> f32 {
     }
 }
 
+/// Redak stavke, a za objekt koji se ne prikazuje (npr. iza granice broja objekata) redak sloja.
+fn indeks_retka(redci: &[RedakZaPrikaz], cilj: Odabir) -> Option<usize> {
+    let sloj = match cilj {
+        Odabir::Objekt(s, _) => Some(Odabir::Sloj(s)),
+        _ => None,
+    };
+    redci
+        .iter()
+        .position(|r| r.odabir == cilj)
+        .or_else(|| redci.iter().position(|r| Some(r.odabir) == sloj))
+}
+
 /// Primjenjuje kotačić, povlačenje klizača i skok na odabrano iz tražilice, crta klizač i vraća
 /// pomak za ovaj okvir.
 fn pomakni_stablo(
@@ -710,9 +722,7 @@ fn pomakni_stablo(
     let visina = podrucje.height();
     let mut pomak = stanje.pomak_stabla - stanje.klizanje_ploce;
     stanje.klizanje_ploce = 0.0;
-    if std::mem::take(&mut stanje.pokazi_odabrano)
-        && let Some(indeks) = redci.iter().position(|r| Some(r.odabir) == stanje.odabrano)
-    {
+    if let Some(indeks) = stanje.pokazi.take().and_then(|c| indeks_retka(redci, c)) {
         pomak = pomak_do_retka(indeks, visina, pomak);
     }
     let najveci = najveci_pomak(redci.len(), visina);

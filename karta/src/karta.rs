@@ -138,7 +138,8 @@ impl Karta {
     }
 
     /// Prikazuje kartu i obrađuje miš i tipkovnicu.
-    pub fn prikazi(&mut self, ui: &mut Ui, u: &mut Uredjivac, ok: &Okolina<'_>) {
+    /// Crta kartu i vraća njezin odgovor, uz koji prozor otvara izbornik na desni klik.
+    pub fn prikazi(&mut self, ui: &mut Ui, u: &mut Uredjivac, ok: &Okolina<'_>) -> Response {
         self.tipkovnica(ui, u);
         self.zaustavi_pri_pritisku(ui);
         let pritisak = ui.input(|i| i.pointer.press_origin());
@@ -190,7 +191,8 @@ impl Karta {
                 if let Some(p) = podloga {
                     crtez_na_karti::nacrtaj_navod(ui.painter(), odgovor.rect, p.navod());
                 }
-            });
+            })
+            .response
     }
 
     fn tipkovnica(&mut self, ui: &mut Ui, u: &mut Uredjivac) {
@@ -336,7 +338,7 @@ fn klikovi(
         c.klik_s(m, shift, u, ok, p);
     }
     if odgovor.clicked_by(PointerButton::Secondary) {
-        c.desni_klik(u, ok);
+        c.desni_klik(m, u, ok, p);
     }
 }
 

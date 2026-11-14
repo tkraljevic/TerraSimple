@@ -805,3 +805,148 @@ fn cmd_backspace_brise_lik_i_kad_mu_je_odabrana_tocka() {
     };
     assert_eq!(p[0].len(), 4, "poništavanje vraća cijeli lik");
 }
+
+/// Točka „Zdenac” u sredini karte, u sloju „Pokus” unutar mape „Vodovod”.
+fn tocka_u_mapi() -> (Aplikacija, IdSloja, IdObjekta, slojevi::IdMape) {
+    let mut app = Aplikacija::default();
+    let Ok(Some(Novo::Mapa(mapa))) = app.uredjivac.izvrsi(NaredbaStabla::DodajMapu {
+        u: None,
+        naziv: "Vodovod".into(),
+    }) else {
+        panic!("mapa");
+    };
+    let Ok(Some(Novo::Sloj(s))) = app.uredjivac.izvrsi(NaredbaStabla::DodajSloj {
+        u: Some(mapa),
+        naziv: "Pokus".into(),
+        vrsta: VrstaGeometrije::Tocka,
+    }) else {
+        panic!("sloj");
+    };
+    let Ok(Some(Novo::Objekt(o))) = app.uredjivac.izvrsi(NaredbaObjekta::Dodaj {
+        sloj: s,
+        naziv: "Zdenac".into(),
+        geometrija: Geometrija::Tocka(Vrh::novi(16.2, 45.3)),
+    }) else {
+        panic!("objekt");
+    };
+    app.karta.karta().idi_na(16.2, 45.3, 14.0);
+    (app, s, o, mapa)
+}
+
+#[test]
+fn desni_klik_na_objekt_otvara_izbornik_i_pokazuje_sloj_u_ploci() {
+    let (app, s, o, mapa) = tocka_u_mapi();
+    let mut h = prozor(app);
+    h.state_mut().stanje.postavi_otvorenost_mape(mapa, false);
+    h.run_steps(2);
+    assert!(h.query_by_label("Zdenac").is_none(), "mapa je zatvorena");
+    desni_klik(&mut h, sredina_karte());
+    assert_eq!(h.state().stanje.odabrano, Some(Odabir::Objekt(s, o)));
+    assert!(h.state().stanje.je_mapa_otvorena(mapa));
+    assert!(h.state().stanje.je_sloj_otvoren(s));
+    assert!(
+        h.query_by_label("Zdenac").is_some(),
+        "redak objekta u ploči"
+    );
+    assert!(h.query_by_label("Zumiraj na objekt").is_some());
+
+    // Klik na kartu zatvara izbornik.
+    klikni(&mut h, sredina_karte() + vec2(200.0, 150.0));
+    assert!(h.query_by_label("Zumiraj na objekt").is_none());
+}
+
+#[test]
+fn izbornik_na_karti_otvara_stil_i_preimenovanje_te_zumira() {
+    let (app, s, o, _) = tocka_u_mapi();
+    let mut h = prozor(app);
+    desni_klik(&mut h, sredina_karte());
+    h.get_by_label("Stil").click();
+    h.run_steps(3);
+    assert_eq!(
+        h.state()
+            .stanje
+            .stil
+            .as_ref()
+            .and_then(|x| x.ciljni_objekt()),
+        Some(o)
+    );
+    assert!(h.query_by_label("Zumiraj na objekt").is_none());
+
+    h.state_mut().stanje.stil = None;
+    h.state_mut().stanje.ploca_otvorena = false;
+    desni_klik(&mut h, sredina_karte());
+    h.get_by_label("Preimenuj").click();
+    h.run_steps(3);
+    assert!(h.state().stanje.ploca_otvorena);
+    assert_eq!(
+        h.state().stanje.preimenovanje.as_ref().map(|p| p.0),
+        Some(Odabir::Objekt(s, o))
+    );
+    pritisni(&mut h, Key::Escape);
+
+    let prije = h.state().karta.pogled().expect("pogled").metara_po_tocki;
+    desni_klik(&mut h, sredina_karte());
+    h.get_by_label("Zumiraj na objekt").click();
+    h.run_steps(5);
+    let poslije = h.state().karta.pogled().expect("pogled").metara_po_tocki;
+    assert!(poslije < prije, "karta je bliže: {prije} → {poslije}");
+}
+
+#[test]
+fn izbornik_za_dva_odabrana_premjesta_i_brise_oba() {
+    let mut app = Aplikacija::default();
+    let cilj = novi_sloj(&mut app, VrstaGeometrije::Tocka);
+    app.uredjivac
+        .izvrsi(NaredbaStabla::Preimenuj {
+            stavka: slojevi::Stavka::Sloj(cilj),
+            naziv: "Crpke".into(),
+        })
+        .expect("naziv");
+    let mut h = prozor(app);
+    let m = sredina_karte();
+    h.state_mut().stanje.odabrano = Some(Odabir::Sloj(cilj));
+    h.run_steps(2);
+    let izvor = novi_sloj(h.state_mut(), VrstaGeometrije::Tocka);
+    h.state_mut().stanje.odabrano = Some(Odabir::Sloj(izvor));
+    for pomak in [0.0, 90.0] {
+        h.state_mut().stanje.alat = Alat::Tocka;
+        h.run_steps(2);
+        klikni(&mut h, m + vec2(pomak, 0.0));
+        preskoci_naziv(&mut h);
+    }
+    pritisni(&mut h, Key::Escape);
+    klikni(&mut h, m + vec2(-30.0, -30.0));
+    klikni(&mut h, m + vec2(150.0, 30.0));
+    assert_eq!(h.state().stanje.odabrani_na_karti.len(), 2);
+
+    // Ploča bi imala isti naziv sloja, pa je zatvorena.
+    h.state_mut().stanje.ploca_otvorena = false;
+    desni_klik(&mut h, m);
+    assert_eq!(h.state().stanje.odabrani_na_karti.len(), 2, "odabir ostaje");
+    assert!(h.query_by_label("Preimenuj").is_none());
+    h.get_by_label("Premjesti u").hover();
+    h.run_steps(3);
+    h.get_by_label("Crpke").click();
+    h.run_steps(3);
+    let u_cilju = h
+        .state()
+        .uredjivac
+        .projekt()
+        .sloj(cilj)
+        .expect("sloj")
+        .objekti
+        .len();
+    assert_eq!(u_cilju, 2);
+    assert!(
+        h.state()
+            .stanje
+            .odabrani_na_karti
+            .iter()
+            .all(|(s, _)| *s == cilj)
+    );
+
+    desni_klik(&mut h, m);
+    h.get_by_label("Obriši 2 odabrana objekta").click();
+    h.run_steps(3);
+    assert_eq!(broj_objekata(h.state()), 0);
+}

@@ -8,6 +8,7 @@ pub mod datoteka;
 mod datoteka_testovi;
 pub mod dijalozi;
 pub mod ikone;
+pub mod izbornik_karte;
 pub mod izvoz;
 #[cfg(test)]
 mod izvoz_testovi;

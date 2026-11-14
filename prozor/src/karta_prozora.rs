@@ -2,11 +2,12 @@
 //! za statusnu traku. Alat, odabir i vidljivost dolaze iz ploče Slojevi.
 
 use crate::ikone::SkladisteIkona;
+use crate::izbornik_karte::{self, RadnjaKarte};
 use crate::poruke::{KatalogPoruka, broj_s_razmakom, mjera_duljine, mjera_povrsine};
 use crate::sastavnice::{
     OpisGumbaIkone, cip, gumb_ikona, tekst_lijevo, tekst_sredina, zaobljeni_okvir,
 };
-use crate::stanje::{Alat, NazivNovog, Odabir, StanjePrikaza};
+use crate::stanje::{Alat, NazivNovog, Odabir, StanjePrikaza, UredjivanjeStila};
 use crate::tema::{Boje, font_obicni, font_srednji};
 use eframe::egui::{self, Pos2, Rect, Role, Sense, Stroke, WidgetInfo, pos2, vec2};
 use karta::{Karta, ListDgu, Okolina, Podloga, Pogled, Poruka};
@@ -141,11 +142,12 @@ impl KartaProzora {
         let vidljivi = vidljivi_slojevi(u.projekt(), stanje);
         let mut dijete = ui.new_child(egui::UiBuilder::new().max_rect(okvir));
         dijete.set_clip_rect(okvir);
-        s_okolinom(katalog, &vidljivi, |ok| {
-            self.karta.prikazi(&mut dijete, u, ok);
+        let odgovor = s_okolinom(katalog, &vidljivi, |ok| {
+            self.karta.prikazi(&mut dijete, u, ok)
         });
         self.odabir_s_karte(stanje);
         self.alat_s_karte(stanje);
+        self.izbornik(&odgovor, u, stanje, katalog);
         if let Some((sloj, objekt)) = self.karta.crtanje().uzmi_novi()
             && let Some(o) = u.projekt().objekt(sloj, objekt)
         {
@@ -217,6 +219,80 @@ impl KartaProzora {
         };
         stanje.odabrani_na_karti.clone_from(&self.zadnji_na_karti);
         self.zadnje_odabrano = stanje.odabrano;
+    }
+
+    /// Desni klik na objekt otvara izbornik, a ploča Slojevi odmah pokaže objekt u njegovu sloju.
+    fn izbornik(
+        &mut self,
+        odgovor: &egui::Response,
+        u: &mut Uredjivac,
+        stanje: &mut StanjePrikaza,
+        katalog: &KatalogPoruka,
+    ) {
+        let trazen = self.karta.crtanje().uzmi_izbornik();
+        if let Some((s, o)) = trazen {
+            pokazi_u_ploci(u.projekt(), stanje, Odabir::Objekt(s, o));
+        }
+        let odabrani = self.karta.crtanje().odabrani().to_vec();
+        let radnja =
+            izbornik_karte::crtaj(odgovor, trazen.is_some(), u.projekt(), &odabrani, katalog);
+        if let Some(r) = radnja {
+            self.izvrsi_radnju(r, &odabrani, u, stanje);
+        }
+    }
+
+    fn izvrsi_radnju(
+        &mut self,
+        radnja: RadnjaKarte,
+        odabrani: &[(IdSloja, IdObjekta)],
+        u: &mut Uredjivac,
+        stanje: &mut StanjePrikaza,
+    ) {
+        let jedini = match odabrani {
+            [(s, o)] => Some(Odabir::Objekt(*s, *o)),
+            _ => None,
+        };
+        match radnja {
+            RadnjaKarte::Preimenuj => {
+                stanje.ploca_otvorena = true;
+                stanje.stil = None;
+                stanje.odabrano = jedini;
+                let _ = crate::ploca::pokreni_preimenovanje_odabranog(u.projekt(), stanje);
+            }
+            RadnjaKarte::Stil => {
+                stanje.ploca_otvorena = true;
+                stanje.stil = jedini.and_then(UredjivanjeStila::za);
+            }
+            RadnjaKarte::Zumiraj => self.zumiraj(u.projekt(), odabrani),
+            RadnjaKarte::PremjestiU(cilj) => self.premjesti(u, stanje, odabrani, cilj),
+            RadnjaKarte::Obrisi => stanje.zatrazeno_brisanje = true,
+        }
+    }
+
+    fn zumiraj(&mut self, projekt: &Projekt, odabrani: &[(IdSloja, IdObjekta)]) {
+        let obuhvat = odabrani
+            .first()
+            .and_then(|(s, o)| projekt.objekt(*s, *o))
+            .and_then(crate::trazilica::obuhvat_objekta);
+        if let Some((duzina, sirina, zum)) = obuhvat {
+            self.karta.idi_na(duzina, sirina, zum);
+        }
+    }
+
+    /// Premješteni objekti ostaju odabrani, a ploča pokaže sloj u koji su otišli.
+    fn premjesti(
+        &mut self,
+        u: &mut Uredjivac,
+        stanje: &mut StanjePrikaza,
+        odabrani: &[(IdSloja, IdObjekta)],
+        cilj: IdSloja,
+    ) {
+        if let Some(novi) = izbornik_karte::premjesti_objekte(u, odabrani, cilj) {
+            if let Some(&(s, o)) = novi.first() {
+                pokazi_u_ploci(u.projekt(), stanje, Odabir::Objekt(s, o));
+            }
+            self.karta.crtanje().postavi_odabrane(novi);
+        }
     }
 
     /// Ploča mjerenja po zaslonu D, desno od trake alata.
@@ -433,6 +509,24 @@ fn gumb_teksta(ui: &egui::Ui, okvir: Rect, tekst: &str, opis: &str, boje: &Boje)
     );
     odgovor.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), opis));
     odgovor
+}
+
+/// Otvara sloj i mape iznad njega, a ploča Slojevi dovodi redak u vidno polje.
+pub fn pokazi_u_ploci(projekt: &Projekt, stanje: &mut StanjePrikaza, cilj: Odabir) {
+    let sloj = match cilj {
+        Odabir::Objekt(s, _) => {
+            stanje.postavi_otvorenost_sloja(s, true);
+            projekt.sloj(s).and_then(|x| x.roditelj)
+        }
+        Odabir::Sloj(s) => projekt.sloj(s).and_then(|x| x.roditelj),
+        Odabir::Mapa(m) => projekt.mapa(m).and_then(|x| x.roditelj),
+    };
+    let mut mapa = sloj;
+    while let Some(m) = mapa {
+        stanje.postavi_otvorenost_mape(m, true);
+        mapa = projekt.mapa(m).and_then(|x| x.roditelj);
+    }
+    stanje.pokazi = Some(cilj);
 }
 
 fn s_okolinom<R>(

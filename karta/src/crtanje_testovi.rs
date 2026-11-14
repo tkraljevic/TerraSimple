@@ -70,7 +70,8 @@ impl Stol {
 
     fn desni(&mut self) {
         self.c.osvjezi_hvatista(self.u.projekt(), &Ravno);
-        self.c.desni_klik(&mut self.u, &OK);
+        self.c
+            .desni_klik(pos2(-5000.0, -5000.0), &mut self.u, &OK, &Ravno);
     }
 
     /// Novi odabir, kao Esc pa klik: klik u AutoCAD-u dodaje u odabir.
