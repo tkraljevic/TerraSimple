@@ -1104,11 +1104,17 @@ impl Aplikacija {
             });
             return;
         }
+        self.uvezi_u_sustavu(staza, None);
+    }
+
+    /// Uvoz datoteke. Kad datoteka ne kaže sustav, prozorčić pita za njega i uvozi ponovno.
+    fn uvezi_u_sustavu(&mut self, staza: PathBuf, sustav: Option<koordinate::Sustav>) {
         let ishod = crate::uvoz::uvezi_datoteku(
             &mut self.uredjivac,
             &mut self.stanje,
             &self.katalog,
             &staza,
+            sustav,
         );
         self.aktivni_dijalog = Some(match ishod {
             Ok(sazetak) => {
@@ -1122,11 +1128,20 @@ impl Aplikacija {
                     poruka: crate::uvoz::poruka_sazetka(&self.katalog, &sazetak),
                 }
             }
-            Err(poruka) => AktivniDijalog::PorukaGreske {
+            Err(crate::uvoz::GreskaUvozaDatoteke::BezSustava(odabran)) => {
+                AktivniDijalog::SustavUvoza { staza, odabran }
+            }
+            Err(crate::uvoz::GreskaUvozaDatoteke::Poruka(poruka)) => AktivniDijalog::PorukaGreske {
                 naslov: self.katalog.tekst("uvoz-greska-naslov"),
                 poruka,
             },
         });
+    }
+
+    fn izvrsi_uvoz_sustava(&mut self, dijalog: &AktivniDijalog) {
+        if let AktivniDijalog::SustavUvoza { staza, odabran } = dijalog {
+            self.uvezi_u_sustavu(staza.clone(), Some(*odabran));
+        }
     }
 
     /// Odabrani slojevi idu u novu mapu, a karta se pomiče na njih.
@@ -1367,6 +1382,7 @@ impl Aplikacija {
                 self.aktivni_dijalog = None;
                 self.izvrsi_izvoz(&dijalog);
                 self.izvrsi_uvoz_gpkg(&dijalog);
+                self.izvrsi_uvoz_sustava(&dijalog);
             }
             IshodDijaloga::Oporavak(vrati) => self.obradi_oporavak(vrati, &dijalog),
         }

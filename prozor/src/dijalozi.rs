@@ -60,6 +60,11 @@ pub enum AktivniDijalog {
     Oporavak(crate::oporavak::Ostatak),
     /// Odabir slojeva iz GeoPackagea koji se kopiraju u projekt (zaslon G).
     UvozGpkg(crate::uvoz_gpkg::PripremaUvoza),
+    /// Datoteka ne kaže koordinatni sustav, pa ga korisnik bira (zaslon L).
+    SustavUvoza {
+        staza: std::path::PathBuf,
+        odabran: koordinate::Sustav,
+    },
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -418,7 +423,134 @@ fn crtaj_ostale(
         AktivniDijalog::UvozGpkg(priprema) => {
             crtaj_uvoz_gpkg(ui, dostupan, priprema, boje, katalog)
         }
+        AktivniDijalog::SustavUvoza { staza, odabran } => {
+            crtaj_sustav_uvoza(ui, dostupan, staza, odabran, boje, katalog)
+        }
         _ => None,
+    }
+}
+
+/// Sustavi u prozorčiću, redom kao u nacrtu L, s ključem opisa.
+const SUSTAVI_UVOZA: [(koordinate::Sustav, &str, &str); 4] = [
+    (
+        koordinate::Sustav::Htrs96Tm,
+        "HTRS96/TM",
+        "sustav-htrs-opis",
+    ),
+    (
+        koordinate::Sustav::HdksZona6,
+        "HDKS, zona 6",
+        "sustav-hdks6-opis",
+    ),
+    (
+        koordinate::Sustav::HdksZona5,
+        "HDKS, zona 5",
+        "sustav-hdks5-opis",
+    ),
+    (koordinate::Sustav::Wgs84, "WGS84", "sustav-wgs-opis"),
+];
+
+/// Jedan izbor sustava: krug, naziv i opis. Klik ga odabire.
+fn redak_sustava(
+    ui: &mut egui::Ui,
+    okvir: Rect,
+    (naziv, opis): (&str, &str),
+    odabran: bool,
+    boje: &Boje,
+) -> bool {
+    let ispuna = if odabran {
+        boje.primarna_svijetla
+    } else {
+        boje.ploca
+    };
+    zaobljeni_okvir(ui, okvir, ispuna, Some(boje.obrub), 8.0);
+    let krug = pos2(okvir.min.x + 22.0, okvir.center().y);
+    let boja = if odabran { boje.primarna } else { boje.obrub_2 };
+    ui.painter()
+        .circle_stroke(krug, 9.0, egui::Stroke::new(2.0, boja));
+    if odabran {
+        ui.painter().circle_filled(krug, 5.0, boje.primarna);
+    }
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 44.0, okvir.min.y + 15.0),
+        naziv,
+        font_srednji(14.0),
+        boje.tekst,
+    );
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 44.0, okvir.min.y + 34.0),
+        opis,
+        font_obicni(12.0),
+        boje.tekst_2,
+    );
+    let odgovor = ui.interact(
+        okvir,
+        ui.make_persistent_id(("sustav_uvoza", naziv)),
+        Sense::click(),
+    );
+    odgovor
+        .widget_info(|| WidgetInfo::selected(Role::RadioButton, ui.is_enabled(), odabran, naziv));
+    odgovor.clicked()
+}
+
+/// Zaslon L: program pita u kojem su sustavu podaci, a ne pretpostavlja.
+fn crtaj_sustav_uvoza(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    staza: &std::path::Path,
+    odabran: &mut koordinate::Sustav,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 560.0;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 480.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
+    let x = okvir.min.x + 24.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 30.0),
+        &katalog.tekst("sustav-naslov"),
+        font_srednji(18.0),
+        boje.tekst,
+    );
+    let datoteka = staza
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let tekst = katalog.s_tekstovima("sustav-poruka", &[("datoteka", datoteka)]);
+    let galija = ui
+        .painter()
+        .layout(tekst, font_obicni(13.5), boje.tekst_2, sirina - 48.0);
+    ui.painter()
+        .galley(pos2(x, okvir.min.y + 52.0), galija, boje.tekst_2);
+    for (i, (sustav, naziv, kljuc)) in SUSTAVI_UVOZA.into_iter().enumerate() {
+        let r = Rect::from_min_size(
+            pos2(x, okvir.min.y + 110.0 + i as f32 * 62.0),
+            vec2(sirina - 48.0, 54.0),
+        );
+        let opis = katalog.tekst(kljuc);
+        if redak_sustava(ui, r, (naziv, &opis), *odabran == sustav, boje) {
+            *odabran = sustav;
+        }
+    }
+    let by = okvir.max.y - 48.0;
+    let uvezi = Rect::from_min_size(pos2(okvir.max.x - 124.0, by), vec2(100.0, 32.0));
+    let odustani = Rect::from_min_size(pos2(uvezi.min.x - 108.0, by), vec2(100.0, 32.0));
+    let odustani = gumb_dijaloga(
+        ui,
+        odustani,
+        &katalog.tekst("izvoz-odustani"),
+        false,
+        false,
+        boje,
+    );
+    let uvezi = gumb_dijaloga(ui, uvezi, &katalog.tekst("sustav-uvezi"), true, false, boje);
+    if uvezi.clicked() {
+        Some(IshodDijaloga::Prihvati)
+    } else {
+        odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
     }
 }
 

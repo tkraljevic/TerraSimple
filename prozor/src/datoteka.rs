@@ -28,6 +28,7 @@ pub struct SustavskiBirac;
 impl BiracDatoteka for SustavskiBirac {
     fn otvori_datoteku(&self) -> Option<PathBuf> {
         rfd::FileDialog::new()
+            .add_filter("Shapefile (SHP)", &["shp"])
             .add_filter("GeoPackage", &["gpkg"])
             .pick_file()
     }
@@ -48,6 +49,7 @@ impl BiracDatoteka for SustavskiBirac {
             )
             .add_filter("Google Earth (KML, KMZ)", &["kml", "kmz"])
             .add_filter("GeoJSON", &["geojson", "json"])
+            .add_filter("Shapefile (SHP)", &["shp"])
             .add_filter("GeoPackage", &["gpkg"])
             .pick_file()
     }

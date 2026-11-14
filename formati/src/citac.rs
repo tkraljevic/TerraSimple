@@ -63,6 +63,12 @@ pub enum GreskaKml {
     NeispravanJson,
     /// GeoJSON je u koordinatnom sustavu koji program ne zna.
     NepoznatSustav,
+    /// Datoteka ne kaže sustav, a koordinate nisu stupnjevi. Uz grešku ide prva koordinata, da
+    /// prozorčić predloži sustav.
+    BezSustava {
+        istok: i64,
+        sjever: i64,
+    },
 }
 
 impl GreskaKml {
@@ -86,6 +92,7 @@ impl fmt::Display for GreskaKml {
             Self::PreDuboko => f.write_str("oznake su ugniježđene predubok"),
             Self::NeispravanJson => f.write_str("GeoJSON nije ispravan"),
             Self::NepoznatSustav => f.write_str("koordinatni sustav nije poznat"),
+            Self::BezSustava { .. } => f.write_str("datoteka ne kaže koordinatni sustav"),
             ostalo => f.write_str(ostalo.opis_arhive().unwrap_or_default()),
         }
     }
@@ -93,9 +100,17 @@ impl fmt::Display for GreskaKml {
 
 impl std::error::Error for GreskaKml {}
 
-/// Čita KML, KMZ ili GeoJSON. Vrsta se prepoznaje po sadržaju, pa ni krivi nastavak ne smeta: KMZ
-/// po potpisu ZIP-a, a GeoJSON po prvoj vitičastoj zagradi.
+/// Čita KML, KMZ, GeoJSON ili shapefile. Vrsta se prepoznaje po sadržaju, pa ni krivi nastavak ne
+/// smeta: KMZ po potpisu ZIP-a, shapefile po svom potpisu, a GeoJSON po prvoj vitičastoj zagradi.
 pub fn procitaj(staza: &Path) -> Result<DokumentKml, GreskaKml> {
+    procitaj_u_sustavu(staza, None)
+}
+
+/// Isto, ali za datoteku bez zapisanog sustava vrijedi `sustav`, npr. iz prozorčića.
+pub fn procitaj_u_sustavu(
+    staza: &Path,
+    sustav: Option<koordinate::Sustav>,
+) -> Result<DokumentKml, GreskaKml> {
     let datoteka = File::open(staza).map_err(|_| GreskaKml::Citanje)?;
     let mut ulaz = BufReader::with_capacity(64 * 1024, datoteka);
     let pocetak = ulaz.fill_buf().map(<[u8]>::to_vec).unwrap_or_default();
@@ -103,10 +118,19 @@ pub fn procitaj(staza: &Path) -> Result<DokumentKml, GreskaKml> {
     if pocetak.starts_with(b"PK\x03\x04") {
         return kmz::procitaj(ulaz.into_inner());
     }
+    if pocetak.starts_with(&crate::shp::POTPIS) {
+        return procitaj_sve(ulaz).and_then(|b| crate::shp::procitaj(staza, &b, sustav));
+    }
     if je_json(&pocetak) {
-        return procitaj_json(ulaz);
+        return procitaj_json(ulaz, sustav);
     }
     procitaj_iz(ulaz)
+}
+
+fn procitaj_sve(mut ulaz: impl std::io::Read) -> Result<Vec<u8>, GreskaKml> {
+    let mut sve = Vec::new();
+    ulaz.read_to_end(&mut sve).map_err(|_| GreskaKml::Citanje)?;
+    Ok(sve)
 }
 
 /// Prvi znak nakon razmaka i oznake UTF-8 (BOM) je vitičasta zagrada.
@@ -115,11 +139,13 @@ fn je_json(pocetak: &[u8]) -> bool {
     bez_bom.iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'{')
 }
 
-fn procitaj_json(mut ulaz: impl std::io::Read) -> Result<DokumentKml, GreskaKml> {
-    let mut sve = Vec::new();
-    ulaz.read_to_end(&mut sve).map_err(|_| GreskaKml::Citanje)?;
+fn procitaj_json(
+    ulaz: impl std::io::Read,
+    sustav: Option<koordinate::Sustav>,
+) -> Result<DokumentKml, GreskaKml> {
+    let sve = procitaj_sve(ulaz)?;
     let bez_bom = sve.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(&sve);
-    crate::geojson::procitaj(bez_bom)
+    crate::geojson::procitaj(bez_bom, sustav)
 }
 
 pub fn procitaj_tekst(tekst: &str) -> Result<DokumentKml, GreskaKml> {

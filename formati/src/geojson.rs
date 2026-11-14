@@ -38,30 +38,59 @@ fn svojstvo<'a>(p: &'a Map<String, Value>, kljucevi: &[&str]) -> Option<&'a str>
     })
 }
 
-/// Sustav iz `crs`. Bez njega vrijedi WGS84.
-fn sustav(v: &Value) -> Result<Option<Pretvornik>, GreskaKml> {
-    let Some(naziv) = v.pointer("/crs/properties/name").and_then(Value::as_str) else {
-        return Ok(None);
-    };
+fn u_pretvornik(s: Sustav) -> Option<Pretvornik> {
+    (s != Sustav::Wgs84)
+        .then(|| Pretvornik::novi(s, Sustav::Wgs84).ok())
+        .flatten()
+}
+
+/// Sustav iz `crs`, npr. `urn:ogc:def:crs:EPSG::3765`.
+fn sustav_iz_crs(naziv: &str) -> Result<Option<Pretvornik>, GreskaKml> {
     let kraj = naziv.rsplit(':').next().unwrap_or_default();
     let s = if kraj.eq_ignore_ascii_case("CRS84") {
         Some(Sustav::Wgs84)
     } else {
         kraj.parse().ok().and_then(Sustav::iz_epsg)
     };
-    match s {
-        None => Err(GreskaKml::NepoznatSustav),
-        Some(Sustav::Wgs84) => Ok(None),
-        Some(s) => Pretvornik::novi(s, Sustav::Wgs84)
-            .map(Some)
-            .map_err(|_| GreskaKml::NepoznatSustav),
+    s.map(u_pretvornik).ok_or(GreskaKml::NepoznatSustav)
+}
+
+/// Prva točka u datoteci, za provjeru jesu li koordinate u stupnjevima.
+fn prvi_polozaj(v: &Value) -> Option<[f64; 2]> {
+    let broj = |a: &Vec<Value>, i: usize| a.get(i).and_then(Value::as_f64);
+    let par = v
+        .as_array()
+        .and_then(|a| broj(a, 0).zip(broj(a, 1)))
+        .map(|(x, y)| [x, y]);
+    par.or_else(|| {
+        ["features", "geometry", "coordinates", "geometries"]
+            .iter()
+            .filter_map(|k| v.get(k))
+            .chain(v.as_array().into_iter().flatten())
+            .find_map(prvi_polozaj)
+    })
+}
+
+/// Sustav iz `crs`, a bez njega zadani. Bez obaju vrijedi WGS84 (RFC 7946), osim kad koordinate
+/// očito nisu stupnjevi: tada uvoz pita za sustav.
+fn sustav(v: &Value, zadani: Option<Sustav>) -> Result<Option<Pretvornik>, GreskaKml> {
+    if let Some(naziv) = v.pointer("/crs/properties/name").and_then(Value::as_str) {
+        return sustav_iz_crs(naziv);
+    }
+    match (zadani, prvi_polozaj(v)) {
+        (Some(s), _) => Ok(u_pretvornik(s)),
+        (None, Some([x, y])) if x.abs() > 180.0 || y.abs() > 90.0 => Err(GreskaKml::BezSustava {
+            istok: x as i64,
+            sjever: y as i64,
+        }),
+        _ => Ok(None),
     }
 }
 
 /// Čita GeoJSON i pretvara ga u isti oblik kao KML.
-pub(crate) fn procitaj(tekst: &[u8]) -> Result<DokumentKml, GreskaKml> {
+pub(crate) fn procitaj(tekst: &[u8], zadani: Option<Sustav>) -> Result<DokumentKml, GreskaKml> {
     let v: Value = serde_json::from_slice(tekst).map_err(|_| GreskaKml::NeispravanJson)?;
-    let pretvornik = sustav(&v)?;
+    let pretvornik = sustav(&v, zadani)?;
     let znacajke: Vec<Value> = match v.get("type").and_then(Value::as_str) {
         Some("FeatureCollection") => v
             .get("features")

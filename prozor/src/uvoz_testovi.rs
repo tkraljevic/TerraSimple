@@ -28,6 +28,12 @@ fn svaka_greska_ima_svoju_poruku() {
         GreskaKml::NemaKmlUArhivi,
         GreskaKml::NedopustenaPutanja,
         GreskaKml::PrevelikaArhiva,
+        GreskaKml::NeispravanJson,
+        GreskaKml::NepoznatSustav,
+        GreskaKml::BezSustava {
+            istok: 1,
+            sjever: 2,
+        },
     ];
     let mut poruke: Vec<String> = greske.iter().map(|g| poruka_greske(&k, *g)).collect();
     assert!(poruke.iter().all(|p| p.ends_with('.')));
@@ -67,8 +73,14 @@ fn uvoz_otvara_novu_mapu_a_podmape_zatvara() {
     let k = KatalogPoruka::hrvatski();
     let mut u = Uredjivac::novi();
     let mut stanje = StanjePrikaza::novo();
-    let s =
-        uvezi_datoteku(&mut u, &mut stanje, &k, &podatak("mijesani_slojevi.kml")).expect("uvoz");
+    let s = uvezi_datoteku(
+        &mut u,
+        &mut stanje,
+        &k,
+        &podatak("mijesani_slojevi.kml"),
+        None,
+    )
+    .expect("uvoz");
     assert_eq!(stanje.odabrano, Some(Odabir::Mapa(s.mapa)));
     assert!(stanje.je_mapa_otvorena(s.mapa));
     let pod = podmape(u.projekt(), s.mapa);
@@ -87,8 +99,12 @@ fn uvoz_otvara_novu_mapu_a_podmape_zatvara() {
     assert_eq!(obuhvat_mape(u.projekt(), prazna), None);
     assert!(podmape(u.projekt(), IdMape(9999)).is_empty());
 
-    let greska = uvezi_datoteku(&mut u, &mut stanje, &k, &podatak("zip_bomba.kmz"));
-    assert_eq!(greska, Err(poruka_greske(&k, GreskaKml::PrevelikaArhiva)));
+    let greska = uvezi_datoteku(&mut u, &mut stanje, &k, &podatak("zip_bomba.kmz"), None);
+    let poruka = poruka_greske(&k, GreskaKml::PrevelikaArhiva);
+    assert_eq!(
+        greska,
+        Err(crate::uvoz::GreskaUvozaDatoteke::Poruka(poruka))
+    );
 }
 
 fn prozor(birac: &LazniBirac) -> Harness<'static, Aplikacija> {
@@ -141,8 +157,7 @@ fn izbornik_datoteka_uvozi_a_pokvaren_kml_javlja_gresku() {
     birac.postavi_uvoz(podatak("ostecen.kml"));
     h.get_by_label("Datoteka").click();
     h.run_steps(3);
-    h.get_by_label("Uvezi KML, KMZ, GeoJSON ili GeoPackage…")
-        .click();
+    h.get_by_label("Uvezi sloj…").click();
     h.run_steps(4);
     assert!(matches!(
         h.state().aktivni_dijalog,
@@ -154,4 +169,66 @@ fn izbornik_datoteka_uvozi_a_pokvaren_kml_javlja_gresku() {
     assert_eq!(naslov, "Uvoz nije uspio");
     assert!(h.query_by_label("U redu").is_some());
     assert!(h.state().uredjivac.projekt().korijen().is_empty());
+}
+
+fn shp(ime: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../formati/tests/podaci/shp")
+        .join(ime)
+}
+
+#[test]
+fn shapefile_bez_sustava_pita_a_onda_uvozi_na_pravo_mjesto() {
+    let birac = LazniBirac::novi();
+    let mut h = prozor(&birac);
+    birac.postavi_uvoz(shp("crpke.shp"));
+    h.get_by_label("Uvezi sloj").click();
+    h.run_steps(3);
+    let Some(AktivniDijalog::SustavUvoza { odabran, .. }) = &h.state().aktivni_dijalog else {
+        panic!("{:?}", h.state().aktivni_dijalog);
+    };
+    assert_eq!(
+        *odabran,
+        koordinate::Sustav::HdksZona6,
+        "prijedlog po koordinatama"
+    );
+    h.get_by_label("HTRS96/TM").click();
+    h.run_steps(2);
+    h.get_by_label("HDKS, zona 6").click();
+    h.run_steps(2);
+    h.get_by_label("Uvezi").click();
+    h.run_steps(3);
+    assert!(matches!(
+        h.state().aktivni_dijalog,
+        Some(AktivniDijalog::Obavijest { .. })
+    ));
+    let tocke: Vec<_> = h
+        .state()
+        .uredjivac
+        .projekt()
+        .slojevi()
+        .flat_map(|(_, s)| s.objekti.values())
+        .map(|o| o.geometrija.clone())
+        .collect();
+    assert_eq!(tocke.len(), 2);
+    assert!(matches!(tocke[0], slojevi::Geometrija::Tocka(v) if (v.duzina - 18.61).abs() < 1e-4));
+
+    // Shapefile s .prj uvozi se odmah, a Odustani u pitanju o sustavu ne uvozi ništa.
+    h.get_by_label("U redu").click();
+    h.run_steps(2);
+    birac.postavi_uvoz(shp("kanali.shp"));
+    h.get_by_label("Uvezi sloj").click();
+    h.run_steps(3);
+    assert!(matches!(
+        h.state().aktivni_dijalog,
+        Some(AktivniDijalog::Obavijest { .. })
+    ));
+    h.get_by_label("U redu").click();
+    h.run_steps(2);
+    birac.postavi_uvoz(shp("crpke.shp"));
+    h.get_by_label("Uvezi sloj").click();
+    h.run_steps(3);
+    h.get_by_label("Odustani").click();
+    h.run_steps(2);
+    assert!(h.state().aktivni_dijalog.is_none());
 }
