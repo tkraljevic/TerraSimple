@@ -1,7 +1,9 @@
 use crate::aplikacija::{Aplikacija, PostavkeAplikacije};
 use crate::datoteka::LazniBirac;
 use crate::dijalozi::{AktivniDijalog, StavkaIzbornikaDatoteka};
-use crate::izvoz::{FormatIzvoza, Prolaz, naziv_izvoza, pripremi, stavke_geojson, stavke_pregleda};
+use crate::izvoz::{
+    FormatIzvoza, Prolaz, naziv_izvoza, pripremi, stavke_geojson, stavke_pregleda, stavke_shp,
+};
 use crate::poruke::KatalogPoruka;
 use crate::tema::Razmaci;
 use eframe::egui::vec2;
@@ -231,7 +233,7 @@ fn geojson_ima_svoj_pregled() {
     };
     assert_eq!(stavke_geojson(&k, &samo).len(), 2);
     let nazivi: Vec<&str> = FormatIzvoza::SVI.iter().map(|f| f.nastavak()).collect();
-    assert_eq!(nazivi, ["kml", "kmz", "geojson"]);
+    assert_eq!(nazivi, ["kml", "kmz", "geojson", "shp"]);
 }
 
 #[test]
@@ -262,5 +264,80 @@ fn izbor_geojsona_u_prozorcicu_pise_geojson() {
     assert!(tekst.contains("\"type\":\"FeatureCollection\""));
     let d = formati::procitaj(&staza).unwrap();
     assert!(d.korijen.broj_objekata() > 0);
+    std::fs::remove_dir_all(&mapa).unwrap();
+}
+
+#[test]
+fn shp_ima_svoj_pregled() {
+    let k = KatalogPoruka::hrvatski();
+    let sustav = koordinate::Sustav::HdksZona6;
+    assert_eq!(stavke_shp(&k, &PregledIzvoza::default(), sustav).len(), 1);
+    let p = PregledIzvoza {
+        tocaka: 2,
+        mapa: 1,
+        slojeva: 2,
+        visine: 1,
+        izostavljene_vrijednosti: 1,
+        atributi: ["dubina_bunara_m".to_owned()].into(),
+        ..PregledIzvoza::default()
+    };
+    let naslovi: Vec<String> = stavke_shp(&k, &p, sustav)
+        .into_iter()
+        .map(|s| s.naslov)
+        .collect();
+    assert_eq!(
+        naslovi,
+        [
+            "Sve geometrije, nazivi, opisi i mape",
+            "Koordinate u odabranom sustavu",
+            "Atributi",
+            "Svaki sloj ide u svoju datoteku",
+            "Mape se ne zapisuju",
+            "Stil ne ide u SHP",
+            "Visine ne idu u SHP",
+            "Nazivi polja skraćuju se na 10 znakova",
+            "Neke vrijednosti ne idu u KML",
+        ]
+    );
+}
+
+#[test]
+fn izvoz_u_shp_u_odabranom_sustavu() {
+    let birac = LazniBirac::novi();
+    let mut h = prozor(&birac);
+    birac.postavi_uvoz(podatak("mijesani_slojevi.kml"));
+    h.get_by_label("Uvezi sloj").click();
+    h.run_steps(4);
+    h.get_by_label("U redu").click();
+    h.run_steps(3);
+    h.state_mut()
+        .pokreni_radnju_datoteke(StavkaIzbornikaDatoteka::Izvezi);
+    h.run_steps(3);
+    h.get_by_label("SHP").click();
+    h.run_steps(3);
+    h.get_by_label("HDKS, zona 6").click();
+    h.run_steps(3);
+    let mapa = std::env::temp_dir().join(format!("terrasimple-shp-ui-{}", std::process::id()));
+    std::fs::create_dir_all(&mapa).unwrap();
+    birac.postavi_izvoz(mapa.join("teren.shp"));
+    h.get_by_label("Izvezi…").click();
+    h.run_steps(4);
+    let Some(AktivniDijalog::Obavijest { poruka, .. }) = &h.state().aktivni_dijalog else {
+        panic!("{:?}", h.state().aktivni_dijalog);
+    };
+    assert!(poruka.contains("shapefilea"), "{poruka}");
+    let shp: Vec<PathBuf> = std::fs::read_dir(&mapa)
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|d| d.path())
+        .filter(|p| p.extension().is_some_and(|e| e == "shp"))
+        .collect();
+    assert!(shp.len() > 1);
+    let prj = std::fs::read_to_string(shp[0].with_extension("prj")).unwrap();
+    assert_eq!(
+        formati::sustav_iz_prj(&prj),
+        Some(koordinate::Sustav::HdksZona6)
+    );
+    assert!(formati::procitaj(&shp[0]).unwrap().korijen.broj_objekata() > 0);
     std::fs::remove_dir_all(&mapa).unwrap();
 }

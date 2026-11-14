@@ -13,7 +13,7 @@ Stanje 10. 11. 2026.:
   ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
   brisanje s ⌘ + delete i popis prečaca.
 - **Faze:** 0 i 1 su gotove. Faza 2 je gotova, osim sloja koji se čita iz izvorne datoteke. Iz
-  faze 3 radi uvoz i izvoz KML-a, KMZ-a i GeoJSON-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
+  faze 3 radi sve (KML, KMZ, GeoJSON i SHP, uvoz i izvoz), a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
 - **Kvaliteta:** provjera `cargo xtask provjera` prolazi, s pokrivenošću oko 96 %.
 - **Repozitorij** je javan na GitHubu od 10. 11. 2026. Razvijamo na Rustu 1.99.1.
 
@@ -90,7 +90,7 @@ o gumbu „Otvori u QGIS-u” su u [rezultati.md](rezultati.md).
 Otvoreno: Windows i Linux pravim mišem, HDKS u tražilici (odluka postoji, 9. 11. 2026.) i smije li se
 spremiti lik koji siječe sam sebe (sad se sprema uz upozorenje).
 
-### Faza 2: projekt i slojevi (3–4 tjedna) — djelomično
+### Faza 2: projekt i slojevi (3–4 tjedna) — gotova
 
 Zasloni A4, F, F2, G, J. Projekt je jedan GeoPackage, s mapama, novim slojem, uvozom GeoPackagea, automatskim
 spremanjem, oporavkom i gumbom „Otvori u QGIS-u”.
@@ -112,7 +112,7 @@ pamti samo naziv i opis; prozorčić ih navodi.
 
 Nedostaje: čitanje sloja iz izvorne datoteke, bez kopiranja (zaseban posao).
 
-### Faza 3: Google Earth (3–5 tjedana) — u radu
+### Faza 3: Google Earth (3–5 tjedana) — gotova
 
 Zasloni A3, K, L. KML, KMZ, GeoJSON i SHP, pregled gubitaka pri izvozu, pitanje o koordinatnom sustavu,
 razmjena s Earth Proom.
@@ -136,7 +136,12 @@ razmjena s Earth Proom.
   UTF-8, a ako nije ispravan kao kodna stranica 1250, jer `.cpg` zna lagati. Sustav se prepoznaje iz `.prj`
   (HTRS96/TM, HDKS zone 5 i 6, WGS84, Web Mercator). Bez njega, i za GeoJSON s metrima bez `crs`-a,
   prozorčić (zaslon L) pita sustav i predlaže ga po koordinatama. „Drugi sustav (EPSG broj)” još nema.
-- Nedostaje: izvoz u SHP.
+- **Izvoz u SHP (14. 11. 2026.):** u istom prozorčiću, s izborom sustava (zadano HTRS96/TM, jer tako
+  podloge traži direkcija). Svaki sloj ide u svoj `.shp` s `.shx`, `.dbf` (UTF-8, `.cpg`) i `.prj` kakav piše
+  GDAL. Pregled kaže da stil, mape i visine ne idu u datoteku i da se nazivi polja skraćuju na 10 znakova.
+  GDAL iz QGIS-a čita izvezenu datoteku u pravom sustavu, s ispravnim slovima i valjanim likom s rupom.
+
+Faza 3 je time gotova. Otvoreno: „Drugi sustav (EPSG broj)” u pitanju o sustavu, izvoz SHP-a s visinom.
 
 **Na kraju izlazi 0.1, prvo upotrebljivo izdanje:** zamjenjuje Earth Pro za crtanje, mjerenje i KML, a sve se
 otvara u QGIS-u. Do ovdje je 12–18 tjedana rada.

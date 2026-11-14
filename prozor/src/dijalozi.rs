@@ -654,6 +654,24 @@ fn crtaj_stavku_pregleda(
     visina + 34.0
 }
 
+/// Gumbi za sustav izvoza u SHP.
+fn izbor_sustava_izvoza(
+    ui: &mut egui::Ui,
+    priprema: &mut crate::izvoz::PripremaIzvoza,
+    pocetak: egui::Pos2,
+    boje: &Boje,
+) {
+    for (i, (sustav, naziv, _)) in SUSTAVI_UVOZA.into_iter().enumerate() {
+        let okvir = Rect::from_min_size(
+            pos2(pocetak.x + i as f32 * 124.0, pocetak.y),
+            vec2(116.0, 28.0),
+        );
+        if gumb_dijaloga(ui, okvir, naziv, priprema.sustav == sustav, false, boje).clicked() {
+            priprema.sustav = sustav;
+        }
+    }
+}
+
 /// Gumbi za format izvoza. Klik na drugi format mijenja pregled.
 fn izbor_formata(
     ui: &mut egui::Ui,
@@ -681,8 +699,10 @@ fn crtaj_izvoz(
     katalog: &KatalogPoruka,
 ) -> Option<IshodDijaloga> {
     let stavke = priprema.stavke(katalog);
+    let shp = priprema.format == crate::izvoz::FormatIzvoza::Shp;
+    let dodatak = if shp { 40.0 } else { 0.0 };
     let sirina = 560.0;
-    let visina = 210.0 + 60.0 * stavke.len() as f32;
+    let visina = 210.0 + dodatak + 60.0 * stavke.len() as f32;
     let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, visina));
     zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
     let x = okvir.min.x + 24.0;
@@ -698,6 +718,9 @@ fn crtaj_izvoz(
         boje.tekst,
     );
     izbor_formata(ui, priprema, pos2(x, okvir.min.y + 52.0), boje);
+    if shp {
+        izbor_sustava_izvoza(ui, priprema, pos2(x, okvir.min.y + 90.0), boje);
+    }
     let tekstovi = [
         ("naziv", priprema.naziv.clone()),
         ("nastavak", priprema.format.nastavak().to_owned()),
