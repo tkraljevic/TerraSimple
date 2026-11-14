@@ -596,8 +596,15 @@ fn crtaj_stablo_u_ploci(
     let preimenuj = katalog.tekst("gumb-preimenuj");
     let obrisi = katalog.tekst("gumb-obrisi");
     let stil = katalog.tekst("izbornik-stil");
-    let stavke_mape = [preimenuj.as_str(), obrisi.as_str()];
-    let stavke_sloja = [preimenuj.as_str(), stil.as_str(), obrisi.as_str()];
+    let izvezi = katalog.tekst("izbornik-izvezi");
+    let stavke_mape = [preimenuj.as_str(), izvezi.as_str(), obrisi.as_str()];
+    let stavke_sloja = [
+        preimenuj.as_str(),
+        stil.as_str(),
+        izvezi.as_str(),
+        obrisi.as_str(),
+    ];
+    let stavke_objekta = [preimenuj.as_str(), stil.as_str(), obrisi.as_str()];
     let premjesti_u = katalog.tekst("izbornik-premjesti-u");
     let tamna = stanje.tema_tamna;
     let visina_retka = Razmaci::VISINA_RETKA_STABLA;
@@ -643,10 +650,10 @@ fn crtaj_stablo_u_ploci(
             labela_strelice: &labela_strelice,
             labela_vidljivosti: &labela_vidljivosti,
             uredjivanje: uredjivanje_retka(stanje, redak.odabir),
-            stavke_izbornika: if matches!(redak.odabir, Odabir::Mapa(_)) {
-                &stavke_mape
-            } else {
-                &stavke_sloja
+            stavke_izbornika: match redak.odabir {
+                Odabir::Mapa(_) => &stavke_mape,
+                Odabir::Sloj(_) => &stavke_sloja,
+                Odabir::Objekt(_, _) => &stavke_objekta,
             },
             podizbornik,
             povlacenje: stanje.preimenovanje.is_none(),
@@ -918,10 +925,45 @@ fn uredjivanje_retka(stanje: &StanjePrikaza, odabir: Odabir) -> Option<bool> {
 }
 
 const STAVKA_PREIMENUJ: usize = 0;
-/// Mapa nema stil, pa joj je „Obriši” odmah iza „Preimenuj”.
-const STAVKA_STIL: usize = 1;
 
-/// Desni klik odabire redak; izbornik ga zatim preimenuje ili traži brisanje.
+/// Radnje izbornika retka. Mapa nema stil, a objekt se ne izvozi sam.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RadnjaRetka {
+    Preimenuj,
+    Stil,
+    Izvezi,
+    Obrisi,
+}
+
+const fn radnje_retka(odabir: Odabir) -> &'static [RadnjaRetka] {
+    match odabir {
+        Odabir::Mapa(_) => &[
+            RadnjaRetka::Preimenuj,
+            RadnjaRetka::Izvezi,
+            RadnjaRetka::Obrisi,
+        ],
+        Odabir::Sloj(_) => &[
+            RadnjaRetka::Preimenuj,
+            RadnjaRetka::Stil,
+            RadnjaRetka::Izvezi,
+            RadnjaRetka::Obrisi,
+        ],
+        Odabir::Objekt(_, _) => &[
+            RadnjaRetka::Preimenuj,
+            RadnjaRetka::Stil,
+            RadnjaRetka::Obrisi,
+        ],
+    }
+}
+
+const fn stavka_stabla(odabir: Odabir) -> slojevi::Stavka {
+    match odabir {
+        Odabir::Mapa(m) => slojevi::Stavka::Mapa(m),
+        Odabir::Sloj(s) | Odabir::Objekt(s, _) => slojevi::Stavka::Sloj(s),
+    }
+}
+
+/// Desni klik odabire redak; izbornik ga zatim preimenuje, otvara stil, traži izvoz ili brisanje.
 fn obradi_izbornik_retka(
     projekt: &Projekt,
     stanje: &mut StanjePrikaza,
@@ -931,23 +973,23 @@ fn obradi_izbornik_retka(
     if odgovor.desni_klik {
         stanje.odabrano = Some(odabir);
     }
-    let stil = !matches!(odabir, Odabir::Mapa(_));
-    match odgovor.stavka_izbornika {
-        Some(STAVKA_PREIMENUJ) => {
-            stanje.odabrano = Some(odabir);
+    let Some(radnja) = odgovor
+        .stavka_izbornika
+        .and_then(|i| radnje_retka(odabir).get(i).copied())
+    else {
+        return;
+    };
+    stanje.odabrano = Some(odabir);
+    if radnja != RadnjaRetka::Preimenuj {
+        stanje.preimenovanje = None;
+    }
+    match radnja {
+        RadnjaRetka::Preimenuj => {
             let _ = pokreni_preimenovanje_odabranog(projekt, stanje);
         }
-        Some(STAVKA_STIL) if stil => {
-            stanje.odabrano = Some(odabir);
-            stanje.preimenovanje = None;
-            stanje.stil = UredjivanjeStila::za(odabir);
-        }
-        Some(_) => {
-            stanje.odabrano = Some(odabir);
-            stanje.preimenovanje = None;
-            stanje.zatrazeno_brisanje = true;
-        }
-        None => {}
+        RadnjaRetka::Stil => stanje.stil = UredjivanjeStila::za(odabir),
+        RadnjaRetka::Izvezi => stanje.zatrazen_izvoz = Some(stavka_stabla(odabir)),
+        RadnjaRetka::Obrisi => stanje.zatrazeno_brisanje = true,
     }
 }
 

@@ -205,6 +205,13 @@ impl Default for Aplikacija {
 /// Stavke gornjeg izbornika koje nešto rade; ostale su zasad samo natpis.
 const STAVKE_S_RADNJOM: [&str; 3] = ["izbornik-datoteka", "izbornik-slojevi", "izbornik-pomoc"];
 
+/// Popis upozorenja nakon otvaranja otvara se i zatvara istim gumbom.
+fn preklopi_popis(dijalog: &mut AktivniDijalog) {
+    if let AktivniDijalog::UpozorenjaOtvaranja { otvoren_popis, .. } = dijalog {
+        *otvoren_popis = !*otvoren_popis;
+    }
+}
+
 pub(crate) fn dijalog_za_pregled(
     naziv: Option<&str>,
     katalog: &KatalogPoruka,
@@ -248,7 +255,17 @@ impl Aplikacija {
             // Izmišljeni likovi primjera su kod 16,0° E i 45,8° N.
             karta.karta().idi_na(16.004, 45.802, 16.5);
         }
-        let aktivni_dijalog = dijalog_za_pregled(postavke.dijalog.as_deref(), &katalog);
+        let izvoz = || {
+            let opseg = formati::OpsegIzvoza::Projekt;
+            AktivniDijalog::Izvoz(crate::izvoz::pripremi(
+                uredjivac.projekt(),
+                opseg,
+                None,
+                &katalog,
+            ))
+        };
+        let aktivni_dijalog = dijalog_za_pregled(postavke.dijalog.as_deref(), &katalog)
+            .or_else(|| (postavke.dijalog.as_deref() == Some("izvoz")).then(izvoz));
         Self {
             uredjivac,
             stanje,
@@ -347,6 +364,9 @@ impl Aplikacija {
         }
         if std::mem::take(&mut self.stanje.zatrazen_uvoz) {
             self.izvrsi_uvoz();
+        }
+        if let Some(stavka) = self.stanje.zatrazen_izvoz.take() {
+            self.pokreni_izvoz(formati::OpsegIzvoza::Stavka(stavka));
         }
         self.crtaj_statusnu_traku(ui, w, h, &boje);
         self.crtaj_slojeve_dijaloga(ui, &boje);
@@ -958,7 +978,40 @@ impl Aplikacija {
             }
             StavkaIzbornikaDatoteka::SpremiKao => self.izvrsi_spremi_kao(),
             StavkaIzbornikaDatoteka::Uvezi => self.izvrsi_uvoz(),
+            StavkaIzbornikaDatoteka::Izvezi => self.pokreni_izvoz(formati::OpsegIzvoza::Projekt),
         }
+    }
+
+    /// Prvo pregled onoga što ide u KML, a datoteka se bira tek nakon toga.
+    pub fn pokreni_izvoz(&mut self, opseg: formati::OpsegIzvoza) {
+        let priprema = crate::izvoz::pripremi(
+            self.uredjivac.projekt(),
+            opseg,
+            self.datoteka.staza.as_deref(),
+            &self.katalog,
+        );
+        self.aktivni_dijalog = Some(AktivniDijalog::Izvoz(priprema));
+    }
+
+    fn izvrsi_izvoz(&mut self, dijalog: &AktivniDijalog) {
+        let AktivniDijalog::Izvoz(priprema) = dijalog else {
+            return;
+        };
+        let ime = format!("{}.kml", priprema.naziv);
+        let Some(staza) = self.birac.izvezi_datoteku(&ime) else {
+            return;
+        };
+        let ishod = crate::izvoz::izvezi(self.uredjivac.projekt(), priprema, &staza, &self.katalog);
+        self.aktivni_dijalog = Some(match ishod {
+            Ok(poruka) => AktivniDijalog::Obavijest {
+                naslov: self.katalog.tekst("izvoz-gotov-naslov"),
+                poruka,
+            },
+            Err(poruka) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("izvoz-greska-naslov"),
+                poruka,
+            },
+        });
     }
 
     /// KML ili KMZ ide u novu mapu, a karta se pomiče na uvezeno.
@@ -1182,23 +1235,21 @@ impl Aplikacija {
                 self.aktivni_dijalog = None;
                 self.nastavi_nakon_potvrde(ui, namjera);
             }
-            IshodDijaloga::PotvrdaOdustani => self.aktivni_dijalog = None,
+            IshodDijaloga::PotvrdaOdustani
+            | IshodDijaloga::ObrisiOdustani
+            | IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
             IshodDijaloga::ObrisiPotvrdjeno(stavka) => self.obradi_potvrdu_brisanja(stavka),
-            IshodDijaloga::ObrisiOdustani => self.aktivni_dijalog = None,
             IshodDijaloga::UpozorenjaPreklopiPopis => {
-                if let AktivniDijalog::UpozorenjaOtvaranja {
-                    ref mut otvoren_popis,
-                    ..
-                } = dijalog
-                {
-                    *otvoren_popis = !*otvoren_popis;
-                }
+                preklopi_popis(&mut dijalog);
                 self.aktivni_dijalog = Some(dijalog);
             }
-            IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
             IshodDijaloga::SukobSpremiKao => {
                 self.aktivni_dijalog = None;
                 self.izvrsi_spremi_kao();
+            }
+            IshodDijaloga::Izvezi => {
+                self.aktivni_dijalog = None;
+                self.izvrsi_izvoz(&dijalog);
             }
         }
     }

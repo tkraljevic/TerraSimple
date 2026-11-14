@@ -8,6 +8,9 @@ pub mod datoteka;
 mod datoteka_testovi;
 pub mod dijalozi;
 pub mod ikone;
+pub mod izvoz;
+#[cfg(test)]
+mod izvoz_testovi;
 pub mod karta_prozora;
 pub mod naziv_objekta;
 pub mod novi_sloj;

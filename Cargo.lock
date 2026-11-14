@@ -1171,6 +1171,7 @@ name = "formati"
 version = "0.0.0"
 dependencies = [
  "geopaket",
+ "koordinate",
  "quick-xml 0.42.0",
  "slojevi",
  "zip",
