@@ -3,6 +3,7 @@
 
 use crate::poruke::KatalogPoruka;
 use formati::{OpsegIzvoza, PregledIzvoza};
+use koordinate::Sustav;
 use slojevi::{Projekt, Stavka};
 use std::path::Path;
 
@@ -31,10 +32,11 @@ pub enum FormatIzvoza {
     Kml,
     Kmz,
     GeoJson,
+    Shp,
 }
 
 impl FormatIzvoza {
-    pub const SVI: [Self; 3] = [Self::Kml, Self::Kmz, Self::GeoJson];
+    pub const SVI: [Self; 4] = [Self::Kml, Self::Kmz, Self::GeoJson, Self::Shp];
 
     #[must_use]
     pub const fn nastavak(self) -> &'static str {
@@ -42,6 +44,7 @@ impl FormatIzvoza {
             Self::Kml => "kml",
             Self::Kmz => "kmz",
             Self::GeoJson => "geojson",
+            Self::Shp => "shp",
         }
     }
 
@@ -51,6 +54,7 @@ impl FormatIzvoza {
             Self::Kml => "KML",
             Self::Kmz => "KMZ",
             Self::GeoJson => "GeoJSON",
+            Self::Shp => "SHP",
         }
     }
 }
@@ -62,6 +66,8 @@ pub struct PripremaIzvoza {
     pub naziv: String,
     pub pregled: PregledIzvoza,
     pub format: FormatIzvoza,
+    /// Sustav za SHP. Ostali formati su uvijek u WGS84.
+    pub sustav: Sustav,
 }
 
 impl PripremaIzvoza {
@@ -75,6 +81,7 @@ impl PripremaIzvoza {
     pub fn stavke(&self, katalog: &KatalogPoruka) -> Vec<StavkaPregleda> {
         match self.format {
             FormatIzvoza::GeoJson => stavke_geojson(katalog, &self.pregled),
+            FormatIzvoza::Shp => stavke_shp(katalog, &self.pregled, self.sustav),
             FormatIzvoza::Kml | FormatIzvoza::Kmz => stavke_pregleda(katalog, &self.pregled),
         }
     }
@@ -167,6 +174,37 @@ pub fn stavke_geojson(katalog: &KatalogPoruka, p: &PregledIzvoza) -> Vec<StavkaP
     s
 }
 
+/// Shapefile nema mapa ni stila, ima jednu vrstu po datoteci i kratke nazive polja.
+#[must_use]
+pub fn stavke_shp(
+    katalog: &KatalogPoruka,
+    p: &PregledIzvoza,
+    sustav: Sustav,
+) -> Vec<StavkaPregleda> {
+    let mut s = stavke_pregleda(katalog, p);
+    if p.objekata() == 0 {
+        return s;
+    }
+    s.retain(|st| st.prolaz != Prolaz::Pazi);
+    let naziv = crate::uvoz_gpkg::naziv_sustava(sustav).to_owned();
+    let opis = katalog.s_tekstovima("izvoz-shp-sustav-opis", &[("sustav", naziv)]);
+    s.insert(1, stavka(katalog, Prolaz::Da, "izvoz-shp-sustav", opis));
+    let uvjeti = [
+        (p.slojeva > 1, "izvoz-shp-datoteke"),
+        (p.mapa > 0, "izvoz-shp-mape"),
+        (true, "izvoz-shp-stil"),
+        (p.visine > 0, "izvoz-shp-visine"),
+        (p.atributi.iter().any(|a| a.len() > 10), "izvoz-shp-polja"),
+    ];
+    let pazi_stavke = uvjeti
+        .into_iter()
+        .filter(|(da, _)| *da)
+        .map(|(_, k)| pazi(katalog, k));
+    s.extend(pazi_stavke);
+    s.sort_by_key(|st| st.prolaz == Prolaz::Ne);
+    s
+}
+
 /// Naziv dokumenta i predložene datoteke: naziv mape ili sloja, a za cijeli projekt naziv datoteke.
 #[must_use]
 pub fn naziv_izvoza(
@@ -199,6 +237,7 @@ pub fn pripremi(
         naziv: naziv_izvoza(projekt, opseg, staza_projekta, katalog),
         pregled: formati::pregledaj(projekt, opseg, &crate::uvoz::nazivi(katalog)),
         format: FormatIzvoza::default(),
+        sustav: Sustav::Htrs96Tm,
     }
 }
 
@@ -214,12 +253,24 @@ pub fn izvezi(
         .map(|d| d.to_string_lossy().into_owned())
         .unwrap_or_default();
     let nazivi = crate::uvoz::nazivi(katalog);
-    match formati::izvezi(projekt, priprema.opseg, &priprema.naziv, &nazivi, staza) {
-        Ok(p) => Ok(katalog.s_tekstovima(
-            "izvoz-gotov",
+    let ishod = if priprema.format == FormatIzvoza::Shp {
+        formati::izvezi_shp(projekt, priprema.opseg, priprema.sustav, staza)
+            .map(|staze| (priprema.pregled.objekata(), staze.len()))
+    } else {
+        formati::izvezi(projekt, priprema.opseg, &priprema.naziv, &nazivi, staza)
+            .map(|p| (p.objekata(), 1))
+    };
+    match ishod {
+        Ok((objekata, datoteka_ukupno)) => Ok(katalog.s_tekstovima(
+            if datoteka_ukupno == 1 {
+                "izvoz-gotov"
+            } else {
+                "izvoz-gotov-shp"
+            },
             &[
                 ("datoteka", datoteka),
-                ("objekti", katalog.broj_objekata(p.objekata())),
+                ("objekti", katalog.broj_objekata(objekata)),
+                ("datoteke", datoteka_ukupno.to_string()),
             ],
         )),
         Err(_) => Err(katalog.s_tekstovima("izvoz-greska", &[("datoteka", datoteka)])),

@@ -43,6 +43,10 @@ pub struct PregledIzvoza {
     pub natpisi_bez_tocaka: usize,
     /// Slojevi s natpisom u kurzivu.
     pub kurziv: usize,
+    /// Slojevi koji imaju barem jedan objekt. U SHP svaki ide u svoju datoteku.
+    pub slojeva: usize,
+    /// Objekti s visinom. SHP ih zapisuje bez nje.
+    pub visine: usize,
 }
 
 impl PregledIzvoza {
@@ -273,14 +277,17 @@ impl Pisac<'_> {
         let n = &s.stil.natpis;
         let ima = !s.objekti.is_empty();
         let pr = &mut self.pregled;
+        pr.slojeva += usize::from(ima);
         pr.natpisi_bez_tocaka += usize::from(ima && n.prikazi && s.vrsta != VrstaGeometrije::Tocka);
         pr.kurziv += usize::from(ima && n.prikazi && n.kurziv);
         let izvor = self.p.zapisi().slojevi.get(&id);
         pr.drugi_sustav |= ima && izvor.is_some_and(|z| z.sustav != Sustav::Wgs84);
     }
 
-    fn zabiljezi_objekt(&mut self, s: &Sloj, stil: &Stil) {
+    fn zabiljezi_objekt(&mut self, s: &Sloj, o: &Objekt, stil: &Stil) {
         let pr = &mut self.pregled;
+        let visina = crate::shp_izvoz::vrhovi(&o.geometrija).any(|v| v.visina.is_some());
+        pr.visine += usize::from(visina);
         match s.vrsta {
             VrstaGeometrije::Tocka => pr.tocaka += 1,
             VrstaGeometrije::Linija => pr.linija += 1,
@@ -295,7 +302,7 @@ impl Pisac<'_> {
 
     fn objekt(&mut self, id: IdSloja, s: &Sloj, o: &Objekt) {
         let stil = o.stil.na_stilu_sloja(&s.stil);
-        self.zabiljezi_objekt(s, &stil);
+        self.zabiljezi_objekt(s, o, &stil);
         let _ = write!(
             self.tijelo,
             "<Placemark><name>{}</name><styleUrl>#sloj{}</styleUrl>",
