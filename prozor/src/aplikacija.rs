@@ -161,6 +161,16 @@ fn okvir_ploce(stanje: &StanjePrikaza, okvir_karte: Rect) -> Option<Rect> {
     ))
 }
 
+/// Kotačić iznad ploče pomiče ploču, a ne kartu: karta ga ispod ploče ne smije dobiti.
+fn preuzmi_klizanje(ui: &egui::Ui, okvir: Option<Rect>) -> f32 {
+    let pokazivac = ui.input(|i| i.pointer.hover_pos());
+    let nad_plocom = matches!((okvir, pokazivac), (Some(o), Some(p)) if o.contains(p));
+    if !nad_plocom {
+        return 0.0;
+    }
+    ui.input_mut(|i| std::mem::take(&mut i.smooth_scroll_delta).y)
+}
+
 pub struct Aplikacija {
     pub uredjivac: Uredjivac,
     pub stanje: StanjePrikaza,
@@ -617,6 +627,7 @@ impl Aplikacija {
 
     fn crtaj_podrucje_karte(&mut self, ui: &mut egui::Ui, okvir_karte: Rect, boje: &Boje) {
         ui.painter().rect_filled(okvir_karte, 0.0, boje.k_zemlja);
+        self.stanje.klizanje_ploce = preuzmi_klizanje(ui, okvir_ploce(&self.stanje, okvir_karte));
         self.karta.prikazi(
             ui,
             okvir_karte,
@@ -649,7 +660,7 @@ impl Aplikacija {
         };
         let lijevi_x = okvir_karte.min.x + pomak_lijevo + Razmaci::RUB;
 
-        self.crtaj_trazilicu(ui, pos2(lijevi_x, okvir_karte.min.y + 12.0), boje);
+        // Tražilica ide poslije alata i ploče mjerenja, da popis rezultata leži iznad njih.
         self.crtaj_alatnu_traku(ui, pos2(lijevi_x, okvir_karte.min.y + 68.0), boje);
         self.karta.crtaj_plocu_mjerenja(
             ui,
@@ -660,6 +671,7 @@ impl Aplikacija {
             &mut self.ikone,
             boje,
         );
+        self.crtaj_trazilicu(ui, pos2(lijevi_x, okvir_karte.min.y + 12.0), boje);
         let sredina = (lijevi_x + desni_rub) / 2.0;
         self.karta.crtaj_poruku(
             ui,

@@ -28,6 +28,25 @@ pub fn tekst_lijevo(ui: &egui::Ui, tocka: Pos2, tekst: &str, font: FontId, boja:
         .text(tocka, Align2::LEFT_CENTER, tekst, font, boja);
 }
 
+/// Kao `tekst_lijevo`, ali tekst širi od `sirina` završava s „…”. Vraća je li skraćen, da se
+/// puni tekst može pokazati kad miš stoji na njemu.
+pub fn tekst_lijevo_skraceno(
+    slikar: &egui::Painter,
+    tocka: Pos2,
+    tekst: &str,
+    font: FontId,
+    boja: Color32,
+    sirina: f32,
+) -> bool {
+    let mut posao = egui::text::LayoutJob::simple_singleline(tekst.to_owned(), font, boja);
+    posao.wrap = egui::text::TextWrapping::truncate_at_width(sirina.max(1.0));
+    let galija = slikar.layout_job(posao);
+    let skraceno = galija.elided;
+    let vrh = pos2(tocka.x, tocka.y - galija.size().y / 2.0);
+    slikar.galley(vrh, galija, boja);
+    skraceno
+}
+
 pub fn tekst_sredina(ui: &egui::Ui, tocka: Pos2, tekst: &str, font: FontId, boja: Color32) {
     ui.painter()
         .text(tocka, Align2::CENTER_CENTER, tekst, font, boja);
@@ -330,7 +349,7 @@ pub fn redak_stabla(
 
     let (desna_granica, kliknut_prekidac) =
         crtaj_desnu_stranu_retka(ui, ikone, opis, sredina_y, tamna, boje);
-    crtaj_tekst_retka(ui, opis, x, sredina_y, desna_granica, boje);
+    let skracen = crtaj_tekst_retka(ui, opis, x, sredina_y, desna_granica, boje);
 
     let okvir_tijela = Rect::from_min_max(
         pos2(x - 24.0, opis.okvir.min.y),
@@ -342,7 +361,10 @@ pub fn redak_stabla(
     } else {
         Sense::click()
     };
-    let odgovor_tijela = ui.interact(okvir_tijela, id_retka, osjet);
+    let mut odgovor_tijela = ui.interact(okvir_tijela, id_retka, osjet);
+    if skracen && opis.uredjivanje.is_none() {
+        odgovor_tijela = odgovor_tijela.on_hover_text(opis.naslov);
+    }
     odgovor_tijela.widget_info(|| {
         WidgetInfo::selected(Role::Button, ui.is_enabled(), opis.odabrano, opis.naslov)
     });
@@ -367,7 +389,8 @@ fn crtaj_tekst_retka(
     sredina_y: f32,
     desna_granica: f32,
     boje: &Boje,
-) {
+) -> bool {
+    let sirina = desna_granica - x - 2.0;
     let font_naslova = if opis.naglasen_naslov {
         font_srednji(13.0)
     } else {
@@ -376,12 +399,13 @@ fn crtaj_tekst_retka(
     let y_naslova = if opis.podnaslov.is_empty() {
         sredina_y
     } else {
-        tekst_lijevo(
-            ui,
+        tekst_lijevo_skraceno(
+            ui.painter(),
             pos2(x, sredina_y + 8.0),
             opis.podnaslov,
             font_obicni(11.0),
             boje.tekst_3,
+            sirina,
         );
         sredina_y - 8.0
     };
@@ -391,14 +415,23 @@ fn crtaj_tekst_retka(
             pos2(desna_granica.max(x + 40.0) - 4.0, y_naslova + 10.0),
         );
         polje_naziva(ui, polje, opis.naslov, &font_naslova, oznaceno, boje);
+        tekst_lijevo(
+            ui,
+            pos2(x, y_naslova),
+            opis.naslov,
+            font_naslova,
+            boje.tekst,
+        );
+        return false;
     }
-    tekst_lijevo(
-        ui,
+    tekst_lijevo_skraceno(
+        ui.painter(),
         pos2(x, y_naslova),
         opis.naslov,
         font_naslova,
         boje.tekst,
-    );
+        sirina,
+    )
 }
 
 /// Polje oko naziva koji se mijenja: označen naziv dobije pozadinu, a inače se iza njega vidi kursor.
