@@ -101,6 +101,8 @@ pub struct UredjivanjeStila {
     pub samo_objekt: bool,
     /// Izmjena je počela dok je tipka miša još dolje, pa joj se sljedeće pridružuju.
     pub potez: bool,
+    /// Otvorena je kartica Natpis, koja uvijek vrijedi za cijeli sloj.
+    pub natpis: bool,
 }
 
 impl UredjivanjeStila {
@@ -117,13 +119,14 @@ impl UredjivanjeStila {
             objekt,
             samo_objekt: objekt.is_some(),
             potez: false,
+            natpis: false,
         })
     }
 
     /// Objekt čiji se stil mijenja, ako se ne mijenja cijeli sloj.
     #[must_use]
     pub fn ciljni_objekt(&self) -> Option<IdObjekta> {
-        self.objekt.filter(|_| self.samo_objekt)
+        self.objekt.filter(|_| self.samo_objekt && !self.natpis)
     }
 }
 

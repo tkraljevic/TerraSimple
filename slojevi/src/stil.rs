@@ -35,6 +35,35 @@ pub enum VrstaIspune {
     Bez,
 }
 
+/// Naziv objekta na karti. Veličina je u točkama slova (pt), kao u QGIS-u.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Natpis {
+    pub prikazi: bool,
+    pub velicina_pt: f64,
+    pub boja: Boja,
+    pub kurziv: bool,
+    /// Svijetli obrub oko slova, da se natpis čita i na ortofotu.
+    pub obrub: bool,
+}
+
+impl Default for Natpis {
+    /// Tamnosiva slova s bijelim obrubom čitaju se na svakoj podlozi.
+    fn default() -> Self {
+        Self {
+            prikazi: true,
+            velicina_pt: 10.0,
+            boja: Boja {
+                r: 0x20,
+                g: 0x21,
+                b: 0x24,
+                a: 0xFF,
+            },
+            kurziv: false,
+            obrub: true,
+        }
+    }
+}
+
 /// Stil sloja, koji ima sve vrijednosti.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Stil {
@@ -45,6 +74,8 @@ pub struct Stil {
     pub velicina_znaka_mm: f64,
     pub vrsta_crte: VrstaCrte,
     pub vrsta_ispune: VrstaIspune,
+    /// Natpis vrijedi za cijeli sloj.
+    pub natpis: Natpis,
 }
 
 impl Default for Stil {
@@ -68,6 +99,7 @@ impl Default for Stil {
             velicina_znaka_mm: 3.0,
             vrsta_crte: VrstaCrte::Puna,
             vrsta_ispune: VrstaIspune::Puna,
+            natpis: Natpis::default(),
         }
     }
 }
@@ -95,6 +127,7 @@ impl StilObjekta {
             velicina_znaka_mm: self.velicina_znaka_mm.unwrap_or(sloj.velicina_znaka_mm),
             vrsta_crte: self.vrsta_crte.unwrap_or(sloj.vrsta_crte),
             vrsta_ispune: self.vrsta_ispune.unwrap_or(sloj.vrsta_ispune),
+            natpis: sloj.natpis,
         }
     }
 }

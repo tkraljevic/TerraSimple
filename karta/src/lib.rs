@@ -11,6 +11,7 @@ mod crtez_na_karti;
 mod kamera;
 mod karta;
 mod mercator;
+mod natpisi;
 mod odabir;
 mod podloga;
 mod priprema;

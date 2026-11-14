@@ -1,11 +1,12 @@
 //! Ploča Stil (zasloni C2, C3 i C4): boja, debljina i prozirnost cijelog sloja ili jednog objekta.
-//! Otvara se iz izbornika retka u ploči Slojevi i crta se na njezinu mjestu.
+//! Otvara se iz izbornika retka u ploči Slojevi i crta se na njezinu mjestu. Kartica Natpis
+//! uređuje nazive objekata na karti, za cijeli sloj.
 
 use crate::ikone::SkladisteIkona;
 use crate::poruke::{KatalogPoruka, broj, postotak};
 use crate::sastavnice::{
-    OpisGumbaIkone, OpisKlizaca, cip, gumb_ikona, klizac, tekst_desno, tekst_lijevo, tekst_sredina,
-    zaobljeni_okvir,
+    OpisGumbaIkone, OpisKlizaca, cip, gumb_ikona, klizac, prekidac, tekst_desno, tekst_lijevo,
+    tekst_sredina, zaobljeni_okvir,
 };
 use crate::stanje::{StanjePrikaza, UredjivanjeStila};
 use crate::tema::{Boje, font_obicni, font_srednji};
@@ -13,8 +14,8 @@ use eframe::egui::{
     self, Color32, Pos2, Rect, Response, Role, Sense, Stroke, WidgetInfo, ecolor::Hsva, pos2, vec2,
 };
 use slojevi::{
-    Boja, IzmjenaObjekta, Naredba, NaredbaObjekta, NaredbaStabla, Projekt, Stil, StilObjekta,
-    Uredjivac, VrstaCrte, VrstaGeometrije, VrstaIspune,
+    Boja, IzmjenaObjekta, Naredba, NaredbaObjekta, NaredbaStabla, Natpis, Projekt, Stil,
+    StilObjekta, Uredjivac, VrstaCrte, VrstaGeometrije, VrstaIspune,
 };
 
 /// Ponuđene boje, redom kao u nacrtu. Prva je zadana boja crteža.
@@ -43,6 +44,37 @@ pub enum IzmjenaStila {
     Velicina(f64),
     VrstaCrte(VrstaCrte),
     VrstaIspune(VrstaIspune),
+    NatpisPrikazi(bool),
+    NatpisVelicina(f64),
+    NatpisBoja(Boja),
+    NatpisKurziv(bool),
+    NatpisObrub(bool),
+}
+
+impl IzmjenaStila {
+    /// Natpis se zadaje samo za cijeli sloj.
+    #[must_use]
+    pub const fn je_natpis(self) -> bool {
+        matches!(
+            self,
+            Self::NatpisPrikazi(_)
+                | Self::NatpisVelicina(_)
+                | Self::NatpisBoja(_)
+                | Self::NatpisKurziv(_)
+                | Self::NatpisObrub(_)
+        )
+    }
+}
+
+fn primijeni_na_natpis(n: &mut Natpis, izmjena: IzmjenaStila) {
+    match izmjena {
+        IzmjenaStila::NatpisPrikazi(d) => n.prikazi = d,
+        IzmjenaStila::NatpisVelicina(v) => n.velicina_pt = v,
+        IzmjenaStila::NatpisBoja(b) => n.boja = b,
+        IzmjenaStila::NatpisKurziv(d) => n.kurziv = d,
+        IzmjenaStila::NatpisObrub(d) => n.obrub = d,
+        _ => {}
+    }
 }
 
 fn alfa(prozirnost: f64) -> u8 {
@@ -75,6 +107,7 @@ pub fn primijeni(stil: Stil, izmjena: IzmjenaStila) -> Stil {
         IzmjenaStila::Velicina(v) => s.velicina_znaka_mm = v,
         IzmjenaStila::VrstaCrte(v) => s.vrsta_crte = v,
         IzmjenaStila::VrstaIspune(v) => s.vrsta_ispune = v,
+        _ => primijeni_na_natpis(&mut s.natpis, izmjena),
     }
     s
 }
@@ -95,6 +128,7 @@ pub fn primijeni_na_objekt(objekt: StilObjekta, sloj: &Stil, izmjena: IzmjenaSti
         IzmjenaStila::Velicina(_) => s.velicina_znaka_mm = Some(novi.velicina_znaka_mm),
         IzmjenaStila::VrstaCrte(v) => s.vrsta_crte = Some(v),
         IzmjenaStila::VrstaIspune(v) => s.vrsta_ispune = Some(v),
+        _ => {}
     }
     s
 }
@@ -132,7 +166,7 @@ pub fn izvrsi(uredjivac: &mut Uredjivac, u: &mut UredjivanjeStila, izmjena: Izmj
     let Some(sloj) = uredjivac.projekt().sloj(u.sloj) else {
         return false;
     };
-    let naredba: Naredba = match u.ciljni_objekt() {
+    let naredba: Naredba = match u.ciljni_objekt().filter(|_| !izmjena.je_natpis()) {
         Some(objekt) => {
             let Some(o) = sloj.objekti.get(&objekt) else {
                 return false;
@@ -153,9 +187,23 @@ pub fn izvrsi(uredjivac: &mut Uredjivac, u: &mut UredjivanjeStila, izmjena: Izmj
     posalji(uredjivac, u, naredba)
 }
 
-/// Sloj dobiva zadani stil, a objekt opet uzima stil sloja.
+/// Sloj dobiva zadani stil, a objekt opet uzima stil sloja. U kartici Natpis vraća se samo natpis.
 pub fn vrati_zadano(uredjivac: &mut Uredjivac, u: &mut UredjivanjeStila) -> bool {
     u.potez = false;
+    if u.natpis {
+        let Some(sloj) = uredjivac.projekt().sloj(u.sloj) else {
+            return false;
+        };
+        let stil = Stil {
+            natpis: Natpis::default(),
+            ..sloj.stil
+        };
+        return posalji(
+            uredjivac,
+            u,
+            NaredbaStabla::PostaviStil { sloj: u.sloj, stil }.into(),
+        );
+    }
     let naredba: Naredba = match u.ciljni_objekt() {
         Some(objekt) => NaredbaObjekta::Izmijeni {
             sloj: u.sloj,
@@ -210,29 +258,87 @@ pub fn crtaj_plocu_stila(
         return;
     };
     let tamna = stanje.tema_tamna;
-    let mut radnja = zaglavlje(ui, ikone, katalog, okvir, &p.naziv, tamna, boje);
-    let mut y = okvir.min.y + 66.0;
+    let radnja = zaglavlje(ui, ikone, katalog, okvir, &p.naziv, tamna, boje);
+    let y = okvir.min.y + 60.0;
+    kartice(
+        ui,
+        ikone,
+        katalog,
+        &mut u,
+        pos2(okvir.min.x + 16.0, y),
+        tamna,
+        boje,
+    );
+    let mut o = OkolinaPloce {
+        ikone,
+        katalog,
+        okvir,
+        tamna,
+        boje,
+    };
+    let sadrzaj = if u.natpis && p.uredivo {
+        sadrzaj_natpisa
+    } else {
+        sadrzaj_izgleda
+    };
+    let radnja = radnja.or(sadrzaj(ui, uredjivac, &mut o, &mut u, &p, y + 46.0));
+    obradi_radnju(uredjivac, stanje, u, radnja);
+}
+
+/// Ono što ploča treba za crtanje, osim podataka.
+struct OkolinaPloce<'a> {
+    ikone: &'a mut SkladisteIkona,
+    katalog: &'a KatalogPoruka,
+    okvir: Rect,
+    tamna: bool,
+    boje: &'a Boje,
+}
+
+/// Kartica Natpis. Iz retka objekta napomena kaže da natpis vrijedi za cijeli sloj.
+fn sadrzaj_natpisa(
+    ui: &mut egui::Ui,
+    uredjivac: &mut Uredjivac,
+    o: &mut OkolinaPloce<'_>,
+    u: &mut UredjivanjeStila,
+    p: &PrikazStila,
+    y: f32,
+) -> Option<Radnja> {
+    let (katalog, okvir, boje) = (o.katalog, o.okvir, o.boje);
+    let mut y = y;
     if u.objekt.is_some() {
-        izbor_cilja(
-            ui,
-            ikone,
-            katalog,
-            &mut u,
-            pos2(okvir.min.x + 16.0, y),
-            tamna,
-            boje,
-        );
+        y += napomena(ui, katalog, "natpis-za-sloj", okvir, y, boje) + 12.0;
+    }
+    let ctx = (katalog, okvir, boje);
+    if let Some(izmjena) = kontrole_natpisa(ui, o.ikone, ctx, &p.stil.natpis, y, o.tamna) {
+        let _ = izvrsi(uredjivac, u, izmjena);
+    }
+    podnozje(ui, katalog, okvir, boje)
+}
+
+/// Kartica Izgled: boja, debljina, prozirnost i vrsta crte ili ispune.
+fn sadrzaj_izgleda(
+    ui: &mut egui::Ui,
+    uredjivac: &mut Uredjivac,
+    o: &mut OkolinaPloce<'_>,
+    u: &mut UredjivanjeStila,
+    p: &PrikazStila,
+    y: f32,
+) -> Option<Radnja> {
+    let (katalog, okvir, boje) = (o.katalog, o.okvir, o.boje);
+    let mut y = y;
+    if u.objekt.is_some() {
+        let pocetak = pos2(okvir.min.x + 16.0, y);
+        izbor_cilja(ui, o.ikone, katalog, u, pocetak, o.tamna, boje);
         y += 52.0;
     }
-    if p.uredivo {
-        if let Some(izmjena) = kontrole(ui, katalog, &p, okvir, y, boje) {
-            let _ = izvrsi(uredjivac, &mut u, izmjena);
-        }
-        radnja = radnja.or(podnozje(ui, katalog, okvir, boje));
-    } else {
-        napomena(ui, katalog, "stil-zakljucano", okvir, y, boje);
+    if !p.uredivo {
+        let _ = napomena(ui, katalog, "stil-zakljucano", okvir, y, boje);
+        return None;
     }
-    obradi_radnju(uredjivac, stanje, u, radnja);
+    if let Some(izmjena) = kontrole(ui, katalog, p, okvir, y, boje) {
+        let _ = izvrsi(uredjivac, u, izmjena);
+    }
+    podnozje(ui, katalog, okvir, boje)
 }
 
 fn obradi_radnju(
@@ -301,6 +407,92 @@ fn zaglavlje(
     } else {
         zatvori.then_some(Radnja::Zatvori)
     }
+}
+
+/// Kartice „Izgled” i „Natpis”.
+fn kartice(
+    ui: &mut egui::Ui,
+    ikone: &mut SkladisteIkona,
+    katalog: &KatalogPoruka,
+    u: &mut UredjivanjeStila,
+    pocetak: Pos2,
+    tamna: bool,
+    boje: &Boje,
+) {
+    let izgled = Rect::from_min_size(pocetak, vec2(104.0, 30.0));
+    let natpis = Rect::from_min_size(pos2(izgled.max.x + 8.0, pocetak.y), vec2(104.0, 30.0));
+    for (okvir, kljuc, za_natpis) in [
+        (izgled, "stil-izgled", false),
+        (natpis, "stil-natpis", true),
+    ] {
+        let tekst = katalog.tekst(kljuc);
+        if cip(ui, ikone, okvir, &tekst, u.natpis == za_natpis, tamna, boje).clicked() {
+            u.natpis = za_natpis;
+            u.potez = false;
+        }
+    }
+}
+
+fn pt(v: f64) -> String {
+    format!("{} pt", broj(v, 1))
+}
+
+/// Uključenost, veličina i boja slova, kurziv i obrub.
+fn kontrole_natpisa(
+    ui: &mut egui::Ui,
+    ikone: &mut SkladisteIkona,
+    (katalog, okvir, boje): (&KatalogPoruka, Rect, &Boje),
+    n: &Natpis,
+    y: f32,
+    tamna: bool,
+) -> Option<IzmjenaStila> {
+    let x = okvir.min.x + 16.0;
+    let sirina = okvir.width() - 32.0;
+    let naslov = katalog.tekst("natpis-prikazi");
+    tekst_lijevo(
+        ui,
+        pos2(x, y + 10.0),
+        &naslov,
+        font_obicni(13.0),
+        boje.tekst,
+    );
+    let gumb = Rect::from_min_size(pos2(x + sirina - 36.0, y), vec2(36.0, 20.0));
+    let mut izmjena = prekidac(ui, gumb, n.prikazi, boje, &naslov)
+        .clicked()
+        .then_some(IzmjenaStila::NatpisPrikazi(!n.prikazi));
+    let velicina = RedKlizaca {
+        kljuc: "natpis-velicina",
+        vrijednost: n.velicina_pt,
+        najmanje: 6.0,
+        najvise: 24.0,
+        korak: 0.5,
+        prikaz: pt(n.velicina_pt),
+        izmjena: IzmjenaStila::NatpisVelicina,
+    };
+    izmjena = izmjena.or(red_klizaca(
+        ui,
+        katalog,
+        &velicina,
+        pos2(x, y + 44.0),
+        sirina,
+        boje,
+    ));
+    let boja = paleta(ui, katalog, n.boja, pos2(x, y + 100.0), boje).map(|i| match i {
+        IzmjenaStila::Boja(b) => IzmjenaStila::NatpisBoja(b),
+        druga => druga,
+    });
+    izmjena = izmjena.or(boja);
+    let kurziv = Rect::from_min_size(pos2(x, y + 172.0), vec2(104.0, 30.0));
+    let obrub = Rect::from_min_size(pos2(kurziv.max.x + 8.0, y + 172.0), vec2(104.0, 30.0));
+    let tekst_kurziv = katalog.tekst("natpis-kurziv");
+    if cip(ui, ikone, kurziv, &tekst_kurziv, n.kurziv, tamna, boje).clicked() {
+        izmjena = Some(IzmjenaStila::NatpisKurziv(!n.kurziv));
+    }
+    let tekst_obrub = katalog.tekst("natpis-obrub");
+    if cip(ui, ikone, obrub, &tekst_obrub, n.obrub, tamna, boje).clicked() {
+        izmjena = Some(IzmjenaStila::NatpisObrub(!n.obrub));
+    }
+    izmjena
 }
 
 /// „Cijeli sloj” ili „Samo ovaj objekt”, kad je ploča otvorena iz retka objekta.
@@ -748,6 +940,7 @@ fn birac_boje(
     izmijenjena.then_some(rgb(r, g, b))
 }
 
+/// Vraća visinu napomene.
 fn napomena(
     ui: &mut egui::Ui,
     katalog: &KatalogPoruka,
@@ -755,7 +948,7 @@ fn napomena(
     okvir: Rect,
     y: f32,
     boje: &Boje,
-) {
+) -> f32 {
     let galija = ui.painter().layout(
         katalog.tekst(kljuc),
         font_obicni(12.0),
@@ -785,6 +978,7 @@ fn napomena(
         galija,
         boje.tekst_2,
     );
+    visina
 }
 
 /// Napomena o QGIS-u, „Vrati zadano” i „Gotovo”, uz dno ploče.
@@ -794,7 +988,7 @@ fn podnozje(
     okvir: Rect,
     boje: &Boje,
 ) -> Option<Radnja> {
-    napomena(
+    let _ = napomena(
         ui,
         katalog,
         "stil-napomena",

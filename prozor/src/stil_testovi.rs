@@ -380,3 +380,73 @@ fn zakljucan_sloj_pokazuje_napomenu_a_mapa_nema_stil() {
     h.run_steps(2);
     assert!(h.state().stanje.stil.is_none());
 }
+
+#[test]
+fn natpis_uvijek_mijenja_cijeli_sloj_i_vraca_se_bez_diranja_izgleda() {
+    let (mut u, s, o) = sloj_s_objektom(VrstaGeometrije::Linija);
+    let mut ur = UredjivanjeStila::za(Odabir::Objekt(s, o)).unwrap();
+    assert!(izvrsi(&mut u, &mut ur, IzmjenaStila::Boja(PLAVA)));
+    ur.natpis = true;
+    ur.potez = false;
+    assert_eq!(ur.ciljni_objekt(), None);
+    for izmjena in [
+        IzmjenaStila::NatpisPrikazi(false),
+        IzmjenaStila::NatpisVelicina(14.0),
+        IzmjenaStila::NatpisBoja(PLAVA),
+        IzmjenaStila::NatpisKurziv(true),
+        IzmjenaStila::NatpisObrub(false),
+    ] {
+        assert!(izmjena.je_natpis());
+        ur.potez = false;
+        assert!(izvrsi(&mut u, &mut ur, izmjena));
+    }
+    let sloj = u.projekt().sloj(s).unwrap();
+    let n = sloj.stil.natpis;
+    assert!(!n.prikazi && n.kurziv && !n.obrub);
+    assert_eq!((n.velicina_pt, n.boja), (14.0, PLAVA));
+    assert_eq!(sloj.objekti[&o].stil.boja_crte, Some(PLAVA));
+    assert_eq!(
+        primijeni_na_objekt(
+            StilObjekta::default(),
+            &Stil::default(),
+            IzmjenaStila::NatpisKurziv(true)
+        ),
+        StilObjekta::default()
+    );
+
+    ur.natpis = true;
+    assert!(vrati_zadano(&mut u, &mut ur));
+    let sloj = u.projekt().sloj(s).unwrap();
+    assert_eq!(sloj.stil.natpis, slojevi::Natpis::default());
+    assert_eq!(sloj.objekti[&o].stil.boja_crte, Some(PLAVA));
+}
+
+#[test]
+fn kartica_natpis_u_ploci_mijenja_natpis_sloja() {
+    let (u, s, _) = sloj_s_objektom(VrstaGeometrije::Tocka);
+    let mut app = Aplikacija::nova(PostavkeAplikacije {
+        podloga_s_mreze: false,
+        ..Default::default()
+    });
+    app.uredjivac = u;
+    app.stanje.ploca_otvorena = true;
+    app.stanje.stil = UredjivanjeStila::za(Odabir::Sloj(s));
+    let mut h = Harness::builder()
+        .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+        .with_step_dt(0.05)
+        .with_context_setup(Aplikacija::postavi_kontekst)
+        .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+    h.run_steps(3);
+    h.get_by_label("Natpis").click();
+    h.run_steps(3);
+    assert!(h.state().stanje.stil.is_some_and(|u| u.natpis));
+    h.get_by_label("Prikaži nazive na karti").click();
+    h.run_steps(3);
+    h.get_by_label("Kurziv").click();
+    h.run_steps(3);
+    let n = h.state().uredjivac.projekt().sloj(s).unwrap().stil.natpis;
+    assert!(!n.prikazi && n.kurziv);
+    h.get_by_label("Izgled").click();
+    h.run_steps(3);
+    assert!(h.state().stanje.stil.is_some_and(|u| !u.natpis));
+}

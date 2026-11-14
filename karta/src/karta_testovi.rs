@@ -384,8 +384,8 @@ fn skriveni_sloj_se_ne_priprema() {
         vidljiv: &nista,
         ..OK
     };
-    assert!(p.karta.uskladi_slojeve(&p.u, &ok).is_empty());
-    assert_eq!(p.karta.uskladi_slojeve(&p.u, &OK).len(), 1);
+    assert!(p.karta.uskladi_slojeve(&p.u, &ok).0.is_empty());
+    assert_eq!(p.karta.uskladi_slojeve(&p.u, &OK).0.len(), 1);
 }
 
 #[test]

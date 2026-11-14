@@ -5,6 +5,7 @@ use crate::crtanje::{Crtanje, Okolina, Pretvorba, slojevi_odozgo};
 use crate::crtez_na_karti;
 use crate::kamera::Kamera;
 use crate::mercator::{metara_po_stupnju, u_mercator};
+use crate::natpisi::{self, Ekran, NatpisiSloja, pripremi_natpise};
 use crate::podloga::Podloga;
 use crate::priprema::{Razina, pripremi_sloj};
 use eframe::egui::{self, DragPanButtons, Key, Modifiers, PointerButton, Pos2, Response, Ui};
@@ -39,7 +40,14 @@ struct Pripremljen {
     inacica: u64,
     skriveni: Option<IdObjekta>,
     razine: Arc<Vec<Razina>>,
+    natpisi: Arc<NatpisiSloja>,
 }
+
+/// Slojevi za grafičku karticu, odozdo prema gore, i njihovi natpisi, odozgo prema dolje.
+type Uskladjeno = (
+    Arc<Vec<(IdSloja, Arc<Vec<Razina>>)>>,
+    Vec<Arc<NatpisiSloja>>,
+);
 
 pub struct Karta {
     memorija: MapMemory,
@@ -135,7 +143,7 @@ impl Karta {
         self.zaustavi_pri_pritisku(ui);
         let pritisak = ui.input(|i| i.pointer.press_origin());
         let pomice = self.crtanje.smije_pomicati_kartu(pritisak);
-        let slojevi = self.uskladi_slojeve(u, ok);
+        let (slojevi, natpisi_slojeva) = self.uskladi_slojeve(u, ok);
         let tipke = if pomice {
             DragPanButtons::PRIMARY
         } else {
@@ -159,6 +167,15 @@ impl Karta {
                 *spremljena_kamera = Some(k);
                 ui.painter()
                     .add(crtac::poziv(odgovor.rect, Poziv { kamera: k, slojevi }));
+                let ekran = Ekran {
+                    kamera: k,
+                    okvir: odgovor.rect,
+                };
+                natpisi::nacrtaj(
+                    &ui.painter().with_clip_rect(odgovor.rect),
+                    &ekran,
+                    &natpisi_slojeva,
+                );
                 crtanje.osvjezi_hvatista(u.projekt(), projektor);
                 mis(ui, odgovor, projektor, crtanje, guta, u, ok);
                 crtanje.osvjezi_hvatista(u.projekt(), projektor);
@@ -207,16 +224,13 @@ impl Karta {
     }
 
     /// Priprema samo slojeve koji su se promijenili, a vraća ih redom crtanja, odozdo prema gore.
-    fn uskladi_slojeve(
-        &mut self,
-        u: &Uredjivac,
-        ok: &Okolina<'_>,
-    ) -> Arc<Vec<(IdSloja, Arc<Vec<Razina>>)>> {
+    fn uskladi_slojeve(&mut self, u: &Uredjivac, ok: &Okolina<'_>) -> Uskladjeno {
         let projekt = u.projekt();
         let skriveni = self.crtanje.skriveni();
         let odozgo = slojevi_odozgo(projekt);
         self.pripremljeni.retain(|id, _| odozgo.contains(id));
         let mut izlaz = Vec::with_capacity(odozgo.len());
+        let mut natpisi = Vec::with_capacity(odozgo.len());
         for id in odozgo.into_iter().rev().filter(|s| (ok.vidljiv)(*s)) {
             let Some(sloj) = projekt.sloj(id) else {
                 continue;
@@ -229,20 +243,24 @@ impl Karta {
                 .is_some_and(|p| p.inacica == inacica && p.skriveni == skriven);
             if !vrijedi {
                 let razine = Arc::new(pripremi_sloj(sloj, skriven));
+                let natpisi = Arc::new(pripremi_natpise(sloj, skriven));
                 self.pripremljeni.insert(
                     id,
                     Pripremljen {
                         inacica,
                         skriveni: skriven,
                         razine,
+                        natpisi,
                     },
                 );
             }
             if let Some(p) = self.pripremljeni.get(&id) {
                 izlaz.push((id, p.razine.clone()));
+                natpisi.push(p.natpisi.clone());
             }
         }
-        Arc::new(izlaz)
+        natpisi.reverse();
+        (Arc::new(izlaz), natpisi)
     }
 }
 
