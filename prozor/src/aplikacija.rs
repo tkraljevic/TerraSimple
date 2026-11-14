@@ -1090,6 +1090,19 @@ impl Aplikacija {
         let Some(staza) = self.birac.uvezi_datoteku() else {
             return;
         };
+        let gpkg = staza
+            .extension()
+            .is_some_and(|n| n.eq_ignore_ascii_case("gpkg"));
+        if gpkg {
+            self.aktivni_dijalog = Some(match crate::uvoz_gpkg::pripremi(&staza, &self.katalog) {
+                Ok(priprema) => AktivniDijalog::UvozGpkg(priprema),
+                Err(poruka) => AktivniDijalog::PorukaGreske {
+                    naslov: self.katalog.tekst("uvoz-greska-naslov"),
+                    poruka,
+                },
+            });
+            return;
+        }
         let ishod = crate::uvoz::uvezi_datoteku(
             &mut self.uredjivac,
             &mut self.stanje,
@@ -1111,6 +1124,39 @@ impl Aplikacija {
             Err(poruka) => AktivniDijalog::PorukaGreske {
                 naslov: self.katalog.tekst("uvoz-greska-naslov"),
                 poruka,
+            },
+        });
+    }
+
+    /// Odabrani slojevi idu u novu mapu, a karta se pomiče na njih.
+    fn izvrsi_uvoz_gpkg(&mut self, dijalog: &AktivniDijalog) {
+        let AktivniDijalog::UvozGpkg(priprema) = dijalog else {
+            return;
+        };
+        let ishod = crate::uvoz_gpkg::uvezi(&mut self.uredjivac, priprema);
+        self.aktivni_dijalog = Some(match ishod {
+            Ok(s) => {
+                self.stanje.postavi_otvorenost_mape(s.mapa, true);
+                self.stanje.odabrano = Some(Odabir::Mapa(s.mapa));
+                if let Some((d, sirina, zum)) =
+                    crate::uvoz::obuhvat_mape(self.uredjivac.projekt(), s.mapa)
+                {
+                    self.karta.karta().idi_na(d, sirina, zum);
+                }
+                let tekstovi = [
+                    ("objekti", self.katalog.broj_objekata(s.objekata)),
+                    ("slojevi", self.katalog.broj_slojeva(s.slojeva)),
+                ];
+                AktivniDijalog::Obavijest {
+                    naslov: self.katalog.tekst("uvoz-naslov"),
+                    poruka: self.katalog.s_tekstovima("uvoz-gpkg-sazetak", &tekstovi),
+                }
+            }
+            Err(g) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("uvoz-greska-naslov"),
+                poruka: self
+                    .katalog
+                    .s_tekstovima("uvoz-greska-projekt", &[("opis", g.to_string())]),
             },
         });
     }
@@ -1316,9 +1362,10 @@ impl Aplikacija {
                 self.aktivni_dijalog = None;
                 self.izvrsi_spremi_kao();
             }
-            IshodDijaloga::Izvezi => {
+            IshodDijaloga::Prihvati => {
                 self.aktivni_dijalog = None;
                 self.izvrsi_izvoz(&dijalog);
+                self.izvrsi_uvoz_gpkg(&dijalog);
             }
             IshodDijaloga::Oporavak(vrati) => self.obradi_oporavak(vrati, &dijalog),
         }

@@ -1067,3 +1067,20 @@ fn kopija_za_oporavak_nosi_nespremljeno_i_tudje_tablice() {
     assert!(!nema.exists() && !cilj.exists());
     assert!(!cilj.with_extension("u-tijeku").exists());
 }
+#[test]
+fn uvoz_cita_tudju_datoteku_bez_ijedne_promjene() {
+    let (p, mut d, u, s, _o) = pripremi("uvoz-citanje");
+    d.spremi(u.projekt()).unwrap();
+    drop(d);
+    let prije = std::fs::read(&p).unwrap();
+    let (projekt, upozorenja) = geopaket::procitaj_za_uvoz(&p).unwrap();
+    assert!(upozorenja.is_empty());
+    assert_eq!(projekt.sloj(s).unwrap().objekti.len(), 1);
+    assert_eq!(std::fs::read(&p).unwrap(), prije);
+    assert!(!p.with_extension("gpkg-wal").exists());
+
+    let nije = put("uvoz-nije-gpkg");
+    std::fs::write(&nije, b"").unwrap();
+    assert!(geopaket::procitaj_za_uvoz(&nije).is_err());
+    assert!(geopaket::procitaj_za_uvoz(&put("uvoz-nema-je")).is_err());
+}

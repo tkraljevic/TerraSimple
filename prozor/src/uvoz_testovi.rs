@@ -141,7 +141,7 @@ fn izbornik_datoteka_uvozi_a_pokvaren_kml_javlja_gresku() {
     birac.postavi_uvoz(podatak("ostecen.kml"));
     h.get_by_label("Datoteka").click();
     h.run_steps(3);
-    h.get_by_label("Uvezi KML ili KMZ…").click();
+    h.get_by_label("Uvezi KML, KMZ ili GeoPackage…").click();
     h.run_steps(4);
     assert!(matches!(
         h.state().aktivni_dijalog,
