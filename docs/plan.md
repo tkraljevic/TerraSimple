@@ -108,7 +108,12 @@ razmjena s Earth Proom.
   Poligoni; točka natpisa uz liniju uvozi se kao zaseban objekt. Stil u ugniježđenom `Document`-u vrijedi
   samo u njemu. Pravi `myplaces.kml` (147 MB): čitanje 0,42 s, uvoz 0,06 s, 340 MB memorije, 251 mapa,
   207 slojeva, 88 901 objekt, ništa odbijeno; spremanje u GeoPackage 1,0 s.
-- Nedostaje: izvoz u KML i KMZ, GeoJSON, SHP, pregled gubitaka pri izvozu i pitanje o sustavu.
+- **Izvoz u KML i KMZ (14. 11. 2026.):** cijeli projekt iz izbornika Datoteka, a mapa ili sloj desnim
+  klikom. Prije izvoza prozorčić (zaslon K) kaže što ide u datoteku i što se mijenja: isprekidane crte,
+  šrafura, natpisi uz linije, kurziv, drugi koordinatni sustav, vrijednosti koje nisu tekst ni broj.
+  Sloj s nazivom iz uvoza (Točke, Linije, Poligoni) ne dobiva svoju mapu, pa se uvezeni KML vraća u
+  istom obliku. Stupci iz GeoPackagea idu u `ExtendedData`.
+- Nedostaje: GeoJSON, SHP i pitanje o sustavu.
 
 **Na kraju izlazi 0.1, prvo upotrebljivo izdanje:** zamjenjuje Earth Pro za crtanje, mjerenje i KML, a sve se
 otvara u QGIS-u. Do ovdje je 12–18 tjedana rada.
