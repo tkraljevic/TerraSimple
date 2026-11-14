@@ -22,7 +22,7 @@ raspakira u svoju mapu i pokrene. Upute za svaki sustav su u [izdanje.md](docs/i
 
 ## Što radi
 
-Stanje 0.0.6. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
+Stanje 0.0.7. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
 
 - **Karta:** podloga OpenFreeMap ili DGU ortofoto, svijetla i tamna tema, mjerilo i koordinate pod mišem u
   HTRS96/TM.
@@ -30,6 +30,7 @@ Stanje 0.0.6. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
   desni klik završava crtu ili lik. Odmah nakon crtanja upisuje se naziv. Točka se pomiče povlačenjem.
 - **Odabir:** klikom ili okvirom, kao u AutoCAD-u. Delete ili ⌘ + delete (Ctrl + Backspace drugdje) briše
   sve odabrano. Mape, slojevi i objekti premještaju se povlačenjem ili desnim klikom i „Premjesti u”.
+  Desni klik na objekt na karti otvara izbornik, a ploča Slojevi skoči na taj objekt.
 - **Stil:** boja, debljina, prozirnost, vrsta crte i šrafura za cijeli sloj ili jedan objekt, a za točke
   veličina. Otvara se desnim klikom na sloj ili objekt i „Stil”.
 - **Natpisi:** naziv uz liniju, točku ili u liku, s veličinom, bojom, kurzivom i obrubom. Ne preklapaju se

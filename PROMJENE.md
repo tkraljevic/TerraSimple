@@ -1,5 +1,15 @@
 # Popis promjena
 
+## 0.0.7 alfa (probno, 14. 11. 2026.)
+
+- Novo: desni klik na objekt na karti otvara izbornik uz miš: Preimenuj, Stil, Premjesti u, Zumiraj na
+  objekt i Obriši. Ako objekt nije bio odabran, desni klik odabere samo njega. Ako je dio većeg odabira,
+  odabir ostaje, a izbornik nudi premještanje u sloj iste vrste i brisanje svih odabranih, oboje kao jedan
+  korak poništavanja.
+- Ploča Slojevi odmah pokaže objekt na koji je bio desni klik: otvori njegovu mapu i sloj, pomakne stablo
+  do njega i označi ga.
+- Dok crtaš ili mjeriš, desni klik i dalje samo završava crtu ili lik.
+
 ## 0.0.6 alfa (probno, 14. 11. 2026.)
 
 - Novo: natpisi na karti. Uz rijeku ili kanal naziv ide uz liniju i prati njezin zavoj, a ponavlja se kad
