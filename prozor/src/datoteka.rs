@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 pub trait BiracDatoteka: Send + Sync {
     fn otvori_datoteku(&self) -> Option<PathBuf>;
     fn spremi_datoteku(&self, predlozeno_ime: Option<&str>) -> Option<PathBuf>;
-    /// KML ili KMZ iz Google Eartha.
+    /// KML ili KMZ iz Google Eartha ili GeoPackage, npr. iz QGIS-a.
     fn uvezi_datoteku(&self) -> Option<PathBuf>;
     /// Kamo ide izvoz u KML ili KMZ. Vrsta ovisi o nastavku koji korisnik odabere.
     fn izvezi_datoteku(&self, predlozeno_ime: &str) -> Option<PathBuf>;
@@ -42,7 +42,9 @@ impl BiracDatoteka for SustavskiBirac {
 
     fn uvezi_datoteku(&self) -> Option<PathBuf> {
         rfd::FileDialog::new()
+            .add_filter("KML, KMZ, GeoPackage", &["kml", "kmz", "gpkg"])
             .add_filter("Google Earth (KML, KMZ)", &["kml", "kmz"])
+            .add_filter("GeoPackage", &["gpkg"])
             .pick_file()
     }
 

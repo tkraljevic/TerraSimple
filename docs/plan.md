@@ -12,7 +12,7 @@ Stanje 10. 11. 2026.:
 - **Izdanja:** 0.0.1 do 0.0.5 alfa izašla su 10. 11. 2026. kao probna, za Windows, macOS i Linux. Što je
   ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
   brisanje s ⌘ + delete i popis prečaca.
-- **Faze:** 0 i 1 su gotove. Iz faze 2 radi sve osim uvoza GeoPackagea. Iz
+- **Faze:** 0 i 1 su gotove. Faza 2 je gotova, osim sloja koji se čita iz izvorne datoteke. Iz
   faze 3 radi uvoz i izvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
 - **Kvaliteta:** provjera `cargo xtask provjera` prolazi, s pokrivenošću oko 96 %.
 - **Repozitorij** je javan na GitHubu od 10. 11. 2026. Razvijamo na Rustu 1.99.1.
@@ -104,7 +104,13 @@ sudara s QGIS-om (Odluke (14. 11. 2026.)). Nakon pada program pri pokretanju nud
 vraćeni rad Spremi sprema na novo mjesto. Uredno zatvaranje i spremanje brišu kopiju. Svaki pokrenuti
 program drži svoju bravu, pa se kopija prozora koji još radi ne nudi.
 
-Nedostaje: uvoz GeoPackagea.
+**Uvoz GeoPackagea (14. 11. 2026.):** „Uvezi sloj” prima i GeoPackage. Prozorčić (zaslon G) nudi slojeve
+iz datoteke s kućicama, a odabrani se kopiraju u novu mapu, s mapama, nazivima, opisima i stilom
+(Odluke (14. 11. 2026.): zasad samo kopija). Izvorna datoteka se otvara samo za čitanje. Objekt bez
+stupca `naziv` uzima naziv iz stupca kao `name` ili `ime`. Ostali stupci se ne kopiraju, jer projekt zasad
+pamti samo naziv i opis; prozorčić ih navodi.
+
+Nedostaje: čitanje sloja iz izvorne datoteke, bez kopiranja (zaseban posao).
 
 ### Faza 3: Google Earth (3–5 tjedana) — u radu
 

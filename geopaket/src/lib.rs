@@ -136,6 +136,21 @@ impl Datoteka {
     }
 }
 
+/// Čita tuđi GeoPackage samo za čitanje, npr. za uvoz slojeva u drugi projekt. Datoteka se ne
+/// mijenja, ni kad je QGIS drži otvorenu. Vraća projekt i upozorenja čitanja.
+pub fn procitaj_za_uvoz(staza: &Path) -> Result<(Projekt, Vec<String>), Greska> {
+    let zastavice = rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY;
+    Connection::open_with_flags(staza, zastavice)
+        .map_err(Greska::from)
+        .and_then(|veza| pripremi_vezu(&veza).map(|()| veza))
+        .and_then(|veza| pripremi_bazu(&veza, false).map(|()| veza))
+        .and_then(|veza| {
+            veza.unchecked_transaction()
+                .map_err(Greska::from)
+                .and_then(|tx| citanje::projekt(&tx, 0))
+        })
+}
+
 /// Kopija za oporavak nakon pada: projekt kakav je u programu, u novoj datoteci `cilj`. Izvorna
 /// datoteka se samo čita, kroz vlastitu vezu, pa kopija smije nastati u drugoj niti. Projekt
 /// otvoren iz datoteke kopira se s njom, da ostanu tuđe tablice i zapisi. Kopija se piše pod

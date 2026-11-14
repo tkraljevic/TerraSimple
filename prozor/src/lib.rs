@@ -37,5 +37,6 @@ pub mod trazilica;
 mod trazilica_testovi;
 pub mod unos;
 pub mod uvoz;
+pub mod uvoz_gpkg;
 #[cfg(test)]
 mod uvoz_testovi;

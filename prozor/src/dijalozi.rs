@@ -58,6 +58,8 @@ pub enum AktivniDijalog {
     Izvoz(crate::izvoz::PripremaIzvoza),
     /// Kopija rada koju je ostavio program koji se srušio.
     Oporavak(crate::oporavak::Ostatak),
+    /// Odabir slojeva iz GeoPackagea koji se kopiraju u projekt (zaslon G).
+    UvozGpkg(crate::uvoz_gpkg::PripremaUvoza),
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -69,8 +71,8 @@ pub enum IshodDijaloga {
     UpozorenjaPreklopiPopis,
     ZatvoriPoruku,
     SukobSpremiKao,
-    /// Korisnik je pregledao izvoz i bira datoteku.
-    Izvezi,
+    /// Glavni gumb prozorčića izvoza ili uvoza: izvoz bira datoteku, a uvoz kopira slojeve.
+    Prihvati,
     /// Vrati (`true`) ili odbaci kopiju nespremljenog rada.
     Oporavak(bool),
 }
@@ -250,10 +252,173 @@ pub fn crtaj_aktivni_dijalog(
             otvoren_popis,
         } => crtaj_upozorenja_otvaranja(ui, dostupan, upozorenja, otvoren_popis, boje, katalog),
         AktivniDijalog::SukobSpremanja => crtaj_sukob_spremanja(ui, dostupan, boje, katalog),
+        ostali => crtaj_ostale(ui, dostupan, ostali, boje, katalog),
+    }
+}
+
+/// Kućica, ikona vrste, naziv i opis jednog sloja. Klik mijenja odabir.
+fn redak_sloja_uvoza(
+    ui: &mut egui::Ui,
+    sloj: &mut crate::uvoz_gpkg::SlojIzvora,
+    okvir: Rect,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) {
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 8.0);
+    let kucica =
+        Rect::from_center_size(pos2(okvir.min.x + 22.0, okvir.center().y), vec2(18.0, 18.0));
+    if sloj.odabran {
+        ui.painter().rect_filled(kucica, 4.0, boje.primarna);
+        tekst_sredina(
+            ui,
+            kucica.center(),
+            "✓",
+            font_srednji(12.0),
+            boje.primarna_tekst,
+        );
+    } else {
+        ui.painter().rect_stroke(
+            kucica,
+            4.0,
+            egui::Stroke::new(2.0, boje.obrub_2),
+            egui::StrokeKind::Inside,
+        );
+    }
+    let x = okvir.min.x + 44.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 15.0),
+        &sloj.naziv,
+        font_obicni(14.0),
+        boje.tekst,
+    );
+    let opis = katalog.s_tekstovima(
+        "uvoz-gpkg-opis-sloja",
+        &[
+            ("objekti", katalog.broj_objekata(sloj.objekata)),
+            ("sustav", sloj.sustav.to_owned()),
+        ],
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 33.0),
+        &opis,
+        font_obicni(12.0),
+        boje.tekst_2,
+    );
+    let id = ui.make_persistent_id(("uvoz_gpkg_sloj", sloj.id.0));
+    let odgovor = ui.interact(okvir, id, Sense::click());
+    odgovor.widget_info(|| {
+        WidgetInfo::selected(Role::CheckBox, ui.is_enabled(), sloj.odabran, &sloj.naziv)
+    });
+    if odgovor.clicked() {
+        sloj.odabran = !sloj.odabran;
+    }
+}
+
+/// Zaslon G: slojevi iz datoteke s kućicama, napomena i gumbi.
+fn crtaj_uvoz_gpkg(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    priprema: &mut crate::uvoz_gpkg::PripremaUvoza,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 560.0;
+    let vidljivih = priprema.slojevi.len().min(6) as f32;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 240.0 + 56.0 * vidljivih));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
+    let x = okvir.min.x + 24.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 30.0),
+        &katalog.tekst("uvoz-gpkg-naslov"),
+        font_srednji(18.0),
+        boje.tekst,
+    );
+    let datoteka = katalog.s_tekstovima(
+        "uvoz-gpkg-datoteka",
+        &[("datoteka", priprema.naziv.clone())],
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 60.0),
+        &datoteka,
+        font_obicni(13.0),
+        boje.tekst_2,
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 90.0),
+        &katalog.tekst("uvoz-gpkg-slojevi"),
+        font_obicni(13.0),
+        boje.tekst_2,
+    );
+    let popis = Rect::from_min_size(
+        pos2(x, okvir.min.y + 104.0),
+        vec2(sirina - 48.0, 56.0 * vidljivih),
+    );
+    ui.scope_builder(egui::UiBuilder::new().max_rect(popis), |ui| {
+        egui::ScrollArea::vertical()
+            .max_height(popis.height())
+            .show(ui, |ui| {
+                for sloj in &mut priprema.slojevi {
+                    let (r, _) =
+                        ui.allocate_exact_size(vec2(popis.width() - 12.0, 50.0), Sense::hover());
+                    redak_sloja_uvoza(ui, sloj, r, boje, katalog);
+                    ui.add_space(6.0);
+                }
+            });
+    });
+    let mut napomena = katalog.tekst("uvoz-gpkg-kopija");
+    let polja = priprema.izostavljena_polja();
+    if !polja.is_empty() {
+        napomena.push(' ');
+        napomena.push_str(&katalog.s_tekstovima("uvoz-gpkg-polja", &[("popis", polja.join(", "))]));
+    }
+    let galija = ui
+        .painter()
+        .layout(napomena, font_obicni(12.5), boje.tekst_2, sirina - 48.0);
+    ui.painter()
+        .galley(pos2(x, popis.max.y + 14.0), galija, boje.tekst_2);
+    let by = okvir.max.y - 48.0;
+    let uvezi = Rect::from_min_size(pos2(okvir.max.x - 164.0, by), vec2(140.0, 32.0));
+    let odustani = Rect::from_min_size(pos2(uvezi.min.x - 108.0, by), vec2(100.0, 32.0));
+    let odustani = gumb_dijaloga(
+        ui,
+        odustani,
+        &katalog.tekst("izvoz-odustani"),
+        false,
+        false,
+        boje,
+    );
+    let broj = priprema.odabranih();
+    let gumb = katalog.s_tekstovima("uvoz-gpkg-gumb", &[("slojevi", katalog.broj_slojeva(broj))]);
+    let uvezi = gumb_dijaloga(ui, uvezi, &gumb, true, false, boje);
+    if uvezi.clicked() && broj > 0 {
+        Some(IshodDijaloga::Prihvati)
+    } else {
+        odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+    }
+}
+
+/// Prozorčići s vlastitim sadržajem: o programu, prečaci, izvoz, uvoz i oporavak.
+fn crtaj_ostale(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    dijalog: &mut AktivniDijalog,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    match dijalog {
         AktivniDijalog::OProgramu => crtaj_o_programu(ui, dostupan, boje, katalog),
         AktivniDijalog::Precaci => crtaj_precace(ui, dostupan, boje, katalog),
         AktivniDijalog::Izvoz(priprema) => crtaj_izvoz(ui, dostupan, priprema, boje, katalog),
         AktivniDijalog::Oporavak(ostatak) => crtaj_oporavak(ui, dostupan, ostatak, boje, katalog),
+        AktivniDijalog::UvozGpkg(priprema) => {
+            crtaj_uvoz_gpkg(ui, dostupan, priprema, boje, katalog)
+        }
+        _ => None,
     }
 }
 
@@ -419,7 +584,7 @@ fn crtaj_izvoz(
         })
         .inner;
     if izvezi.clicked() && priprema.moze {
-        Some(IshodDijaloga::Izvezi)
+        Some(IshodDijaloga::Prihvati)
     } else {
         odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
     }
@@ -1008,4 +1173,21 @@ fn gumb_dijaloga(
     let odg = ui.interact(okvir, id, Sense::click());
     odg.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), tekst));
     odg
+}
+
+#[cfg(test)]
+mod testovi {
+    use super::*;
+
+    #[test]
+    fn ostali_prozorcici_ne_crtaju_one_s_vlastitom_granom() {
+        let ctx = egui::Context::default();
+        let katalog = KatalogPoruka::hrvatski();
+        let mut izlaz = ctx.run_ui(egui::RawInput::default(), |ui| {
+            let mut d = AktivniDijalog::SukobSpremanja;
+            let boje = Boje::za_temu(false);
+            assert!(crtaj_ostale(ui, ui.max_rect(), &mut d, &boje, &katalog).is_none());
+        });
+        izlaz.textures_delta.clear();
+    }
 }
