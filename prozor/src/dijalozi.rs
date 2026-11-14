@@ -56,6 +56,8 @@ pub enum AktivniDijalog {
     Precaci,
     /// Pregled prije izvoza u KML (zaslon K).
     Izvoz(crate::izvoz::PripremaIzvoza),
+    /// Kopija rada koju je ostavio program koji se srušio.
+    Oporavak(crate::oporavak::Ostatak),
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -63,14 +65,14 @@ pub enum AktivniDijalog {
 pub enum IshodDijaloga {
     PotvrdaSpremi(NamjeraPotvrde),
     PotvrdaNeSpremaj(NamjeraPotvrde),
-    PotvrdaOdustani,
     ObrisiPotvrdjeno(Stavka),
-    ObrisiOdustani,
     UpozorenjaPreklopiPopis,
     ZatvoriPoruku,
     SukobSpremiKao,
     /// Korisnik je pregledao izvoz i bira datoteku.
     Izvezi,
+    /// Vrati (`true`) ili odbaci kopiju nespremljenog rada.
+    Oporavak(bool),
 }
 
 /// Oznaka prečaca kako je pišu programi na tom sustavu: na Macu `⌘S`, drugdje `Ctrl+S`.
@@ -251,6 +253,62 @@ pub fn crtaj_aktivni_dijalog(
         AktivniDijalog::OProgramu => crtaj_o_programu(ui, dostupan, boje, katalog),
         AktivniDijalog::Precaci => crtaj_precace(ui, dostupan, boje, katalog),
         AktivniDijalog::Izvoz(priprema) => crtaj_izvoz(ui, dostupan, priprema, boje, katalog),
+        AktivniDijalog::Oporavak(ostatak) => crtaj_oporavak(ui, dostupan, ostatak, boje, katalog),
+    }
+}
+
+/// Ponuda da se vrati rad koji nije spremljen prije pada programa.
+fn crtaj_oporavak(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    ostatak: &crate::oporavak::Ostatak,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 460.0;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 190.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    let naslov = katalog.tekst("oporavak-naslov");
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 24.0),
+        &naslov,
+        font_srednji(15.0),
+        boje.tekst,
+    );
+    let tekstovi = crate::oporavak::tekstovi_ostatka(katalog, ostatak);
+    let poruka = katalog.s_tekstovima("oporavak-poruka", &tekstovi);
+    let galija = ui
+        .painter()
+        .layout(poruka, font_obicni(13.0), boje.tekst_2, sirina - 40.0);
+    ui.painter().galley(
+        pos2(okvir.min.x + 20.0, okvir.min.y + 48.0),
+        galija,
+        boje.tekst_2,
+    );
+    let by = okvir.max.y - 46.0;
+    let vrati = Rect::from_min_size(pos2(okvir.max.x - 116.0, by), vec2(96.0, 30.0));
+    let odbaci = Rect::from_min_size(pos2(vrati.min.x - 104.0, by), vec2(96.0, 30.0));
+    let odbaci = gumb_dijaloga(
+        ui,
+        odbaci,
+        &katalog.tekst("oporavak-odbaci"),
+        false,
+        false,
+        boje,
+    );
+    let vrati = gumb_dijaloga(
+        ui,
+        vrati,
+        &katalog.tekst("oporavak-vrati"),
+        true,
+        false,
+        boje,
+    );
+    if vrati.clicked() {
+        Some(IshodDijaloga::Oporavak(true))
+    } else {
+        odbaci.clicked().then_some(IshodDijaloga::Oporavak(false))
     }
 }
 
@@ -687,7 +745,7 @@ fn crtaj_potvrdu_nespremljenog(
     );
 
     if odustani.clicked() {
-        Some(IshodDijaloga::PotvrdaOdustani)
+        Some(IshodDijaloga::ZatvoriPoruku)
     } else if ne_spremaj.clicked() {
         Some(IshodDijaloga::PotvrdaNeSpremaj(namjera))
     } else if spremi.clicked() {
@@ -766,7 +824,7 @@ fn crtaj_upozorenje_brisanja(
     let obrisi = gumb_dijaloga(ui, okvir_obrisi, &oznaka_obrisi, false, true, boje);
 
     if odustani.clicked() {
-        Some(IshodDijaloga::ObrisiOdustani)
+        Some(IshodDijaloga::ZatvoriPoruku)
     } else if obrisi.clicked() {
         Some(IshodDijaloga::ObrisiPotvrdjeno(stavka))
     } else {

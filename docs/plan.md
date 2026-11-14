@@ -12,8 +12,8 @@ Stanje 10. 11. 2026.:
 - **Izdanja:** 0.0.1 do 0.0.5 alfa izašla su 10. 11. 2026. kao probna, za Windows, macOS i Linux. Što je
   ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
   brisanje s ⌘ + delete i popis prečaca.
-- **Faze:** 0 i 1 su gotove. Iz faze 2 radi sve osim uvoza GeoPackagea, automatskog spremanja i oporavka. Iz
-  faze 3 radi uvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
+- **Faze:** 0 i 1 su gotove. Iz faze 2 radi sve osim uvoza GeoPackagea. Iz
+  faze 3 radi uvoz i izvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
 - **Kvaliteta:** provjera `cargo xtask provjera` prolazi, s pokrivenošću oko 96 %.
 - **Repozitorij** je javan na GitHubu od 10. 11. 2026. Razvijamo na Rustu 1.99.1.
 
@@ -96,7 +96,15 @@ Zasloni A4, F, F2, G, J. Projekt je jedan GeoPackage, s mapama, novim slojem, uv
 spremanjem, oporavkom i gumbom „Otvori u QGIS-u”.
 
 Napravljeno: mape, novi sloj, premještanje mapa, slojeva i objekata (0.0.4), spremanje u GeoPackage i
-„Otvori u QGIS-u”. Nedostaje: uvoz GeoPackagea, automatsko spremanje i oporavak.
+„Otvori u QGIS-u”.
+
+**Automatsko spremanje i oporavak (14. 11. 2026.):** dok ima nespremljenih izmjena, program najviše
+svakih 30 s sprema kopiju u mapu programa, u pozadini. Projekt se mijenja tek na Spremi, pa se kopija ne
+sudara s QGIS-om (Odluke (14. 11. 2026.)). Nakon pada program pri pokretanju nudi Vrati ili Odbaci, a
+vraćeni rad Spremi sprema na novo mjesto. Uredno zatvaranje i spremanje brišu kopiju. Svaki pokrenuti
+program drži svoju bravu, pa se kopija prozora koji još radi ne nudi.
+
+Nedostaje: uvoz GeoPackagea.
 
 ### Faza 3: Google Earth (3–5 tjedana) — u radu
 

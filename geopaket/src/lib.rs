@@ -136,6 +136,34 @@ impl Datoteka {
     }
 }
 
+/// Kopija za oporavak nakon pada: projekt kakav je u programu, u novoj datoteci `cilj`. Izvorna
+/// datoteka se samo čita, kroz vlastitu vezu, pa kopija smije nastati u drugoj niti. Projekt
+/// otvoren iz datoteke kopira se s njom, da ostanu tuđe tablice i zapisi. Kopija se piše pod
+/// privremenim imenom i tek gotova dobiva pravo ime.
+pub fn spremi_kopiju(izvor: Option<&Path>, cilj: &Path, projekt: &Projekt) -> Result<(), Greska> {
+    let privremena = cilj.with_extension("u-tijeku");
+    let _ = std::fs::remove_file(&privremena);
+    let ishod = napisi_kopiju(izvor, &privremena, projekt)
+        .and_then(|()| std::fs::rename(&privremena, cilj).map_err(Into::into));
+    if ishod.is_err() {
+        let _ = std::fs::remove_file(&privremena);
+    }
+    ishod
+}
+
+fn napisi_kopiju(izvor: Option<&Path>, cilj: &Path, projekt: &Projekt) -> Result<(), Greska> {
+    match izvor {
+        None => Datoteka::otvori(cilj).and_then(|mut d| d.spremi(projekt)),
+        Some(i) if !i.exists() => Err("Izvorne datoteke više nema.".into()),
+        Some(i) => Datoteka::otvori(i)
+            .and_then(|d| d.kopija(cilj))
+            .and_then(|mut k| {
+                k.ucitaj_iznad(projekt.najveci_id())
+                    .and_then(|_| k.spremi(projekt))
+            }),
+    }
+}
+
 fn otvori_vezu(staza: impl AsRef<Path>) -> Result<Connection, Greska> {
     let nova = !staza.as_ref().exists();
     let veza = Connection::open(staza)?;
