@@ -13,7 +13,7 @@ Stanje 10. 11. 2026.:
   ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
   brisanje s ⌘ + delete i popis prečaca.
 - **Faze:** 0 i 1 su gotove. Iz faze 2 radi sve osim uvoza GeoPackagea, automatskog spremanja i oporavka. Iz
-  faze 3 radi uvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta bez ikona i natpisa.
+  faze 3 radi uvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
 - **Kvaliteta:** provjera `cargo xtask provjera` prolazi, s pokrivenošću oko 96 %.
 - **Repozitorij** je javan na GitHubu od 10. 11. 2026. Razvijamo na Rustu 1.99.1.
 
@@ -120,7 +120,10 @@ CSV te uvoz izmjena s pregledom.
 
 Napravljeno (0.0.5): ploča Stil za sloj ili jedan objekt, s bojom, debljinom, prozirnošću, vrstom crte,
 šrafurom i veličinom točke; QGIS ih čita iste. Cijelo povlačenje klizača poništava se jednim korakom.
-Nedostaje: oblici i ikone točaka (karta ih zasad crta kao krug), natpisi na karti i atributna tablica.
+Natpisi (14. 11. 2026.): naziv linije ide uz liniju i prati zavoj, naziv točke uz znak, a naziv lika u
+lik. Natpis koji ne stane ili bi prekrio drugi ne crta se, pa se karta kod udaljavanja sama prorijedi.
+Kartica Natpis u ploči Stil bira veličinu, boju, kurziv i obrub za cijeli sloj, a QGIS ih čita iste.
+Nedostaje: oblici i ikone točaka (karta ih zasad crta kao krug) i atributna tablica.
 
 ### Faza 5: podloge (3–5 tjedana)
 

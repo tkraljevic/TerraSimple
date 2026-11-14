@@ -267,9 +267,11 @@ fn stil_iz_qgisa_ostaje_dok_ga_terrasimple_ne_promijeni() {
         "{t}"
     );
     assert!(
-        !xml(linije).contains("<labeling"),
+        !xml(linije).contains("<labeling type=\"simple\"/>"),
         "promijenjen stil zamjenjuje QGIS-ov"
     );
     assert!(xml(linije).contains("200,0,0,255"), "{}", xml(linije));
-    assert!(!xml(novi).contains("<labeling"));
+    // Natpisi koje zadaje TerraSimple: naziv objekta.
+    assert!(xml(linije).contains("fieldName=\"naziv\""));
+    assert!(xml(novi).contains("labelsEnabled=\"1\""));
 }
