@@ -1,5 +1,25 @@
 # Popis promjena
 
+## 0.0.6 alfa (probno, 14. 11. 2026.)
+
+- Novo: natpisi na karti. Uz rijeku ili kanal naziv ide uz liniju i prati njezin zavoj, a ponavlja se kad
+  zumiraš bliže. Uz točku stoji desno od znaka, a u liku unutar lika. Natpisi se ne preklapaju: kad nema
+  mjesta, manje važan se ne crta. U ploči Stil, kartica Natpis, uključuje se natpis sloja i bira veličina,
+  boja, kurziv i bijeli obrub. QGIS otvara iste natpise.
+- Novo: izvoz. Desni klik na mapu ili sloj, „Izvezi…”, ili cijeli projekt iz izbornika Datoteka. Bira se
+  KML, KMZ, GeoJSON ili SHP, a prozorčić prije izvoza kaže što ide u datoteku i što se gubi, npr.
+  isprekidana crta ili šrafura. SHP se piše u odabranom sustavu (zadano HTRS96/TM), jedna datoteka po sloju.
+- Novo: uvoz GeoJSON-a, shapefilea i GeoPackagea, istim gumbom „Uvezi sloj”. Kad datoteka ne kaže u kojem
+  je sustavu, program pita i predloži sustav po koordinatama. Iz GeoPackagea se biraju slojevi, a kopiraju
+  se u projekt s nazivima, opisima i stilom; izvorna datoteka se ne mijenja. U shapefileu se dobro čitaju
+  č, ć, š, ž i đ i kad `.cpg` kaže krivu kodnu stranicu.
+- Novo: automatsko spremanje. Dok ima nespremljenih izmjena, program svakih 30 sekundi sprema kopiju u
+  svoju mapu. Projekt se mijenja tek na Spremi. Ako se program sruši, pri sljedećem pokretanju nudi Vrati
+  ili Odbaci.
+- Ploča Slojevi: kotačić iznad ploče sad pomiče stablo, a ne kartu, i desno je klizač. Dugi nazivi završavaju
+  s „…”, a mapa broji i podmape. Rezultati tražilice više se ne skrivaju ispod alata i kažu u kojem je sloju
+  objekt.
+
 ## 0.0.5 alfa (probno, 10. 11. 2026.)
 
 - Novo: uvoz KML-a i KMZ-a iz Google Eartha, gumbom „Uvezi sloj” u ploči Slojevi ili iz izbornika
