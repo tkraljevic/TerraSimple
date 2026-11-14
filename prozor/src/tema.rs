@@ -122,6 +122,7 @@ impl Razmaci {
     pub const ZAOBLJENJE_RETKA: f32 = 7.0;
     pub const VISINA_RETKA_STABLA: f32 = 42.0;
     pub const UVLAKA_STABLA: f32 = 16.0;
+    pub const UVLAKA_PODIZBORNIKA: f32 = 12.0;
 }
 
 #[must_use]

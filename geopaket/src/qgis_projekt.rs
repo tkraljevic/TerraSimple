@@ -179,11 +179,12 @@ fn dodaj_slojeve_xml(
             continue;
         }
         let (geom_tip, wkb_tip) = geometrija_oznake(s.vrsta);
-        let renderer = stil::renderer(s.vrsta, s.stil);
+        let renderer = stil::renderer(s.vrsta, s.stil) + &stil::natpisi(s.vrsta, s.stil);
+        let natpisi = stil::ukljuceni_natpisi(s.stil);
         let srs = qgis_sustavi::zapis(sustav_sloja(p, id));
 
         xml.push_str(&format!(
-            "    <maplayer type=\"vector\" geometry=\"{geom_tip}\" wkbType=\"{wkb_tip}\" styleCategories=\"AllStyleCategories\">\n\
+            "    <maplayer type=\"vector\" geometry=\"{geom_tip}\" wkbType=\"{wkb_tip}\" labelsEnabled=\"{natpisi}\" styleCategories=\"AllStyleCategories\">\n\
              \x20     <id>{}</id>\n\
              \x20     <datasource>./{}|layername={}</datasource>\n\
              \x20     <layername>{}</layername>\n\

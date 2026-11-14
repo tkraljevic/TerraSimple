@@ -1,13 +1,16 @@
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::poruke::{KatalogPoruka, mjera_duljine, mjera_povrsine};
-use crate::primjer::ukupno_slojeva_u_mapi;
+use crate::premjestanje::{Mjesto, odredista_premjestanja, odrediste_ispustanja, premjesti};
 use crate::sastavnice::{
-    OpisGumbaIkone, OpisRetkaStabla, cip, gumb_ikona, gumb_obrub, redak_stabla, tekst_lijevo,
-    zaobljeni_okvir,
+    OpisGumbaIkone, OpisRetkaStabla, PodizbornikRetka, StavkaPodizbornika, cip, gumb_ikona,
+    gumb_obrub, redak_stabla, tekst_lijevo, zaobljeni_okvir,
 };
-use crate::stanje::{NoviSloj, Odabir, StanjePrikaza};
-use crate::tema::{Boje, Razmaci, font_srednji};
-use eframe::egui::{self, Pos2, Rect, Role, Sense, WidgetInfo, pos2, vec2};
+use crate::stanje::{NoviSloj, Odabir, StanjePrikaza, UredjivanjeStila};
+use crate::tema::{Boje, Razmaci, font_obicni, font_srednji};
+use eframe::egui::{
+    self, CursorIcon, Id, LayerId, Order, Pos2, Rect, Role, Sense, Stroke, StrokeKind, WidgetInfo,
+    pos2, vec2,
+};
 use slojevi::{
     IdMape, IdSloja, IzmjenaObjekta, Mjere, NaredbaObjekta, NaredbaStabla, Novo, Objekt, Projekt,
     Sloj, StanjeSloja, Stavka, Uredjivac, VrstaGeometrije,
@@ -78,8 +81,7 @@ fn dodaj_retke_mape(
     let podnaslov = if stanje.skrij_podnaslov_mape.contains(&id_mape) {
         String::new()
     } else {
-        let ukupno = ukupno_slojeva_u_mapi(projekt, id_mape);
-        katalog.broj_slojeva(ukupno)
+        podnaslov_mape(mapa, katalog)
     };
     let odabir = Odabir::Mapa(id_mape);
     redci.push(RedakZaPrikaz {
@@ -102,6 +104,22 @@ fn dodaj_retke_mape(
     }
     for dijete in &mapa.djeca {
         dodaj_retke_stavke(projekt, stanje, katalog, *dijete, uvlaka + 1, redci);
+    }
+}
+
+/// Koliko mapa i slojeva leži izravno u mapi: „2 sloja”, „1 mapa” ili „1 mapa, 2 sloja”. Mapa samo s
+/// podmapama tako ne izgleda prazno.
+fn podnaslov_mape(mapa: &slojevi::Mapa, katalog: &KatalogPoruka) -> String {
+    let mape = mapa
+        .djeca
+        .iter()
+        .filter(|d| matches!(d, Stavka::Mapa(_)))
+        .count();
+    let slojeva = mapa.djeca.len() - mape;
+    match (mape, slojeva) {
+        (0, s) => katalog.broj_slojeva(s),
+        (m, 0) => katalog.broj_mapa(m),
+        (m, s) => format!("{}, {}", katalog.broj_mapa(m), katalog.broj_slojeva(s)),
     }
 }
 
@@ -399,6 +417,10 @@ pub fn crtaj_plocu_slojeva(
         Some(boje.obrub),
         Razmaci::ZAOBLJENJE_PLOCE,
     );
+    if stanje.stil.is_some() {
+        crate::stil::crtaj_plocu_stila(ui, uredjivac, stanje, ikone, katalog, okvir_ploce, boje);
+        return;
+    }
     crtaj_zaglavlje_ploce(
         ui,
         stanje,
@@ -529,7 +551,7 @@ fn crtaj_akcijske_gumbe_ploce(
     }
 
     let okvir_uvezi = Rect::from_min_size(pos2(pocetak.x + 130.0, pocetak.y), vec2(112.0, 32.0));
-    let _ = gumb_obrub(
+    if gumb_obrub(
         ui,
         ikone,
         okvir_uvezi,
@@ -537,7 +559,11 @@ fn crtaj_akcijske_gumbe_ploce(
         &katalog.tekst("gumb-uvezi-sloj"),
         tamna,
         boje,
-    );
+    )
+    .clicked()
+    {
+        stanje.zatrazen_uvoz = true;
+    }
 
     let okvir_mapa = Rect::from_min_size(pos2(pocetak.x + 248.0, pocetak.y), vec2(100.0, 32.0));
     if gumb_obrub(
@@ -569,16 +595,42 @@ fn crtaj_stablo_u_ploci(
     let labela_vidljivosti = katalog.tekst("oznaka-vidljivost");
     let preimenuj = katalog.tekst("gumb-preimenuj");
     let obrisi = katalog.tekst("gumb-obrisi");
-    let stavke_izbornika = [preimenuj.as_str(), obrisi.as_str()];
+    let stil = katalog.tekst("izbornik-stil");
+    let izvezi = katalog.tekst("izbornik-izvezi");
+    let stavke_mape = [preimenuj.as_str(), izvezi.as_str(), obrisi.as_str()];
+    let stavke_sloja = [
+        preimenuj.as_str(),
+        stil.as_str(),
+        izvezi.as_str(),
+        obrisi.as_str(),
+    ];
+    let stavke_objekta = [preimenuj.as_str(), stil.as_str(), obrisi.as_str()];
+    let premjesti_u = katalog.tekst("izbornik-premjesti-u");
     let tamna = stanje.tema_tamna;
-    let visina_retka = crate::tema::Razmaci::VISINA_RETKA_STABLA;
-    let maks_redaka = ((podrucje.height() / visina_retka).floor() as usize).max(1);
+    let visina_retka = Razmaci::VISINA_RETKA_STABLA;
+    let pomak = pomakni_stablo(ui, stanje, &redci, podrucje, boje);
+    let sirina_retka = if visina_stabla(redci.len()) > podrucje.height() {
+        podrucje.width() - SIRINA_KLIZACA - 2.0
+    } else {
+        podrucje.width()
+    };
+    let mut ui_stabla = ui.new_child(egui::UiBuilder::new().max_rect(podrucje));
+    ui_stabla.set_clip_rect(podrucje.intersect(ui.clip_rect()));
+    let ui = &mut ui_stabla;
+    let (prvi, zadnji) = vidljivi_redci(redci.len(), podrucje.height(), pomak);
 
-    for (indeks, redak) in redci.iter().take(maks_redaka).enumerate() {
-        let y = podrucje.min.y + indeks as f32 * visina_retka;
+    for (indeks, redak) in redci.iter().enumerate().take(zadnji).skip(prvi) {
+        let y = podrucje.min.y + indeks as f32 * visina_retka - pomak;
+        let projekt = uredjivac.projekt();
+        let odredista = || stavke_podizbornika(projekt, redak.odabir, katalog);
+        let podizbornik = Some(PodizbornikRetka {
+            naslov: &premjesti_u,
+            iza_stavke: STAVKA_PREIMENUJ,
+            stavke: &odredista,
+        });
         let okvir = Rect::from_min_size(
             pos2(podrucje.min.x, y),
-            vec2(podrucje.width(), visina_retka - 2.0),
+            vec2(sirina_retka, visina_retka - 2.0),
         );
         let opis = OpisRetkaStabla {
             id_kljuc: &redak.id_kljuc,
@@ -594,15 +646,258 @@ fn crtaj_stablo_u_ploci(
             oznaka_formata: redak.oznaka_formata.as_deref(),
             zakljucano: redak.zakljucano,
             ukljuceno: Some(redak.ukljuceno),
-            odabrano: stanje.odabrano == Some(redak.odabir),
+            odabrano: je_odabran_redak(stanje, redak.odabir),
             labela_strelice: &labela_strelice,
             labela_vidljivosti: &labela_vidljivosti,
             uredjivanje: uredjivanje_retka(stanje, redak.odabir),
-            stavke_izbornika: &stavke_izbornika,
+            stavke_izbornika: match redak.odabir {
+                Odabir::Mapa(_) => &stavke_mape,
+                Odabir::Sloj(_) => &stavke_sloja,
+                Odabir::Objekt(_, _) => &stavke_objekta,
+            },
+            podizbornik,
+            povlacenje: stanje.preimenovanje.is_none(),
         };
         let odg = redak_stabla(ui, ikone, &opis, tamna, boje);
         obradi_odgovor_retka(uredjivac.projekt(), stanje, redak.odabir, odg);
+        obradi_premjestanje_retka(uredjivac, stanje, katalog, redak.odabir, odg);
     }
+    obradi_ispustanje(ui, uredjivac, stanje, &redci, podrucje, pomak, boje);
+}
+
+const SIRINA_KLIZACA: f32 = 6.0;
+
+fn visina_stabla(broj_redaka: usize) -> f32 {
+    broj_redaka as f32 * Razmaci::VISINA_RETKA_STABLA
+}
+
+/// Najveći pomak: zadnji redak smije doći do dna ploče, ali ne i dalje.
+fn najveci_pomak(broj_redaka: usize, visina_podrucja: f32) -> f32 {
+    (visina_stabla(broj_redaka) - visina_podrucja).max(0.0)
+}
+
+/// Redci od `prvi` do prije `zadnji` barem djelomično se vide; ostali se ni ne crtaju, pa i sloj s
+/// desecima tisuća objekata klizi glatko.
+fn vidljivi_redci(broj_redaka: usize, visina_podrucja: f32, pomak: f32) -> (usize, usize) {
+    let h = Razmaci::VISINA_RETKA_STABLA;
+    let prvi = (pomak / h).floor() as usize;
+    let zadnji = ((pomak + visina_podrucja) / h).ceil() as usize;
+    (prvi.min(broj_redaka), zadnji.min(broj_redaka))
+}
+
+/// Pomak koji redak `indeks` dovodi u vidno polje, ili isti pomak ako se redak već cijeli vidi.
+fn pomak_do_retka(indeks: usize, visina_podrucja: f32, pomak: f32) -> f32 {
+    let h = Razmaci::VISINA_RETKA_STABLA;
+    let vrh = indeks as f32 * h;
+    if vrh < pomak {
+        vrh
+    } else if vrh + h > pomak + visina_podrucja {
+        vrh + h - visina_podrucja
+    } else {
+        pomak
+    }
+}
+
+/// Primjenjuje kotačić, povlačenje klizača i skok na odabrano iz tražilice, crta klizač i vraća
+/// pomak za ovaj okvir.
+fn pomakni_stablo(
+    ui: &egui::Ui,
+    stanje: &mut StanjePrikaza,
+    redci: &[RedakZaPrikaz],
+    podrucje: Rect,
+    boje: &Boje,
+) -> f32 {
+    let visina = podrucje.height();
+    let mut pomak = stanje.pomak_stabla - stanje.klizanje_ploce;
+    stanje.klizanje_ploce = 0.0;
+    if std::mem::take(&mut stanje.pokazi_odabrano)
+        && let Some(indeks) = redci.iter().position(|r| Some(r.odabir) == stanje.odabrano)
+    {
+        pomak = pomak_do_retka(indeks, visina, pomak);
+    }
+    let najveci = najveci_pomak(redci.len(), visina);
+    if najveci > 0.0 {
+        pomak += povuci_klizac(ui, podrucje, redci.len(), pomak.clamp(0.0, najveci), boje);
+    }
+    stanje.pomak_stabla = pomak.clamp(0.0, najveci);
+    stanje.pomak_stabla
+}
+
+/// Klizač uz desni rub stabla: ručka je onoliko visoka koliki se dio stabla vidi. Vraća koliko ga
+/// je korisnik povukao, preračunato u pomak stabla.
+fn povuci_klizac(
+    ui: &egui::Ui,
+    podrucje: Rect,
+    broj_redaka: usize,
+    pomak: f32,
+    boje: &Boje,
+) -> f32 {
+    let visina = podrucje.height();
+    let ukupno = visina_stabla(broj_redaka);
+    let staza = Rect::from_min_max(
+        pos2(podrucje.max.x - SIRINA_KLIZACA, podrucje.min.y),
+        podrucje.max,
+    );
+    let visina_rucke = (visina * visina / ukupno).max(24.0).min(visina);
+    let hod = visina - visina_rucke;
+    let udio = pomak / (ukupno - visina);
+    let rucka = Rect::from_min_size(
+        pos2(staza.min.x, staza.min.y + hod * udio),
+        vec2(SIRINA_KLIZACA, visina_rucke),
+    );
+    let odgovor = ui.interact(staza, ui.make_persistent_id("klizac_stabla"), Sense::drag());
+    let boja = if odgovor.hovered() || odgovor.dragged() {
+        boje.tekst_3
+    } else {
+        boje.obrub
+    };
+    ui.painter().rect_filled(rucka, SIRINA_KLIZACA / 2.0, boja);
+    if hod <= 0.0 {
+        return 0.0;
+    }
+    odgovor.drag_delta().y * (ukupno - visina) / hod
+}
+
+/// Redak je odabran u ploči ili je njegov objekt jedan od više odabranih na karti.
+fn je_odabran_redak(stanje: &StanjePrikaza, odabir: Odabir) -> bool {
+    stanje.odabrano == Some(odabir)
+        || matches!(odabir, Odabir::Objekt(s, o) if stanje.odabrani_na_karti.contains(&(s, o)))
+}
+
+fn stavke_podizbornika(
+    projekt: &Projekt,
+    odabir: Odabir,
+    katalog: &KatalogPoruka,
+) -> Vec<StavkaPodizbornika> {
+    odredista_premjestanja(projekt, odabir, katalog)
+        .into_iter()
+        .map(|o| StavkaPodizbornika {
+            naziv: o.naziv,
+            uvlaka: o.uvlaka,
+            omogucena: o.omoguceno,
+        })
+        .collect()
+}
+
+/// Početak povlačenja retka i odabir mjesta u podizborniku „Premjesti u”.
+fn obradi_premjestanje_retka(
+    uredjivac: &mut Uredjivac,
+    stanje: &mut StanjePrikaza,
+    katalog: &KatalogPoruka,
+    odabir: Odabir,
+    odgovor: crate::sastavnice::OdgovorRetkaStabla,
+) {
+    if odgovor.povlacenje_pocelo {
+        stanje.povuceno = Some(odabir);
+    }
+    let Some(redni) = odgovor.stavka_podizbornika else {
+        return;
+    };
+    let mjesto = odredista_premjestanja(uredjivac.projekt(), odabir, katalog)
+        .into_iter()
+        .nth(redni)
+        .filter(|o| o.omoguceno)
+        .and_then(|o| o.mjesto);
+    if let Some(mjesto) = mjesto {
+        let _ = premjesti(uredjivac, stanje, odabir, mjesto);
+    }
+}
+
+/// Dok se redak povlači, označava kamo bi otišao i ispisuje njegov naziv uz miš. Kad korisnik
+/// pusti tipku, stavka se premješta, a izvan stabla ili na nedopušteno mjesto ostaje gdje je bila.
+fn obradi_ispustanje(
+    ui: &egui::Ui,
+    uredjivac: &mut Uredjivac,
+    stanje: &mut StanjePrikaza,
+    redci: &[RedakZaPrikaz],
+    podrucje: Rect,
+    pomak: f32,
+    boje: &Boje,
+) {
+    let Some(povuceno) = stanje.povuceno else {
+        return;
+    };
+    let (pokazivac, pusteno) = ui.input(|i| (i.pointer.interact_pos(), !i.pointer.primary_down()));
+    let cilj = pokazivac.and_then(|p| redak_pod_pokazivacem(redci, podrucje, pomak, p));
+    let odrediste = cilj.and_then(|(indeks, odabir)| {
+        odrediste_ispustanja(uredjivac.projekt(), povuceno, odabir).map(|m| (indeks, m))
+    });
+    if pusteno {
+        stanje.povuceno = None;
+        if let Some((_, mjesto)) = odrediste {
+            let _ = premjesti(uredjivac, stanje, povuceno, mjesto);
+        }
+        return;
+    }
+    ui.ctx().set_cursor_icon(CursorIcon::Grabbing);
+    if let Some((indeks, mjesto)) = odrediste {
+        crtaj_cilj_ispustanja(
+            ui,
+            podrucje,
+            indeks as f32 * Razmaci::VISINA_RETKA_STABLA - pomak,
+            mjesto,
+            boje,
+        );
+    }
+    if let (Some(p), Some(naziv)) = (pokazivac, naziv_za_odabir(uredjivac.projekt(), povuceno)) {
+        crtaj_natpis_povlacenja(ui, p, &naziv, boje);
+    }
+}
+
+fn redak_pod_pokazivacem(
+    redci: &[RedakZaPrikaz],
+    podrucje: Rect,
+    pomak: f32,
+    pokazivac: Pos2,
+) -> Option<(usize, Odabir)> {
+    if !podrucje.contains(pokazivac) {
+        return None;
+    }
+    let indeks =
+        ((pokazivac.y - podrucje.min.y + pomak) / Razmaci::VISINA_RETKA_STABLA).floor() as usize;
+    redci.get(indeks).map(|r| (indeks, r.odabir))
+}
+
+/// Mapa ili sloj u koji nešto ide dobije okvir, a kad mapa ili sloj ide ispred sloja, iznad njega se
+/// crta crta.
+fn crtaj_cilj_ispustanja(
+    ui: &egui::Ui,
+    podrucje: Rect,
+    vrh_retka: f32,
+    mjesto: Mjesto,
+    boje: &Boje,
+) {
+    let y = podrucje.min.y + vrh_retka;
+    let okvir = Rect::from_min_size(
+        pos2(podrucje.min.x, y),
+        vec2(podrucje.width(), Razmaci::VISINA_RETKA_STABLA - 2.0),
+    );
+    let potez = Stroke::new(2.0, boje.primarna);
+    let ispred = matches!(mjesto, Mjesto::Mapa { polozaj, .. } if polozaj != usize::MAX);
+    if !ispred {
+        ui.painter()
+            .rect_stroke(okvir, Razmaci::ZAOBLJENJE_RETKA, potez, StrokeKind::Inside);
+    } else {
+        ui.painter().line_segment(
+            [
+                pos2(okvir.min.x + 4.0, y - 1.0),
+                pos2(okvir.max.x - 4.0, y - 1.0),
+            ],
+            potez,
+        );
+    }
+}
+
+fn crtaj_natpis_povlacenja(ui: &egui::Ui, pokazivac: Pos2, naziv: &str, boje: &Boje) {
+    let slikar = ui
+        .ctx()
+        .layer_painter(LayerId::new(Order::Tooltip, Id::unique("povlacenje_retka")));
+    let tocka = pokazivac + vec2(14.0, 6.0);
+    let natpis = slikar.layout_no_wrap(naziv.to_owned(), font_obicni(13.0), boje.tekst);
+    let okvir = Rect::from_min_size(tocka, natpis.size()).expand(4.0);
+    slikar.rect_filled(okvir, 4.0, boje.ploca);
+    slikar.rect_stroke(okvir, 4.0, Stroke::new(1.0, boje.obrub), StrokeKind::Inside);
+    slikar.galley(tocka, natpis, boje.tekst);
 }
 
 fn obradi_odgovor_retka(
@@ -631,7 +926,44 @@ fn uredjivanje_retka(stanje: &StanjePrikaza, odabir: Odabir) -> Option<bool> {
 
 const STAVKA_PREIMENUJ: usize = 0;
 
-/// Desni klik odabire redak; izbornik ga zatim preimenuje ili traži brisanje.
+/// Radnje izbornika retka. Mapa nema stil, a objekt se ne izvozi sam.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RadnjaRetka {
+    Preimenuj,
+    Stil,
+    Izvezi,
+    Obrisi,
+}
+
+const fn radnje_retka(odabir: Odabir) -> &'static [RadnjaRetka] {
+    match odabir {
+        Odabir::Mapa(_) => &[
+            RadnjaRetka::Preimenuj,
+            RadnjaRetka::Izvezi,
+            RadnjaRetka::Obrisi,
+        ],
+        Odabir::Sloj(_) => &[
+            RadnjaRetka::Preimenuj,
+            RadnjaRetka::Stil,
+            RadnjaRetka::Izvezi,
+            RadnjaRetka::Obrisi,
+        ],
+        Odabir::Objekt(_, _) => &[
+            RadnjaRetka::Preimenuj,
+            RadnjaRetka::Stil,
+            RadnjaRetka::Obrisi,
+        ],
+    }
+}
+
+const fn stavka_stabla(odabir: Odabir) -> slojevi::Stavka {
+    match odabir {
+        Odabir::Mapa(m) => slojevi::Stavka::Mapa(m),
+        Odabir::Sloj(s) | Odabir::Objekt(s, _) => slojevi::Stavka::Sloj(s),
+    }
+}
+
+/// Desni klik odabire redak; izbornik ga zatim preimenuje, otvara stil, traži izvoz ili brisanje.
 fn obradi_izbornik_retka(
     projekt: &Projekt,
     stanje: &mut StanjePrikaza,
@@ -641,17 +973,23 @@ fn obradi_izbornik_retka(
     if odgovor.desni_klik {
         stanje.odabrano = Some(odabir);
     }
-    match odgovor.stavka_izbornika {
-        Some(STAVKA_PREIMENUJ) => {
-            stanje.odabrano = Some(odabir);
+    let Some(radnja) = odgovor
+        .stavka_izbornika
+        .and_then(|i| radnje_retka(odabir).get(i).copied())
+    else {
+        return;
+    };
+    stanje.odabrano = Some(odabir);
+    if radnja != RadnjaRetka::Preimenuj {
+        stanje.preimenovanje = None;
+    }
+    match radnja {
+        RadnjaRetka::Preimenuj => {
             let _ = pokreni_preimenovanje_odabranog(projekt, stanje);
         }
-        Some(_) => {
-            stanje.odabrano = Some(odabir);
-            stanje.preimenovanje = None;
-            stanje.zatrazeno_brisanje = true;
-        }
-        None => {}
+        RadnjaRetka::Stil => stanje.stil = UredjivanjeStila::za(odabir),
+        RadnjaRetka::Izvezi => stanje.zatrazen_izvoz = Some(stavka_stabla(odabir)),
+        RadnjaRetka::Obrisi => stanje.zatrazeno_brisanje = true,
     }
 }
 
@@ -824,6 +1162,68 @@ mod testovi {
     }
 
     #[test]
+    fn mapa_samo_s_podmapama_broji_mape_a_ne_pise_nula_slojeva() {
+        let katalog = KatalogPoruka::hrvatski();
+        let mut u = Uredjivac::novi();
+        let vanjska = mapa_u(&mut u, None, "Moja mjesta");
+        mapa_u(&mut u, Some(vanjska), "Objekti");
+        mapa_u(&mut u, None, "Prazna");
+        let stanje = StanjePrikaza::novo();
+        let redci = izgradi_retke_stabla(u.projekt(), &stanje, &katalog);
+        let podnaslov = |naslov: &str| {
+            redci
+                .iter()
+                .find(|r| r.naslov == naslov)
+                .map(|r| r.podnaslov.clone())
+                .unwrap()
+        };
+        assert_eq!(podnaslov("Moja mjesta"), "1 mapa");
+        assert_eq!(podnaslov("Prazna"), "0 slojeva");
+    }
+
+    #[test]
+    fn stablo_klizi_samo_do_zadnjeg_retka_i_crta_samo_vidljive() {
+        let h = Razmaci::VISINA_RETKA_STABLA;
+        assert_eq!(najveci_pomak(5, 10.0 * h), 0.0);
+        assert_eq!(najveci_pomak(30, 10.0 * h), 20.0 * h);
+        assert_eq!(vidljivi_redci(30, 10.0 * h, 0.0), (0, 10));
+        assert_eq!(vidljivi_redci(30, 10.0 * h, 2.5 * h), (2, 13));
+        assert_eq!(vidljivi_redci(3, 10.0 * h, 0.0), (0, 3));
+    }
+
+    #[test]
+    fn odabrani_redak_dolazi_u_vidno_polje_samo_kad_je_izvan_njega() {
+        let h = Razmaci::VISINA_RETKA_STABLA;
+        assert_eq!(pomak_do_retka(4, 10.0 * h, 0.0), 0.0);
+        assert_eq!(pomak_do_retka(25, 10.0 * h, 0.0), 16.0 * h);
+        assert_eq!(pomak_do_retka(2, 10.0 * h, 8.0 * h), 2.0 * h);
+    }
+
+    #[test]
+    fn redak_pod_misem_racuna_pomak_stabla() {
+        let h = Razmaci::VISINA_RETKA_STABLA;
+        let mut u = Uredjivac::novi();
+        for i in 0..20 {
+            mapa_u(&mut u, None, &format!("Mapa {i}"));
+        }
+        let katalog = KatalogPoruka::hrvatski();
+        let redci = izgradi_retke_stabla(u.projekt(), &StanjePrikaza::novo(), &katalog);
+        let podrucje = Rect::from_min_size(pos2(0.0, 100.0), vec2(300.0, 5.0 * h));
+        let mis = pos2(10.0, 100.0 + h / 2.0);
+        assert_eq!(
+            redak_pod_pokazivacem(&redci, podrucje, 0.0, mis).unwrap().0,
+            0
+        );
+        assert_eq!(
+            redak_pod_pokazivacem(&redci, podrucje, 7.0 * h, mis)
+                .unwrap()
+                .0,
+            7
+        );
+        assert!(redak_pod_pokazivacem(&redci, podrucje, 0.0, pos2(10.0, 50.0)).is_none());
+    }
+
+    #[test]
     fn stablo_primjera_zaslona_a_daje_jedanaest_redaka() {
         let mut uredjivac = Uredjivac::novi();
         let mut stanje = StanjePrikaza::novo();
@@ -833,7 +1233,7 @@ mod testovi {
         let redci = izgradi_retke_stabla(uredjivac.projekt(), &stanje, &katalog);
         assert_eq!(redci.len(), 11);
         assert_eq!(redci[0].naslov, "Teren 2026");
-        assert_eq!(redci[0].podnaslov, "3 sloja");
+        assert_eq!(redci[0].podnaslov, "1 mapa, 3 sloja");
         assert_eq!(redci[1].naslov, "Parcele");
         assert_eq!(redci[1].podnaslov, "12 objekata");
         assert_eq!(redci[2].podnaslov, "2,31 ha");

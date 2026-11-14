@@ -68,9 +68,21 @@ impl Stol {
         self.c.osvjezi_hvatista(self.u.projekt(), &Ravno);
     }
 
-    fn desni(&mut self, x: f32, y: f32) {
+    fn desni(&mut self) {
         self.c.osvjezi_hvatista(self.u.projekt(), &Ravno);
-        self.c.desni_klik(pos2(x, y), &mut self.u);
+        self.c.desni_klik(&mut self.u, &OK);
+    }
+
+    /// Novi odabir, kao Esc pa klik: klik u AutoCAD-u dodaje u odabir.
+    fn odaberi(&mut self, x: f32, y: f32) {
+        self.c.postavi_odabrani(None);
+        self.klik(x, y);
+        self.c.okvir = None;
+    }
+
+    fn backspace(&mut self) {
+        self.c.osvjezi_hvatista(self.u.projekt(), &Ravno);
+        self.c.natrag(&mut self.u);
     }
 
     fn vuci(&mut self, od: Pos2, do_: Pos2) {
@@ -155,7 +167,7 @@ fn zakljucan_sloj_se_preskace_a_aktivni_se_postuje() {
 }
 
 #[test]
-fn linija_treba_dvije_tocke_a_dvoklik_je_zavrsava() {
+fn linija_treba_dvije_tocke_a_desni_klik_je_zavrsava() {
     let mut s = Stol::novi(Alat::Linija);
     s.klik(0.0, 0.0);
     s.zavrsi();
@@ -163,10 +175,12 @@ fn linija_treba_dvije_tocke_a_dvoklik_je_zavrsava() {
     assert!(s.u.projekt().korijen().is_empty());
     s.klik(100.0, 0.0);
     assert_eq!(s.c.poruka(), None, "svaki klik briše staru poruku");
-    s.zavrsi();
+    s.desni();
     let cilj = s.c.odabran().expect("odabran");
     assert_eq!(broj_vrhova(&s.geometrija(cilj)), 2);
     assert!(s.c.crtez.is_none());
+    assert_eq!(s.c.uzmi_novi(), Some(cilj), "prozor nudi upis naziva");
+    assert_eq!(s.c.uzmi_novi(), None, "samo jednom");
 }
 
 #[test]
@@ -201,20 +215,13 @@ fn klik_na_prvu_tocku_linije_ne_zatvara_je() {
 }
 
 #[test]
-fn desni_klik_brise_tocku_crteza_a_zadnja_brise_crtez() {
-    let mut s = Stol::novi(Alat::Linija);
-    s.klik(0.0, 0.0);
-    s.klik(100.0, 0.0);
-    s.desni(100.0, 0.0);
-    assert_eq!(s.c.crtez.as_ref().expect("crtež").vrhovi.len(), 1);
-    s.desni(500.0, 500.0);
-    assert_eq!(
-        s.c.crtez.as_ref().expect("crtež").vrhovi.len(),
-        1,
-        "promašaj"
-    );
-    s.desni(0.0, 0.0);
-    assert!(s.c.crtez.is_none());
+fn desni_klik_bez_crteza_samo_odbacuje_okvir() {
+    let mut s = Stol::novi(Alat::Odaberi);
+    s.klik(500.0, 500.0);
+    assert!(s.c.okvir_odabira().is_some());
+    s.desni();
+    assert!(s.c.okvir_odabira().is_none());
+    assert!(s.u.projekt().korijen().is_empty());
 }
 
 #[test]
@@ -222,9 +229,9 @@ fn backspace_i_esc() {
     let mut s = Stol::novi(Alat::Linija);
     s.klik(0.0, 0.0);
     s.klik(100.0, 0.0);
-    s.c.natrag();
+    s.c.natrag(&mut s.u);
     assert_eq!(s.c.crtez.as_ref().expect("crtež").vrhovi.len(), 1);
-    s.c.natrag();
+    s.c.natrag(&mut s.u);
     assert!(s.c.crtez.is_none());
     s.klik(0.0, 0.0);
     s.c.odustani();
@@ -305,12 +312,26 @@ fn zatvorenici_iz_datoteke_su_otvoreni_pri_uredjivanju() {
 }
 
 #[test]
-fn desni_klik_brise_vrh_objekta_ali_ne_ispod_najmanjeg_broja() {
+fn backspace_brise_odabranu_tocku_objekta_ali_ne_ispod_najmanjeg_broja() {
     let mut s = Stol::novi(Alat::Poligon);
     let cilj = s.poligon();
-    s.desni(100.0, 100.0);
+    s.klik(100.0, 100.0);
+    assert_eq!(s.c.odabrana_tocka(), Some((0, 2)));
+    s.backspace();
     assert_eq!(broj_vrhova(&s.geometrija(cilj)), 3);
-    s.desni(100.0, 0.0);
+    assert_eq!(
+        s.c.odabrana_tocka(),
+        None,
+        "obrisana točka nije više odabrana"
+    );
+    s.backspace();
+    assert_eq!(
+        broj_vrhova(&s.geometrija(cilj)),
+        3,
+        "bez odabrane točke ništa"
+    );
+    s.klik(100.0, 0.0);
+    s.backspace();
     assert_eq!(s.c.poruka(), Some(Poruka::NeMozeBrisati { najmanje: 3 }));
     assert_eq!(broj_vrhova(&s.geometrija(cilj)), 3);
     assert_eq!(s.u.ponisti(), Ok(true));
@@ -318,15 +339,29 @@ fn desni_klik_brise_vrh_objekta_ali_ne_ispod_najmanjeg_broja() {
 }
 
 #[test]
-fn desni_klik_na_srednju_tocku_ne_brise_nista() {
+fn srednja_tocka_se_ne_odabire_a_esc_skida_odabir_tocke_pa_objekta() {
     let mut s = Stol::novi(Alat::Poligon);
     let cilj = s.poligon();
-    s.desni(50.0, 0.0);
-    assert_eq!(broj_vrhova(&s.geometrija(cilj)), 4);
+    s.klik(50.0, 0.0);
+    assert_eq!(s.c.odabrana_tocka(), None);
+    assert_eq!(s.c.odabran(), Some(cilj));
+    s.klik(0.0, 0.0);
+    assert_eq!(s.c.odabrana_tocka(), Some((0, 0)));
+    s.c.odustani();
+    assert_eq!(s.c.odabrana_tocka(), None);
+    assert_eq!(s.c.odabran(), Some(cilj));
+    s.c.odustani();
+    assert_eq!(s.c.odabran(), None);
 }
 
 #[test]
-fn tocka_se_vuce_ali_desni_klik_je_ne_brise() {
+fn povucena_tocka_postaje_odabrana_a_tocka_objekt_nema_odabranu_tocku() {
+    let mut s = Stol::novi(Alat::Poligon);
+    let cilj = s.poligon();
+    s.vuci(pos2(50.0, 0.0), pos2(50.0, -20.0));
+    assert_eq!(s.c.odabrana_tocka(), Some((0, 1)), "nova točka iz srednje");
+    assert_eq!(broj_vrhova(&s.geometrija(cilj)), 5);
+
     let mut s = Stol::novi(Alat::Tocka);
     s.klik(0.0, 0.0);
     let cilj = s.c.odabran().expect("odabran");
@@ -335,8 +370,9 @@ fn tocka_se_vuce_ali_desni_klik_je_ne_brise() {
         panic!("točka");
     };
     assert!((v.duzina - 18.03).abs() < 1e-6);
-    s.desni(30.0, 0.0);
-    assert_eq!(s.c.poruka(), Some(Poruka::NeMozeBrisati { najmanje: 1 }));
+    assert_eq!(s.c.odabrana_tocka(), None);
+    s.klik(30.0, 0.0);
+    assert_eq!(s.c.odabrana_tocka(), None);
 }
 
 #[test]
@@ -347,9 +383,9 @@ fn zakljucan_objekt_se_odabire_ali_nema_hvatista() {
     assert_eq!(s.c.hvatista.len(), 8, "četiri vrha i četiri srednje točke");
     s.u.postavi_stanje_sloja(cilj.0, StanjeSloja::USukobu)
         .expect("stanje");
-    s.klik(500.0, 500.0);
+    s.odaberi(500.0, 500.0);
     assert!(s.c.odabran().is_none());
-    s.klik(50.0, 50.0);
+    s.odaberi(50.0, 50.0);
     assert_eq!(s.c.odabran(), Some(cilj));
     assert!(s.c.hvatista.is_empty());
 }
@@ -361,7 +397,7 @@ fn odabir_gleda_gornji_sloj_rupu_i_vidljivost() {
     // Novi sloj ide na kraj korijena, pa je ispod, a isti sloj bira zadnji nacrtani objekt.
     let gornji = s.poligon();
     assert_eq!(donji.0, gornji.0);
-    s.klik(50.0, 50.0);
+    s.odaberi(50.0, 50.0);
     assert_eq!(s.c.odabran(), Some(gornji));
     let rupa: Vec<Vrh> = [(25.0, 25.0), (75.0, 25.0), (75.0, 75.0), (25.0, 75.0)]
         .iter()
@@ -377,13 +413,14 @@ fn odabir_gleda_gornji_sloj_rupu_i_vidljivost() {
         izmjena: IzmjenaObjekta::Geometrija(Geometrija::Poligon(p)),
     })
     .expect("rupa");
-    s.klik(50.0, 50.0);
+    s.odaberi(50.0, 50.0);
     assert_eq!(s.c.odabran(), Some(donji), "kroz rupu se vidi donji");
     let nista = |_: IdSloja| false;
     let skriveno = Okolina {
         vidljiv: &nista,
         ..OK
     };
+    s.c.postavi_odabrani(None);
     s.c.klik(pos2(50.0, 50.0), &mut s.u, &skriveno, &Ravno);
     assert!(s.c.odabran().is_none(), "skriveni sloj se ne može odabrati");
 }
@@ -395,9 +432,9 @@ fn linija_i_tocka_imaju_doseg_u_pikselima() {
     s.klik(100.0, 0.0);
     s.zavrsi();
     let cilj = s.c.odabran().expect("odabran");
-    s.klik(50.0, 5.0);
+    s.odaberi(50.0, 5.0);
     assert_eq!(s.c.odabran(), Some(cilj));
-    s.klik(50.0, 7.0);
+    s.odaberi(50.0, 7.0);
     assert!(s.c.odabran().is_none());
     assert_eq!(
         do_duzine(pos2(3.0, 4.0), pos2(0.0, 0.0), pos2(0.0, 0.0)),
@@ -534,7 +571,7 @@ fn dvoklik_zavrsava_mjerenje_crte_i_ne_sprema() {
     assert!(s.c.crtez.as_ref().expect("crtež").gotov);
     assert_eq!(s.c.alat(), Alat::Mjeri);
     assert!(s.u.projekt().korijen().is_empty());
-    s.c.natrag();
+    s.c.natrag(&mut s.u);
     assert_eq!(
         s.c.crtez.as_ref().expect("crtež").vrhovi.len(),
         2,
@@ -701,9 +738,9 @@ fn odabir_koristi_oblik_lika() {
     }
     s.zavrsi();
     let cilj = s.c.odabran().expect("odabran");
-    s.klik(70.0, 30.0);
+    s.odaberi(70.0, 30.0);
     assert!(s.c.odabran().is_none(), "ulegnuti dio nije lik");
-    s.klik(70.0, 80.0);
+    s.odaberi(70.0, 80.0);
     assert_eq!(s.c.odabran(), Some(cilj));
 }
 
@@ -795,17 +832,8 @@ fn zastarjelo_hvatiste_ne_rusi_program() {
     let mut s = Stol::novi(Alat::Linija);
     s.klik(0.0, 0.0);
     s.klik(100.0, 0.0);
-    s.c.obrisi_iz_crteza(2);
-    assert_eq!(s.c.crtez.as_ref().expect("crtež").vrhovi.len(), 2);
     s.zavrsi();
     let c = s.c.odabran().expect("odabran");
-    let h = Hvatiste {
-        cilj: Cilj::Objekt(c.0, c.1),
-        prsten: 0,
-        i: 2,
-        srednje: false,
-        mjesto: pos2(0.0, 0.0),
-    };
     let dodaj = NaredbaObjekta::Izmijeni {
         sloj: c.0,
         objekt: c.1,
@@ -816,8 +844,7 @@ fn zastarjelo_hvatiste_ne_rusi_program() {
         ])),
     };
     s.u.izvrsi(dodaj).expect("tri vrha");
-    let h = Hvatiste { i: 3, ..h };
-    s.c.obrisi_iz_objekta(c.0, c.1, h, &mut s.u);
+    s.c.obrisi_iz_objekta(c, (0, 3), &mut s.u);
     assert_eq!(broj_vrhova(&s.geometrija(c)), 3, "vrha 3 nema");
     assert_eq!(s.c.poruka(), Some(Poruka::NeMozeBrisati { najmanje: 2 }));
 }
@@ -1035,9 +1062,9 @@ fn esc_i_backspace_cuvaju_postojeci_dio_linije() {
     let prije = s.geometrija(c);
     s.klik(200.0, 0.0);
     s.klik(300.0, 0.0);
-    s.c.natrag();
-    s.c.natrag();
-    s.c.natrag();
+    s.c.natrag(&mut s.u);
+    s.c.natrag(&mut s.u);
+    s.c.natrag(&mut s.u);
     assert_eq!(
         s.c.crtez.as_ref().expect("crtež").vrhovi.len(),
         3,
@@ -1055,45 +1082,34 @@ fn esc_i_backspace_cuvaju_postojeci_dio_linije() {
 }
 
 #[test]
-fn desni_klik_u_nastavku_mijenja_i_granicu_za_backspace() {
+fn backspace_odmah_nakon_klika_na_kraj_linije_brise_taj_kraj() {
     let mut s = Stol::novi(Alat::Linija);
     let c = linija(&mut s);
     s.klik(200.0, 0.0);
-    s.klik(300.0, 0.0);
-    s.desni(100.0, 0.0);
-    assert_eq!(s.c.crtez.as_ref().expect("crtež").vrhovi.len(), 3);
-    s.c.natrag();
-    assert_eq!(
-        s.c.crtez.as_ref().expect("crtež").vrhovi.len(),
-        2,
-        "nova točka je maknuta"
-    );
-    s.c.natrag();
-    assert_eq!(
-        s.c.crtez.as_ref().expect("crtež").vrhovi.len(),
-        2,
-        "postojeće ostaju"
-    );
-    s.desni(300.0, 0.0);
-    s.c.obrisi_iz_crteza(9);
-    s.zavrsi();
+    assert_eq!(s.c.alat(), Alat::Linija);
+    s.backspace();
+    assert_eq!(s.c.alat(), Alat::Odaberi);
+    assert!(s.c.crtez.is_none());
+    let v = vrhovi_linije(&s, c);
+    assert_eq!(v.len(), 2);
+    assert!((v[1].duzina - 18.1).abs() < 1e-6);
+
+    s.klik(0.0, 0.0);
+    s.backspace();
+    assert_eq!(s.c.poruka(), Some(Poruka::NeMozeBrisati { najmanje: 2 }));
     assert_eq!(vrhovi_linije(&s, c).len(), 2);
 }
 
 #[test]
-fn desni_klik_na_novu_tocku_ne_otvara_brisanje_postojecih() {
+fn desni_klik_zavrsava_nastavak() {
     let mut s = Stol::novi(Alat::Linija);
-    linija(&mut s);
-    s.klik(200.0, 0.0);
-    s.klik(300.0, 0.0);
-    s.desni(300.0, 0.0);
-    assert_eq!(s.c.crtez.as_ref().expect("crtež").vrhovi.len(), 3);
-    s.c.natrag();
-    assert_eq!(
-        s.c.crtez.as_ref().expect("crtež").vrhovi.len(),
-        3,
-        "Backspace ne briše točke koje su već bile u liniji"
-    );
+    let c = linija(&mut s);
+    let _ = s.c.uzmi_novi();
+    s.klik(0.0, 0.0);
+    s.klik(-100.0, 0.0);
+    s.desni();
+    assert_eq!(vrhovi_linije(&s, c).len(), 4);
+    assert_eq!(s.c.uzmi_novi(), None, "produljena linija nije nov objekt");
 }
 
 #[test]

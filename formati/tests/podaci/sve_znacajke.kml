@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+     xmlns:gx="http://www.google.com/kml/ext/2.2"
+     xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="dok_glavni">
+  <name>Ispitno područje Čepin – Đakovo – Županja</name>
+  <description><![CDATA[<b>Glavni dokument</b> s hrvatskim slovima: čćđšž ČĆĐŠŽ]]></description>
+  <open>1</open>
+  <atom:author><atom:name>Ispitni autor</atom:name></atom:author>
+  <atom:link href="https://primjer.hr"/>
+  <LookAt>
+    <longitude>18.675</longitude>
+    <latitude>45.555</latitude>
+    <altitude>120.0</altitude>
+    <heading>15.0</heading>
+    <tilt>35.0</tilt>
+    <range>2500.0</range>
+    <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+  </LookAt>
+  <TimeStamp><when>2026-11-07T08:00:00Z</when></TimeStamp>
+  <Schema name="ShemaMjerenja" id="shema_1">
+    <SimpleField type="string" name="oznaka"/>
+    <gx:SimpleArrayField name="brzina" type="float"/>
+  </Schema>
+  <ExtendedData>
+    <Data name="izvor">
+      <displayName>Izvor podataka</displayName>
+      <value>Terenska izmjera Šećerana</value>
+    </Data>
+  </ExtendedData>
+  <!-- StyleMap namjerno stoji PRIJE Style elemenata, kao u 396 parova u pravom myplaces.kml -->
+  <StyleMap id="mapa_stila_glavna">
+    <Pair>
+      <key>normal</key>
+      <styleUrl>#stil_normalni</styleUrl>
+    </Pair>
+    <Pair>
+      <key>highlight</key>
+      <styleUrl>#stil_istaknuti</styleUrl>
+    </Pair>
+  </StyleMap>
+  <Style id="stil_normalni">
+    <IconStyle>
+      <color>ff0088ff</color>
+      <scale>1.2</scale>
+      <heading>45.0</heading>
+      <Icon><href>ikone/tocka.png</href></Icon>
+      <hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
+    </IconStyle>
+    <LabelStyle>
+      <color>ffffffff</color>
+      <scale>0.9</scale>
+    </LabelStyle>
+    <LineStyle>
+      <color>ff0055ff</color>
+      <width>2.5</width>
+    </LineStyle>
+    <PolyStyle>
+      <color>7f00ff00</color>
+      <fill>1</fill>
+      <outline>1</outline>
+    </PolyStyle>
+    <BalloonStyle>
+      <bgColor>ffffffff</bgColor>
+      <text><![CDATA[<h3>$[name]</h3><div>$[description]</div>]]></text>
+    </BalloonStyle>
+    <ListStyle>
+      <listItemType>check</listItemType>
+      <bgColor>ffdddddd</bgColor>
+      <ItemIcon><state>open</state><href>ikone/mapa.png</href></ItemIcon>
+    </ListStyle>
+  </Style>
+  <Style id="stil_istaknuti">
+    <IconStyle>
+      <color>ff00ffff</color>
+      <scale>1.5</scale>
+      <Icon><href>ikone/tocka_istaknuta.png</href></Icon>
+    </IconStyle>
+    <LineStyle>
+      <color>ff00ffff</color>
+      <width>4.0</width>
+    </LineStyle>
+    <PolyStyle>
+      <color>aa00ffff</color>
+      <fill>1</fill>
+      <outline>1</outline>
+    </PolyStyle>
+  </Style>
+  <NetworkLink>
+    <name>Vanjski sloj DGU</name>
+    <description>Mrežna veza na udaljeni KML</description>
+    <Style>
+      <ListStyle><listItemType>check</listItemType></ListStyle>
+    </Style>
+    <Link>
+      <href>https://primjer.hr/sloj.kml</href>
+      <refreshMode>onInterval</refreshMode>
+      <refreshInterval>3600</refreshInterval>
+    </Link>
+  </NetworkLink>
+  <Folder id="mapa_1">
+    <name>Glavna mapa objekata – Čepin</name>
+    <description><![CDATA[<p>Opis mape u <i>CDATA</i> bloku s hrvatskim slovima: Šećerana, Đurđenovac, Čađavica, Županja.</p>]]></description>
+    <LookAt>
+      <longitude>18.68</longitude>
+      <latitude>45.56</latitude>
+      <altitude>0</altitude>
+      <heading>0</heading>
+      <tilt>0</tilt>
+      <range>1500</range>
+    </LookAt>
+    <Style>
+      <ListStyle><listItemType>check</listItemType></ListStyle>
+    </Style>
+    <Placemark id="pm_tocka">
+      <name>Čvorište Šećerana – čćđšž</name>
+      <Snippet maxLines="2">Kratki izvadak točke</Snippet>
+      <description><![CDATA[<h3>Čvorište Šećerana</h3><p>Stanje: <b>uredno</b>, kota 95,4 m.</p>]]></description>
+      <styleUrl>#mapa_stila_glavna</styleUrl>
+      <LookAt>
+        <longitude>18.675</longitude>
+        <latitude>45.555</latitude>
+        <altitude>95.4</altitude>
+        <heading>0</heading>
+        <tilt>10</tilt>
+        <range>500</range>
+      </LookAt>
+      <TimeStamp><when>2026-10-25T10:15:00Z</when></TimeStamp>
+      <ExtendedData>
+        <Data name="kota">
+          <displayName>Nadmorska visina</displayName>
+          <value>95,4</value>
+        </Data>
+        <SchemaData schemaUrl="#shema_1">
+          <SimpleData name="oznaka">KT-ŠEĆ-01</SimpleData>
+        </SchemaData>
+      </ExtendedData>
+      <Point>
+        <extrude>1</extrude>
+        <altitudeMode>relativeToGround</altitudeMode>
+        <coordinates>18.675,45.555,95.4</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark id="pm_linija">
+      <name>Nasip uz kanal Đakovo</name>
+      <description>Trasa nasipa s visinama</description>
+      <TimeSpan>
+        <begin>2026-01-01</begin>
+        <end>2026-11-07</end>
+      </TimeSpan>
+      <Style>
+        <LineStyle>
+          <color>ffff0000</color>
+          <width>3.5</width>
+        </LineStyle>
+      </Style>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>clampToGround</altitudeMode>
+        <coordinates>18.670,45.550,88.1 18.680,45.555,89.2 18.690,45.560,90.0</coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark id="pm_poligon">
+      <name>Retencija Županja s tri rupe</name>
+      <description><![CDATA[Poligon s <b>tri unutarnja prstena</b> (dva u istom innerBoundaryIs, kao u myplaces.kml).]]></description>
+      <styleUrl>#stil_normalni</styleUrl>
+      <Polygon>
+        <tessellate>1</tessellate>
+        <altitudeMode>absolute</altitudeMode>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>18.60,45.50,85.0 18.70,45.50,85.0 18.70,45.60,85.0 18.60,45.60,85.0 18.60,45.50,85.0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+        <innerBoundaryIs>
+          <LinearRing>
+            <coordinates>18.61,45.51,85.0 18.63,45.51,85.0 18.63,45.53,85.0 18.61,45.53,85.0 18.61,45.51,85.0</coordinates>
+          </LinearRing>
+          <LinearRing>
+            <coordinates>18.64,45.51,85.0 18.66,45.51,85.0 18.66,45.53,85.0 18.64,45.53,85.0 18.64,45.51,85.0</coordinates>
+          </LinearRing>
+        </innerBoundaryIs>
+        <innerBoundaryIs>
+          <LinearRing>
+            <coordinates>18.67,45.55,85.0 18.69,45.55,85.0 18.69,45.57,85.0 18.67,45.57,85.0 18.67,45.55,85.0</coordinates>
+          </LinearRing>
+        </innerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark id="pm_vise_mijesano">
+      <name>Dionica s točkom natpisa (MultiGeometry)</name>
+      <description>Miješani MultiGeometry: Point + LineString, kao u 1279 objekata u myplaces.kml</description>
+      <styleUrl>#mapa_stila_glavna</styleUrl>
+      <MultiGeometry>
+        <Point>
+          <coordinates>18.65,45.55,0</coordinates>
+        </Point>
+        <LineString>
+          <coordinates>18.64,45.54,0 18.65,45.55,0 18.66,45.56,0</coordinates>
+        </LineString>
+      </MultiGeometry>
+    </Placemark>
+    <Placemark id="pm_trag">
+      <name>Obilazak čamcem (gx:MultiTrack)</name>
+      <description>Snimljeni trag s vremenima i brzinama</description>
+      <styleUrl>#stil_normalni</styleUrl>
+      <gx:MultiTrack>
+        <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>
+        <gx:Track>
+          <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>
+          <when>2026-10-25T08:00:00Z</when>
+          <when>2026-10-25T08:05:00Z</when>
+          <when>2026-10-25T08:10:00Z</when>
+          <gx:coord>18.670 45.550 82.5</gx:coord>
+          <gx:coord>18.675 45.553 82.6</gx:coord>
+          <gx:coord>18.680 45.556 82.4</gx:coord>
+          <ExtendedData>
+            <SchemaData schemaUrl="#shema_1">
+              <gx:SimpleArrayData name="brzina">
+                <gx:value>1.4</gx:value>
+                <gx:value>1.7</gx:value>
+                <gx:value>1.5</gx:value>
+              </gx:SimpleArrayData>
+            </SchemaData>
+          </ExtendedData>
+        </gx:Track>
+      </gx:MultiTrack>
+    </Placemark>
+    <NetworkLink>
+      <name>Veza unutar mape</name>
+      <description>Mrežna veza u mapi koju kml 0.15 tiho gubi</description>
+      <Link><href>https://primjer.hr/podmapa.kml</href></Link>
+    </NetworkLink>
+    <GroundOverlay>
+      <name>Stari katastarski plan</name>
+      <description>Slikovni prekrivač s pravokutnikom</description>
+      <Icon><href>slike/plan.png</href></Icon>
+      <LatLonBox>
+        <north>45.57</north>
+        <south>45.54</south>
+        <east>18.70</east>
+        <west>18.66</west>
+        <rotation>1.5</rotation>
+      </LatLonBox>
+    </GroundOverlay>
+    <GroundOverlay>
+      <name>Kosi ortofoto prekrivač</name>
+      <Icon><href>slike/ortofoto.png</href></Icon>
+      <gx:LatLonQuad>
+        <coordinates>18.66,45.54,0 18.70,45.54,0 18.70,45.57,0 18.66,45.57,0</coordinates>
+      </gx:LatLonQuad>
+    </GroundOverlay>
+    <gx:Tour>
+      <name>Pregledni let</name>
+      <gx:Playlist>
+        <gx:FlyTo>
+          <gx:duration>3.0</gx:duration>
+          <gx:flyToMode>smooth</gx:flyToMode>
+          <LookAt>
+            <longitude>18.68</longitude>
+            <latitude>45.55</latitude>
+            <altitude>0</altitude>
+            <heading>0</heading>
+            <tilt>45</tilt>
+            <range>1000</range>
+          </LookAt>
+        </gx:FlyTo>
+        <gx:Wait><gx:duration>1.0</gx:duration></gx:Wait>
+      </gx:Playlist>
+    </gx:Tour>
+    <Document id="ugnijezdeni_dok">
+      <name>Uvezeni pod-dokument</name>
+      <Style id="stil_normalni">
+        <LineStyle>
+          <color>ff00ff00</color>
+          <width>5.0</width>
+        </LineStyle>
+      </Style>
+      <Placemark id="pm_kamera">
+        <name>Točka s kamerom u pod-dokumentu</name>
+        <styleUrl>#stil_normalni</styleUrl>
+        <Camera>
+          <longitude>18.69</longitude>
+          <latitude>45.58</latitude>
+          <altitude>250.0</altitude>
+          <heading>90.0</heading>
+          <tilt>60.0</tilt>
+          <roll>2.0</roll>
+        </Camera>
+        <gx:TimeSpan>
+          <begin>2026-05-01</begin>
+          <end>2026-05-02</end>
+        </gx:TimeSpan>
+        <Point>
+          <coordinates>18.69,45.58,101.2</coordinates>
+        </Point>
+      </Placemark>
+    </Document>
+    <NepoznatiDodatak>
+      <Vrijednost>42</Vrijednost>
+    </NepoznatiDodatak>
+  </Folder>
+</Document>
+</kml>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <Folder>
+    <name>Oštećena mapa</name>
+    <Placemark>
+      <name>Nezatvorena točka</name>
+      <Point>
+        <coordinates>18.675,nije_broj,90.0</coordinates>
+    </Placemark>
+  </Folder>
+</kml>

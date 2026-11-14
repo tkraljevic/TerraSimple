@@ -11,6 +11,10 @@ use std::sync::{Arc, Mutex};
 pub trait BiracDatoteka: Send + Sync {
     fn otvori_datoteku(&self) -> Option<PathBuf>;
     fn spremi_datoteku(&self, predlozeno_ime: Option<&str>) -> Option<PathBuf>;
+    /// KML ili KMZ iz Google Eartha, GeoJSON ili GeoPackage, npr. iz QGIS-a.
+    fn uvezi_datoteku(&self) -> Option<PathBuf>;
+    /// Kamo ide izvoz. Format je već odabran u prozorčiću, pa birač nudi samo njegov nastavak.
+    fn izvezi_datoteku(&self, predlozeno_ime: &str, nastavak: &str) -> Option<PathBuf>;
 }
 
 /// Sustavski birač datoteka preko biblioteke `rfd`.
@@ -24,6 +28,7 @@ pub struct SustavskiBirac;
 impl BiracDatoteka for SustavskiBirac {
     fn otvori_datoteku(&self) -> Option<PathBuf> {
         rfd::FileDialog::new()
+            .add_filter("Shapefile (SHP)", &["shp"])
             .add_filter("GeoPackage", &["gpkg"])
             .pick_file()
     }
@@ -35,6 +40,26 @@ impl BiracDatoteka for SustavskiBirac {
         }
         d.save_file()
     }
+
+    fn uvezi_datoteku(&self) -> Option<PathBuf> {
+        rfd::FileDialog::new()
+            .add_filter(
+                "KML, KMZ, GeoJSON, GeoPackage",
+                &["kml", "kmz", "geojson", "json", "gpkg"],
+            )
+            .add_filter("Google Earth (KML, KMZ)", &["kml", "kmz"])
+            .add_filter("GeoJSON", &["geojson", "json"])
+            .add_filter("Shapefile (SHP)", &["shp"])
+            .add_filter("GeoPackage", &["gpkg"])
+            .pick_file()
+    }
+
+    fn izvezi_datoteku(&self, predlozeno_ime: &str, nastavak: &str) -> Option<PathBuf> {
+        rfd::FileDialog::new()
+            .add_filter(nastavak.to_uppercase(), &[nastavak])
+            .set_file_name(predlozeno_ime)
+            .save_file()
+    }
 }
 
 /// Lažni birač za automatske testove koji ne otvara stvarni prozor sustava.
@@ -42,6 +67,8 @@ impl BiracDatoteka for SustavskiBirac {
 pub struct LazniBirac {
     sljedeca_za_otvaranje: Arc<Mutex<Option<PathBuf>>>,
     sljedeca_za_spremanje: Arc<Mutex<Option<PathBuf>>>,
+    sljedeca_za_uvoz: Arc<Mutex<Option<PathBuf>>>,
+    sljedeca_za_izvoz: Arc<Mutex<Option<PathBuf>>>,
 }
 
 impl LazniBirac {
@@ -52,6 +79,18 @@ impl LazniBirac {
 
     pub fn postavi_otvaranje(&self, staza: impl Into<PathBuf>) {
         if let Ok(mut g) = self.sljedeca_za_otvaranje.lock() {
+            *g = Some(staza.into());
+        }
+    }
+
+    pub fn postavi_uvoz(&self, staza: impl Into<PathBuf>) {
+        if let Ok(mut g) = self.sljedeca_za_uvoz.lock() {
+            *g = Some(staza.into());
+        }
+    }
+
+    pub fn postavi_izvoz(&self, staza: impl Into<PathBuf>) {
+        if let Ok(mut g) = self.sljedeca_za_izvoz.lock() {
             *g = Some(staza.into());
         }
     }
@@ -73,6 +112,17 @@ impl BiracDatoteka for LazniBirac {
 
     fn spremi_datoteku(&self, _predlozeno_ime: Option<&str>) -> Option<PathBuf> {
         self.sljedeca_za_spremanje
+            .lock()
+            .ok()
+            .and_then(|mut g| g.take())
+    }
+
+    fn uvezi_datoteku(&self) -> Option<PathBuf> {
+        self.sljedeca_za_uvoz.lock().ok().and_then(|mut g| g.take())
+    }
+
+    fn izvezi_datoteku(&self, _predlozeno_ime: &str, _nastavak: &str) -> Option<PathBuf> {
+        self.sljedeca_za_izvoz
             .lock()
             .ok()
             .and_then(|mut g| g.take())

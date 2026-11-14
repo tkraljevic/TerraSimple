@@ -70,6 +70,66 @@ pub struct NoviSloj {
     pub prazan_naziv: bool,
 }
 
+/// Naziv upravo nacrtanog objekta, dok ga korisnik upisuje.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NazivNovog {
+    pub sloj: IdSloja,
+    pub objekt: IdObjekta,
+    pub naziv: String,
+    /// Prvi put se cijeli predloženi naziv označi, pa ga upisivanje zamijeni.
+    pub oznaci: bool,
+}
+
+impl NazivNovog {
+    #[must_use]
+    pub fn novi(sloj: IdSloja, objekt: IdObjekta, naziv: &str) -> Self {
+        Self {
+            sloj,
+            objekt,
+            naziv: naziv.to_owned(),
+            oznaci: true,
+        }
+    }
+}
+
+/// Ploča Stil, otvorena za sloj ili za jedan njegov objekt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UredjivanjeStila {
+    pub sloj: IdSloja,
+    /// Objekt iz čijeg je retka ploča otvorena. Tada se bira cijeli sloj ili samo on.
+    pub objekt: Option<IdObjekta>,
+    pub samo_objekt: bool,
+    /// Izmjena je počela dok je tipka miša još dolje, pa joj se sljedeće pridružuju.
+    pub potez: bool,
+    /// Otvorena je kartica Natpis, koja uvijek vrijedi za cijeli sloj.
+    pub natpis: bool,
+}
+
+impl UredjivanjeStila {
+    /// Iz retka sloja mijenja se sloj, a iz retka objekta zadano samo taj objekt. Mapa nema stil.
+    #[must_use]
+    pub const fn za(odabir: Odabir) -> Option<Self> {
+        let (sloj, objekt) = match odabir {
+            Odabir::Mapa(_) => return None,
+            Odabir::Sloj(s) => (s, None),
+            Odabir::Objekt(s, o) => (s, Some(o)),
+        };
+        Some(Self {
+            sloj,
+            objekt,
+            samo_objekt: objekt.is_some(),
+            potez: false,
+            natpis: false,
+        })
+    }
+
+    /// Objekt čiji se stil mijenja, ako se ne mijenja cijeli sloj.
+    #[must_use]
+    pub fn ciljni_objekt(&self) -> Option<IdObjekta> {
+        self.objekt.filter(|_| self.samo_objekt && !self.natpis)
+    }
+}
+
 pub struct StanjePrikaza {
     zatvorene_mape: BTreeSet<IdMape>,
     otvoreni_slojevi: BTreeSet<IdSloja>,
@@ -81,12 +141,30 @@ pub struct StanjePrikaza {
     pub oznake_slojeva: BTreeMap<IdSloja, String>,
     pub ikone_slojeva: BTreeMap<IdSloja, (String, String)>,
     pub odabrano: Option<Odabir>,
+    /// Objekti odabrani na karti, da ih ploča istakne i kad ih je više.
+    pub odabrani_na_karti: Vec<(IdSloja, IdObjekta)>,
+    /// Prozorčić s nazivom upravo nacrtanog objekta.
+    pub naziv_novog: Option<NazivNovog>,
     pub preimenovanje: Option<(Odabir, String)>,
     /// Cijeli naziv u polju preimenovanja je označen, pa ga prvi upisani znak zamjenjuje.
     pub naziv_oznacen: bool,
     /// Izbornik retka u ploči traži brisanje odabranog; prozor ga izvodi, s upozorenjem ako treba.
     pub zatrazeno_brisanje: bool,
+    /// Gumb „Uvezi sloj” traži uvoz; prozor otvara birač datoteka.
+    pub zatrazen_uvoz: bool,
+    /// Izbornik retka traži izvoz mape ili sloja; prozor otvara pregled izvoza.
+    pub zatrazen_izvoz: Option<slojevi::Stavka>,
+    /// Koliko je stablo u ploči Slojevi pomaknuto prema dolje, u točkama.
+    pub pomak_stabla: f32,
+    /// Kotačić ili dodirna ploha iznad ploče Slojevi u ovom okviru; karta ga tada ne dobije.
+    pub klizanje_ploce: f32,
+    /// Tražilica je odabrala sloj ili objekt, pa ga stablo treba dovesti u vidno polje.
+    pub pokazi_odabrano: bool,
+    /// Mapa, sloj ili objekt koji korisnik upravo povlači mišem u ploči Slojevi.
+    pub povuceno: Option<Odabir>,
     pub novi_sloj: Option<NoviSloj>,
+    /// Dok je postavljeno, umjesto ploče Slojevi crta se ploča Stil.
+    pub stil: Option<UredjivanjeStila>,
     pub alat: Alat,
     pub podloga: usize,
     pub ploca_lijevo: bool,
@@ -118,10 +196,19 @@ impl StanjePrikaza {
             oznake_slojeva: BTreeMap::new(),
             ikone_slojeva: BTreeMap::new(),
             odabrano: None,
+            odabrani_na_karti: Vec::new(),
+            naziv_novog: None,
             preimenovanje: None,
             naziv_oznacen: false,
             zatrazeno_brisanje: false,
+            zatrazen_uvoz: false,
+            zatrazen_izvoz: None,
+            pomak_stabla: 0.0,
+            klizanje_ploce: 0.0,
+            pokazi_odabrano: false,
+            povuceno: None,
             novi_sloj: None,
+            stil: None,
             alat: Alat::Odaberi,
             podloga: 0,
             ploca_lijevo: false,

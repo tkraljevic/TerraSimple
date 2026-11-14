@@ -2,7 +2,7 @@
 //! `egui`, jer su to mala količina i svaki okvir drukčiji podaci.
 
 use crate::crtanje::{
-    Alat, Crtanje, Crtez, Okolina, Pretvorba, je_lik, presjek_geometrije, prstenovi,
+    Alat, Cilj, Crtanje, Crtez, Okolina, Pretvorba, je_lik, presjek_geometrije, prstenovi,
 };
 use eframe::egui::{self, Color32, FontId, Mesh, Painter, Pos2, Rect, Shape, Stroke, pos2, vec2};
 use lyon_tessellation::geometry_builder::{BuffersBuilder, VertexBuffers};
@@ -13,6 +13,10 @@ use slojevi::{Geometrija, Projekt, Vrh};
 
 const NARANCASTA: Color32 = Color32::from_rgb(0xE8, 0x59, 0x0C);
 const ISPUNA: Color32 = Color32::from_rgba_premultiplied(58, 22, 3, 64);
+const OKVIR_RUB: Color32 = Color32::from_rgb(0x1E, 0x6F, 0xD9);
+const OKVIR_ISPUNA: Color32 = Color32::from_rgba_premultiplied(15, 55, 108, 40);
+const DODIR_RUB: Color32 = Color32::from_rgb(0x2E, 0x9E, 0x4F);
+const DODIR_ISPUNA: Color32 = Color32::from_rgba_premultiplied(18, 62, 31, 40);
 const TAMNO: Color32 = Color32::from_rgb(0x1E, 0x1F, 0x23);
 /// Oznaka presjeka: crvena s bijelim obrubom vidi se na svijetloj i tamnoj karti i na ortofotu.
 const CRVENA: Color32 = Color32::from_rgb(0xD3, 0x2F, 0x2F);
@@ -170,8 +174,14 @@ pub(crate) fn nacrtaj(
     mis: Option<Pos2>,
     ok: &Okolina<'_>,
 ) {
-    let odabrano = c.odabran().and_then(|(sloj, o)| projekt.objekt(sloj, o));
-    if let Some(g) = c.pregled().or(odabrano.map(|o| &o.geometrija)) {
+    for (sloj, o) in c.odabrani() {
+        let Some(objekt) = projekt.objekt(*sloj, *o) else {
+            continue;
+        };
+        let g = c
+            .pregled()
+            .filter(|_| c.odabran().is_some())
+            .unwrap_or(&objekt.geometrija);
         nacrtaj_geometriju(s, g, p);
         nacrtaj_presjek(s, presjek_geometrije(g), p);
     }
@@ -179,8 +189,11 @@ pub(crate) fn nacrtaj(
         nacrtaj_trenutni(s, c, crtez, p, mis, ok);
         nacrtaj_presjek(s, c.presjek_crteza(mis.map(|m| p.na_kartu(m))), p);
     }
+    let odabrana = c.odabrana_tocka();
     for h in &c.hvatista {
-        if h.srednje {
+        if odabrana == Some((h.prsten, h.i)) && !h.srednje && h.cilj != Cilj::Crtez {
+            s.circle(h.mjesto, 7.0, NARANCASTA, Stroke::new(2.0, Color32::WHITE));
+        } else if h.srednje {
             s.circle(
                 h.mjesto,
                 4.0,
@@ -191,6 +204,45 @@ pub(crate) fn nacrtaj(
             s.circle(h.mjesto, 5.5, Color32::WHITE, Stroke::new(2.0, NARANCASTA));
         }
     }
+}
+
+/// Okvir za odabir od prvog kuta do miša. Slijeva nadesno je plav s punim rubom i bira ono što je
+/// cijelo u njemu, a zdesna nalijevo zelen s isprekidanim rubom i bira sve što dotakne.
+pub(crate) fn nacrtaj_okvir_odabira(
+    s: &Painter,
+    c: &Crtanje,
+    p: &dyn Pretvorba,
+    mis: Option<Pos2>,
+) {
+    let (Some(pocetak), Some(m)) = (c.okvir_odabira(), mis) else {
+        return;
+    };
+    let a = p.u_ekran(&pocetak);
+    let okvir = Rect::from_two_pos(a, m);
+    if m.x >= a.x {
+        s.rect_filled(okvir, 0.0, OKVIR_ISPUNA);
+        s.rect_stroke(
+            okvir,
+            0.0,
+            Stroke::new(1.5, OKVIR_RUB),
+            egui::StrokeKind::Middle,
+        );
+        return;
+    }
+    s.rect_filled(okvir, 0.0, DODIR_ISPUNA);
+    let kutovi = [
+        okvir.left_top(),
+        okvir.right_top(),
+        okvir.right_bottom(),
+        okvir.left_bottom(),
+        okvir.left_top(),
+    ];
+    s.extend(Shape::dashed_line(
+        &kutovi,
+        Stroke::new(1.5, DODIR_RUB),
+        6.0,
+        4.0,
+    ));
 }
 
 /// Oznaka izvora podloge, koja mora biti vidljiva, u donjem desnom kutu.

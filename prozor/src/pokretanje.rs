@@ -53,6 +53,9 @@ fn postavke(argumenti: &[String], provjera: bool) -> PostavkeAplikacije {
     } else {
         let mut p = rasclani_argumente(argumenti);
         p.podloga_s_mreze = true;
+        // Primjer i snimka zaslona nisu pravi rad, pa im kopija ne treba.
+        let pravi_rad = !p.primjer && p.snimka.is_none();
+        p.oporavak = pravi_rad.then(prozor::oporavak::zadana_mapa).flatten();
         p
     }
 }
@@ -148,6 +151,10 @@ struct Omotac {
     pocetak: Instant,
 }
 impl eframe::App for Omotac {
+    fn raw_input_hook(&mut self, ctx: &egui::Context, unos: &mut egui::RawInput) {
+        self.aplikacija.raw_input_hook(ctx, unos);
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         if self.provjera {
             self.crtaj_provjeru(ui, self.pocetak.elapsed());

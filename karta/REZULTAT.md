@@ -1,6 +1,6 @@
 # Rezultat paketa `karta`
 
-Karta, crtanje i mjerenje opisani su u `docs/plan.md`, u rezultatima paketa `karta`.
+Karta, crtanje i mjerenje opisani su u `docs/rezultati.md`, u rezultatima paketa `karta`.
 
 ## Lik koji siječe sam sebe (9. 11. 2026.)
 

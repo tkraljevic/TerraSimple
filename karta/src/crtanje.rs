@@ -1,5 +1,6 @@
-//! Pravila crtanja: lijevi klik dodaje točku, povlačenje je pomiče, desni klik briše, a dvoklik
-//! završava. Ne zna za grafičku karticu ni za `walkers`, a sve izmjene idu kroz naredbe.
+//! Pravila crtanja: lijevi klik dodaje točku, povlačenje je pomiče, Backspace briše zadnju ili
+//! odabranu točku, a desni klik završava. Ne zna za grafičku karticu ni za `walkers`, a sve izmjene
+//! idu kroz naredbe.
 
 use eframe::egui::{Pos2, pos2};
 use geometrija::mjeri_crtu;
@@ -94,6 +95,8 @@ pub(crate) struct Nastavak {
     od_pocetka: bool,
     /// Koliko je vrhova imala, da Backspace ne briše ono što je već bilo.
     pocetnih: usize,
+    /// Je li dodana ijedna točka. Dok nije, kliknuti kraj je odabrana točka, pa ga Backspace briše.
+    dodavano: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -119,10 +122,17 @@ struct Vucenje {
 pub struct Crtanje {
     alat: Alat,
     pub(crate) crtez: Option<Crtez>,
-    odabran: Option<(IdSloja, IdObjekta)>,
+    /// Odabrani objekti, redom kojim su odabrani. Točke za hvatanje ima samo jedan odabrani.
+    pub(crate) odabrani: Vec<(IdSloja, IdObjekta)>,
+    /// Odabrana točka jedinog odabranog objekta (prsten, redni broj), koju Backspace briše.
+    pub(crate) tocka: Option<(usize, usize)>,
+    /// Prvi kut okvira za odabir, kad je korisnik kliknuo na prazno mjesto.
+    pub(crate) okvir: Option<Vrh>,
+    /// Upravo nacrtan objekt, za prozorčić s nazivom.
+    novi: Option<(IdSloja, IdObjekta)>,
     vuce: Option<Vucenje>,
     pub(crate) hvatista: Vec<Hvatiste>,
-    poruka: Option<Poruka>,
+    pub(crate) poruka: Option<Poruka>,
     aktivni: Vec<(VrstaGeometrije, IdSloja)>,
     mjeri_povrsinu: bool,
 }
@@ -195,7 +205,7 @@ fn niz_mut(g: &mut Geometrija, prsten: usize) -> Option<&mut Vec<Vrh>> {
     }
 }
 
-fn u_tocke(vrhovi: &[Vrh], p: &dyn Pretvorba) -> Vec<Pos2> {
+pub(crate) fn u_tocke(vrhovi: &[Vrh], p: &dyn Pretvorba) -> Vec<Pos2> {
     vrhovi.iter().map(|v| p.u_ekran(v)).collect()
 }
 
@@ -221,7 +231,7 @@ fn unutar(prsten: &[Pos2], m: Pos2) -> bool {
     unutra
 }
 
-fn pogada(g: &Geometrija, m: Pos2, p: &dyn Pretvorba) -> bool {
+pub(crate) fn pogada(g: &Geometrija, m: Pos2, p: &dyn Pretvorba) -> bool {
     match g {
         Geometrija::Tocka(v) => p.u_ekran(v).distance(m) < DOSEG_TOCKE,
         Geometrija::Linija(v) => u_tocke(v, p)
@@ -251,7 +261,11 @@ pub(crate) fn slojevi_odozgo(projekt: &Projekt) -> Vec<IdSloja> {
     izlaz
 }
 
-fn najblizi_objekt(objekti: Vec<&Objekt>, m: Pos2, p: &dyn Pretvorba) -> Option<IdObjekta> {
+pub(crate) fn najblizi_objekt(
+    objekti: Vec<&Objekt>,
+    m: Pos2,
+    p: &dyn Pretvorba,
+) -> Option<IdObjekta> {
     objekti
         .into_iter()
         .rev()
@@ -275,13 +289,34 @@ impl Crtanje {
         self.poruka
     }
 
+    /// Jedini odabrani objekt. Kad ih je odabrano više, nema ga.
     pub fn odabran(&self) -> Option<(IdSloja, IdObjekta)> {
-        self.odabran
+        match self.odabrani.as_slice() {
+            [jedan] => Some(*jedan),
+            _ => None,
+        }
+    }
+
+    /// Svi odabrani objekti.
+    pub fn odabrani(&self) -> &[(IdSloja, IdObjekta)] {
+        &self.odabrani
     }
 
     /// Odabir iz ploče Slojevi, da karta istakne isti objekt.
     pub fn postavi_odabrani(&mut self, objekt: Option<(IdSloja, IdObjekta)>) {
-        self.odabran = objekt;
+        self.odabrani = objekt.into_iter().collect();
+        self.tocka = None;
+        self.okvir = None;
+    }
+
+    /// Odabrana točka jedinog odabranog objekta, koju Backspace briše.
+    pub fn odabrana_tocka(&self) -> Option<(usize, usize)> {
+        self.tocka.filter(|_| self.odabran().is_some())
+    }
+
+    /// Objekt nacrtan od zadnjeg pitanja, jednom, da prozor ponudi upis naziva.
+    pub fn uzmi_novi(&mut self) -> Option<(IdSloja, IdObjekta)> {
+        self.novi.take()
     }
 
     /// Crta li se ili mjeri upravo nešto. Tada Backspace i Escape pripadaju karti.
@@ -395,7 +430,7 @@ impl Crtanje {
         let mut h = Vec::new();
         if let Some(c) = self.crtez.as_ref() {
             dodaj_hvatista(&mut h, Cilj::Crtez, &[&c.vrhovi], false, false, p);
-        } else if let Some((s, o)) = self.odabran.filter(|_| self.crtez.is_none()) {
+        } else if let Some((s, o)) = self.odabran() {
             let sloj = projekt.sloj(s).filter(|s| s.stanje.smije_mijenjati());
             let objekt = sloj.and_then(|x| x.objekti.get(&o));
             if let Some(g) = self.pregled().or(objekt.map(|x| &x.geometrija)) {
@@ -432,14 +467,23 @@ impl Crtanje {
         !self.vuce() && pritisak.and_then(|m| self.najblize(m)).is_none()
     }
 
+    #[cfg(test)]
     pub(crate) fn klik(&mut self, m: Pos2, u: &mut Uredjivac, ok: &Okolina<'_>, p: &dyn Pretvorba) {
+        self.klik_s(m, false, u, ok, p);
+    }
+
+    /// Klik, a `shift` znači da je držan Shift: tada klik na objekt izbacuje ga iz odabira.
+    pub(crate) fn klik_s(
+        &mut self,
+        m: Pos2,
+        shift: bool,
+        u: &mut Uredjivac,
+        ok: &Okolina<'_>,
+        p: &dyn Pretvorba,
+    ) {
         self.poruka = None;
         match self.alat {
-            Alat::Odaberi => {
-                if !self.pocni_nastavak(m, u.projekt()) {
-                    self.odaberi(m, u.projekt(), ok, p);
-                }
-            }
+            Alat::Odaberi => self.klik_odabira(m, shift, u.projekt(), ok, p),
             Alat::Tocka => {
                 let g = Geometrija::Tocka(p.na_kartu(m));
                 self.spremi(VrstaGeometrije::Tocka, g, u, ok);
@@ -449,7 +493,7 @@ impl Crtanje {
     }
 
     /// Klik na prvu ili zadnju točku odabrane linije nastavlja crtanje od te točke.
-    fn pocni_nastavak(&mut self, m: Pos2, projekt: &Projekt) -> bool {
+    pub(crate) fn pocni_nastavak(&mut self, m: Pos2, projekt: &Projekt) -> bool {
         let Some(h) = self.najblize(m).filter(|h| !h.srednje) else {
             return false;
         };
@@ -480,6 +524,7 @@ impl Crtanje {
                 objekt,
                 od_pocetka,
                 pocetnih,
+                dodavano: false,
             }),
         });
         true
@@ -494,7 +539,7 @@ impl Crtanje {
             vrhovi.reverse();
         }
         self.alat = Alat::Odaberi;
-        self.odabran = Some((n.sloj, n.objekt));
+        self.postavi_odabrani(Some((n.sloj, n.objekt)));
         let nova = Geometrija::Linija(vrhovi);
         // Dvoklik bez ijedne nove točke ne smije ostaviti prazan korak u povijesti.
         let ista = u
@@ -527,6 +572,9 @@ impl Crtanje {
             nastavak: None,
         });
         c.vrhovi.push(p.na_kartu(m));
+        if let Some(n) = c.nastavak.as_mut() {
+            n.dodavano = true;
+        }
     }
 
     /// Mjerenje s klikom na prvu točku postaje lik, a crtanje poligona ionako jest lik.
@@ -542,7 +590,7 @@ impl Crtanje {
         self.zavrsi(u, ok);
     }
 
-    /// Dvoklik. Prvi klik para već je dodao točku.
+    /// Desni klik završava crtež ili mjerenje.
     pub(crate) fn zavrsi(&mut self, u: &mut Uredjivac, ok: &Okolina<'_>) {
         let Some(c) = self.crtez.as_ref() else {
             return;
@@ -599,9 +647,13 @@ impl Crtanje {
         match ishod {
             Ok((sloj, Some(Novo::Objekt(id)))) => {
                 self.postavi_aktivni_sloj(vrsta, sloj);
-                self.odabran = Some((sloj, id));
+                self.postavi_odabrani(Some((sloj, id)));
+                self.novi = Some((sloj, id));
                 self.crtez = None;
-                self.alat = Alat::Odaberi;
+                // Spremljeno mjerenje ostaje u mjerenju, a nacrtan objekt vraća na odabir.
+                if self.alat != Alat::Mjeri {
+                    self.alat = Alat::Odaberi;
+                }
             }
             Ok(_) => {}
             Err(g) => self.poruka = Some(Poruka::Naredba(g)),
@@ -624,36 +676,14 @@ impl Crtanje {
             .or_else(|| slojevi_odozgo(projekt).into_iter().find(dobar))
     }
 
-    fn odaberi(&mut self, m: Pos2, projekt: &Projekt, ok: &Okolina<'_>, p: &dyn Pretvorba) {
-        self.odabran = slojevi_odozgo(projekt)
-            .into_iter()
-            .filter(|s| (ok.vidljiv)(*s))
-            .find_map(|s| {
-                let sloj = projekt.sloj(s)?;
-                let id = najblizi_objekt(sloj.objekti.values().collect(), m, p)?;
-                Some((s, id))
-            });
-    }
-
-    pub(crate) fn desni_klik(&mut self, m: Pos2, u: &mut Uredjivac) {
+    /// Desni klik završava crtež, a okvir za odabir odbacuje.
+    pub(crate) fn desni_klik(&mut self, u: &mut Uredjivac, ok: &Okolina<'_>) {
         self.poruka = None;
-        let Some(h) = self.najblize(m).filter(|h| !h.srednje) else {
-            return;
-        };
-        match h.cilj {
-            Cilj::Crtez => self.obrisi_iz_crteza(h.i),
-            Cilj::Objekt(s, o) => self.obrisi_iz_objekta(s, o, h, u),
+        if self.crtez.as_ref().is_some_and(|c| !c.gotov) {
+            self.zavrsi(u, ok);
+        } else {
+            self.okvir = None;
         }
-    }
-
-    fn obrisi_iz_crteza(&mut self, i: usize) {
-        if let Some(c) = self.crtez.as_mut().filter(|c| i < c.vrhovi.len()) {
-            c.vrhovi.remove(i);
-            if let Some(n) = c.nastavak.as_mut().filter(|n| i < n.pocetnih) {
-                n.pocetnih -= 1;
-            }
-        }
-        self.makni_prazan_crtez();
     }
 
     fn makni_prazan_crtez(&mut self) {
@@ -662,7 +692,13 @@ impl Crtanje {
         }
     }
 
-    fn obrisi_iz_objekta(&mut self, s: IdSloja, o: IdObjekta, h: Hvatiste, u: &mut Uredjivac) {
+    /// Briše točku objekta, ali ne ispod najmanjeg broja točaka za tu vrstu.
+    fn obrisi_iz_objekta(
+        &mut self,
+        (s, o): (IdSloja, IdObjekta),
+        (prsten, i): (usize, usize),
+        u: &mut Uredjivac,
+    ) {
         let Some(g) = u
             .projekt()
             .objekt(s, o)
@@ -672,9 +708,9 @@ impl Crtanje {
         };
         let najmanje = najmanje_vrhova(g.vrsta());
         let mut nova = g;
-        match niz_mut(&mut nova, h.prsten).filter(|n| n.len() > najmanje && h.i < n.len()) {
+        match niz_mut(&mut nova, prsten).filter(|n| n.len() > najmanje && i < n.len()) {
             Some(n) => {
-                n.remove(h.i);
+                n.remove(i);
                 self.posalji_geometriju(s, o, nova, u);
             }
             None => self.poruka = Some(Poruka::NeMozeBrisati { najmanje }),
@@ -701,6 +737,12 @@ impl Crtanje {
             Cilj::Crtez => None,
             Cilj::Objekt(s, o) => projekt.objekt(s, o).map(|x| za_uredivanje(&x.geometrija)),
         };
+        if matches!(
+            pregled,
+            Some(Geometrija::Linija(_) | Geometrija::Poligon(_))
+        ) {
+            self.tocka = Some((h.prsten, h.i + usize::from(h.srednje)));
+        }
         let mut v = Vucenje {
             cilj: h.cilj,
             prsten: h.prsten,
@@ -739,26 +781,53 @@ impl Crtanje {
         }
     }
 
-    /// Esc odustaje od onoga što je u tijeku.
+    /// Esc odustaje od onoga što je u tijeku, a kad ničega nema, poništava odabir: prvo točke,
+    /// pa objekata.
     pub(crate) fn odustani(&mut self) {
-        if self.vuce.take().is_none() {
+        self.poruka = None;
+        if self.vuce.take().is_some() {
+            return;
+        }
+        if let Some(c) = self.crtez.take() {
             // Odustajanje od produljenja vraća na odabir, inače bi sljedeći klik počeo novu liniju.
-            if self.crtez.take().is_some_and(|c| c.nastavak.is_some()) {
+            if c.nastavak.is_some() {
                 self.alat = Alat::Odaberi;
             }
+            return;
         }
-        self.poruka = None;
+        if self.okvir.take().is_none() && self.tocka.take().is_none() {
+            self.odabrani.clear();
+        }
     }
 
-    /// Backspace miče zadnju točku crteža.
-    pub(crate) fn natrag(&mut self) {
-        if let Some(c) = self.crtez.as_mut().filter(|c| !c.gotov) {
-            let najmanje = c.nastavak.map_or(0, |n| n.pocetnih);
-            if c.vrhovi.len() > najmanje {
+    /// Backspace miče zadnju točku crteža. Kad se ne crta, briše odabranu točku objekta.
+    pub(crate) fn natrag(&mut self, u: &mut Uredjivac) {
+        self.poruka = None;
+        let Some(c) = self.crtez.as_mut().filter(|c| !c.gotov) else {
+            if let (Some(objekt), Some(tocka)) = (self.odabran(), self.tocka.take()) {
+                self.obrisi_iz_objekta(objekt, tocka, u);
+            }
+            return;
+        };
+        match c.nastavak {
+            // Linija se nastavlja od kraja koji je kliknut, pa je taj kraj odabrana točka.
+            Some(n) if !n.dodavano => self.obrisi_kraj_nastavka(n, u),
+            Some(n) if c.vrhovi.len() > n.pocetnih => {
+                c.vrhovi.pop();
+            }
+            Some(_) => {}
+            None => {
                 c.vrhovi.pop();
             }
         }
         self.makni_prazan_crtez();
+    }
+
+    fn obrisi_kraj_nastavka(&mut self, n: Nastavak, u: &mut Uredjivac) {
+        self.crtez = None;
+        self.alat = Alat::Odaberi;
+        let i = if n.od_pocetka { 0 } else { n.pocetnih - 1 };
+        self.obrisi_iz_objekta((n.sloj, n.objekt), (0, i), u);
     }
 
     /// Crtež kao geometrija, s točkom pod mišem dok crtanje traje.

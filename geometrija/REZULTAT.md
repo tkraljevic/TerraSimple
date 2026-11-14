@@ -1,6 +1,6 @@
 # Rezultat paketa `geometrija`
 
-Mjere na elipsoidu opisane su u `docs/plan.md`, u rezultatima paketa `geometrija`.
+Mjere na elipsoidu opisane su u `docs/rezultati.md`, u rezultatima paketa `geometrija`.
 
 ## Lik koji siječe sam sebe (9. 11. 2026.)
 

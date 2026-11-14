@@ -41,6 +41,13 @@ impl KatalogPoruka {
     }
 
     #[must_use]
+    pub fn broj_mapa(&self, broj: usize) -> String {
+        let mut argumenti = FluentArgs::new();
+        argumenti.set("broj", broj);
+        self.dohvati("broj-mapa", Some(&argumenti))
+    }
+
+    #[must_use]
     pub fn broj_objekata(&self, broj: usize) -> String {
         let mut argumenti = FluentArgs::new();
         argumenti.set("broj", broj);
@@ -276,6 +283,9 @@ mod testovi {
         assert_eq!(katalog.broj_slojeva(1), "1 sloj");
         assert_eq!(katalog.broj_slojeva(2), "2 sloja");
         assert_eq!(katalog.broj_slojeva(5), "5 slojeva");
+        assert_eq!(katalog.broj_mapa(1), "1 mapa");
+        assert_eq!(katalog.broj_mapa(3), "3 mape");
+        assert_eq!(katalog.broj_mapa(5), "5 mapa");
     }
 
     #[test]

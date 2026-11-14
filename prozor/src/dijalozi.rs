@@ -1,5 +1,6 @@
 //! Prikaz padajućeg izbornika Datoteka i modalnih dijaloga (potvrde, greške, upozorenja).
 
+use crate::izvoz::{Prolaz, StavkaPregleda};
 use crate::poruke::KatalogPoruka;
 use crate::sastavnice::{tekst_lijevo, tekst_sredina, zaobljeni_okvir};
 use crate::tema::{Boje, Razmaci, font_obicni, font_srednji};
@@ -13,6 +14,8 @@ pub enum StavkaIzbornikaDatoteka {
     Otvori,
     Spremi,
     SpremiKao,
+    Uvezi,
+    Izvezi,
 }
 
 /// Svrha potvrde nespremljenih izmjena.
@@ -36,6 +39,11 @@ pub enum AktivniDijalog {
         naslov: String,
         poruka: String,
     },
+    /// Obavijest o uspjehu, npr. sažetak uvoza.
+    Obavijest {
+        naslov: String,
+        poruka: String,
+    },
     UpozorenjaOtvaranja {
         upozorenja: Vec<String>,
         otvoren_popis: bool,
@@ -44,6 +52,19 @@ pub enum AktivniDijalog {
     SukobSpremanja,
     /// Inačica, licenca i izvori karte.
     OProgramu,
+    /// Prečaci tipkovnice i miša.
+    Precaci,
+    /// Pregled prije izvoza u KML (zaslon K).
+    Izvoz(crate::izvoz::PripremaIzvoza),
+    /// Kopija rada koju je ostavio program koji se srušio.
+    Oporavak(crate::oporavak::Ostatak),
+    /// Odabir slojeva iz GeoPackagea koji se kopiraju u projekt (zaslon G).
+    UvozGpkg(crate::uvoz_gpkg::PripremaUvoza),
+    /// Datoteka ne kaže koordinatni sustav, pa ga korisnik bira (zaslon L).
+    SustavUvoza {
+        staza: std::path::PathBuf,
+        odabran: koordinate::Sustav,
+    },
 }
 
 /// Radnja koju je korisnik odabrao u dijalogu.
@@ -51,12 +72,14 @@ pub enum AktivniDijalog {
 pub enum IshodDijaloga {
     PotvrdaSpremi(NamjeraPotvrde),
     PotvrdaNeSpremaj(NamjeraPotvrde),
-    PotvrdaOdustani,
     ObrisiPotvrdjeno(Stavka),
-    ObrisiOdustani,
     UpozorenjaPreklopiPopis,
     ZatvoriPoruku,
     SukobSpremiKao,
+    /// Glavni gumb prozorčića izvoza ili uvoza: izvoz bira datoteku, a uvoz kopira slojeve.
+    Prihvati,
+    /// Vrati (`true`) ili odbaci kopiju nespremljenog rada.
+    Oporavak(bool),
 }
 
 /// Oznaka prečaca kako je pišu programi na tom sustavu: na Macu `⌘S`, drugdje `Ctrl+S`.
@@ -112,9 +135,19 @@ pub fn crtaj_padajuci_izbornik_datoteka(
             katalog.tekst("izbornik-datoteka-spremi-kao"),
             precac("precac-spremi-kao"),
         ),
+        (
+            StavkaIzbornikaDatoteka::Uvezi,
+            katalog.tekst("izbornik-datoteka-uvezi"),
+            String::new(),
+        ),
+        (
+            StavkaIzbornikaDatoteka::Izvezi,
+            katalog.tekst("izbornik-datoteka-izvezi"),
+            String::new(),
+        ),
     ];
 
-    let sirina = 190.0;
+    let sirina = 220.0;
     let visina_retka = 28.0;
     let ukupna_visina = stavke.len() as f32 * visina_retka + 8.0;
     let okvir = Rect::from_min_size(pocetak, vec2(sirina, ukupna_visina));
@@ -214,14 +247,530 @@ pub fn crtaj_aktivni_dijalog(
             katalog,
         ),
         AktivniDijalog::PorukaGreske { naslov, poruka } => {
-            crtaj_poruku_greske(ui, dostupan, naslov, poruka, boje, katalog)
+            crtaj_poruku(ui, dostupan, (naslov, boje.crvena), poruka, boje, katalog)
+        }
+        AktivniDijalog::Obavijest { naslov, poruka } => {
+            crtaj_poruku(ui, dostupan, (naslov, boje.tekst), poruka, boje, katalog)
         }
         AktivniDijalog::UpozorenjaOtvaranja {
             upozorenja,
             otvoren_popis,
         } => crtaj_upozorenja_otvaranja(ui, dostupan, upozorenja, otvoren_popis, boje, katalog),
         AktivniDijalog::SukobSpremanja => crtaj_sukob_spremanja(ui, dostupan, boje, katalog),
+        ostali => crtaj_ostale(ui, dostupan, ostali, boje, katalog),
+    }
+}
+
+/// Kućica, ikona vrste, naziv i opis jednog sloja. Klik mijenja odabir.
+fn redak_sloja_uvoza(
+    ui: &mut egui::Ui,
+    sloj: &mut crate::uvoz_gpkg::SlojIzvora,
+    okvir: Rect,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) {
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 8.0);
+    let kucica =
+        Rect::from_center_size(pos2(okvir.min.x + 22.0, okvir.center().y), vec2(18.0, 18.0));
+    if sloj.odabran {
+        ui.painter().rect_filled(kucica, 4.0, boje.primarna);
+        tekst_sredina(
+            ui,
+            kucica.center(),
+            "✓",
+            font_srednji(12.0),
+            boje.primarna_tekst,
+        );
+    } else {
+        ui.painter().rect_stroke(
+            kucica,
+            4.0,
+            egui::Stroke::new(2.0, boje.obrub_2),
+            egui::StrokeKind::Inside,
+        );
+    }
+    let x = okvir.min.x + 44.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 15.0),
+        &sloj.naziv,
+        font_obicni(14.0),
+        boje.tekst,
+    );
+    let opis = katalog.s_tekstovima(
+        "uvoz-gpkg-opis-sloja",
+        &[
+            ("objekti", katalog.broj_objekata(sloj.objekata)),
+            ("sustav", sloj.sustav.to_owned()),
+        ],
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 33.0),
+        &opis,
+        font_obicni(12.0),
+        boje.tekst_2,
+    );
+    let id = ui.make_persistent_id(("uvoz_gpkg_sloj", sloj.id.0));
+    let odgovor = ui.interact(okvir, id, Sense::click());
+    odgovor.widget_info(|| {
+        WidgetInfo::selected(Role::CheckBox, ui.is_enabled(), sloj.odabran, &sloj.naziv)
+    });
+    if odgovor.clicked() {
+        sloj.odabran = !sloj.odabran;
+    }
+}
+
+/// Zaslon G: slojevi iz datoteke s kućicama, napomena i gumbi.
+fn crtaj_uvoz_gpkg(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    priprema: &mut crate::uvoz_gpkg::PripremaUvoza,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 560.0;
+    let vidljivih = priprema.slojevi.len().min(6) as f32;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 240.0 + 56.0 * vidljivih));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
+    let x = okvir.min.x + 24.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 30.0),
+        &katalog.tekst("uvoz-gpkg-naslov"),
+        font_srednji(18.0),
+        boje.tekst,
+    );
+    let datoteka = katalog.s_tekstovima(
+        "uvoz-gpkg-datoteka",
+        &[("datoteka", priprema.naziv.clone())],
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 60.0),
+        &datoteka,
+        font_obicni(13.0),
+        boje.tekst_2,
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 90.0),
+        &katalog.tekst("uvoz-gpkg-slojevi"),
+        font_obicni(13.0),
+        boje.tekst_2,
+    );
+    let popis = Rect::from_min_size(
+        pos2(x, okvir.min.y + 104.0),
+        vec2(sirina - 48.0, 56.0 * vidljivih),
+    );
+    ui.scope_builder(egui::UiBuilder::new().max_rect(popis), |ui| {
+        egui::ScrollArea::vertical()
+            .max_height(popis.height())
+            .show(ui, |ui| {
+                for sloj in &mut priprema.slojevi {
+                    let (r, _) =
+                        ui.allocate_exact_size(vec2(popis.width() - 12.0, 50.0), Sense::hover());
+                    redak_sloja_uvoza(ui, sloj, r, boje, katalog);
+                    ui.add_space(6.0);
+                }
+            });
+    });
+    let mut napomena = katalog.tekst("uvoz-gpkg-kopija");
+    let polja = priprema.izostavljena_polja();
+    if !polja.is_empty() {
+        napomena.push(' ');
+        napomena.push_str(&katalog.s_tekstovima("uvoz-gpkg-polja", &[("popis", polja.join(", "))]));
+    }
+    let galija = ui
+        .painter()
+        .layout(napomena, font_obicni(12.5), boje.tekst_2, sirina - 48.0);
+    ui.painter()
+        .galley(pos2(x, popis.max.y + 14.0), galija, boje.tekst_2);
+    let by = okvir.max.y - 48.0;
+    let uvezi = Rect::from_min_size(pos2(okvir.max.x - 164.0, by), vec2(140.0, 32.0));
+    let odustani = Rect::from_min_size(pos2(uvezi.min.x - 108.0, by), vec2(100.0, 32.0));
+    let odustani = gumb_dijaloga(
+        ui,
+        odustani,
+        &katalog.tekst("izvoz-odustani"),
+        false,
+        false,
+        boje,
+    );
+    let broj = priprema.odabranih();
+    let gumb = katalog.s_tekstovima("uvoz-gpkg-gumb", &[("slojevi", katalog.broj_slojeva(broj))]);
+    let uvezi = gumb_dijaloga(ui, uvezi, &gumb, true, false, boje);
+    if uvezi.clicked() && broj > 0 {
+        Some(IshodDijaloga::Prihvati)
+    } else {
+        odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+    }
+}
+
+/// Prozorčići s vlastitim sadržajem: o programu, prečaci, izvoz, uvoz i oporavak.
+fn crtaj_ostale(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    dijalog: &mut AktivniDijalog,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    match dijalog {
         AktivniDijalog::OProgramu => crtaj_o_programu(ui, dostupan, boje, katalog),
+        AktivniDijalog::Precaci => crtaj_precace(ui, dostupan, boje, katalog),
+        AktivniDijalog::Izvoz(priprema) => crtaj_izvoz(ui, dostupan, priprema, boje, katalog),
+        AktivniDijalog::Oporavak(ostatak) => crtaj_oporavak(ui, dostupan, ostatak, boje, katalog),
+        AktivniDijalog::UvozGpkg(priprema) => {
+            crtaj_uvoz_gpkg(ui, dostupan, priprema, boje, katalog)
+        }
+        AktivniDijalog::SustavUvoza { staza, odabran } => {
+            crtaj_sustav_uvoza(ui, dostupan, staza, odabran, boje, katalog)
+        }
+        _ => None,
+    }
+}
+
+/// Sustavi u prozorčiću, redom kao u nacrtu L, s ključem opisa.
+const SUSTAVI_UVOZA: [(koordinate::Sustav, &str, &str); 4] = [
+    (
+        koordinate::Sustav::Htrs96Tm,
+        "HTRS96/TM",
+        "sustav-htrs-opis",
+    ),
+    (
+        koordinate::Sustav::HdksZona6,
+        "HDKS, zona 6",
+        "sustav-hdks6-opis",
+    ),
+    (
+        koordinate::Sustav::HdksZona5,
+        "HDKS, zona 5",
+        "sustav-hdks5-opis",
+    ),
+    (koordinate::Sustav::Wgs84, "WGS84", "sustav-wgs-opis"),
+];
+
+/// Jedan izbor sustava: krug, naziv i opis. Klik ga odabire.
+fn redak_sustava(
+    ui: &mut egui::Ui,
+    okvir: Rect,
+    (naziv, opis): (&str, &str),
+    odabran: bool,
+    boje: &Boje,
+) -> bool {
+    let ispuna = if odabran {
+        boje.primarna_svijetla
+    } else {
+        boje.ploca
+    };
+    zaobljeni_okvir(ui, okvir, ispuna, Some(boje.obrub), 8.0);
+    let krug = pos2(okvir.min.x + 22.0, okvir.center().y);
+    let boja = if odabran { boje.primarna } else { boje.obrub_2 };
+    ui.painter()
+        .circle_stroke(krug, 9.0, egui::Stroke::new(2.0, boja));
+    if odabran {
+        ui.painter().circle_filled(krug, 5.0, boje.primarna);
+    }
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 44.0, okvir.min.y + 15.0),
+        naziv,
+        font_srednji(14.0),
+        boje.tekst,
+    );
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 44.0, okvir.min.y + 34.0),
+        opis,
+        font_obicni(12.0),
+        boje.tekst_2,
+    );
+    let odgovor = ui.interact(
+        okvir,
+        ui.make_persistent_id(("sustav_uvoza", naziv)),
+        Sense::click(),
+    );
+    odgovor
+        .widget_info(|| WidgetInfo::selected(Role::RadioButton, ui.is_enabled(), odabran, naziv));
+    odgovor.clicked()
+}
+
+/// Zaslon L: program pita u kojem su sustavu podaci, a ne pretpostavlja.
+fn crtaj_sustav_uvoza(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    staza: &std::path::Path,
+    odabran: &mut koordinate::Sustav,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 560.0;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 480.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
+    let x = okvir.min.x + 24.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 30.0),
+        &katalog.tekst("sustav-naslov"),
+        font_srednji(18.0),
+        boje.tekst,
+    );
+    let datoteka = staza
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let tekst = katalog.s_tekstovima("sustav-poruka", &[("datoteka", datoteka)]);
+    let galija = ui
+        .painter()
+        .layout(tekst, font_obicni(13.5), boje.tekst_2, sirina - 48.0);
+    ui.painter()
+        .galley(pos2(x, okvir.min.y + 52.0), galija, boje.tekst_2);
+    for (i, (sustav, naziv, kljuc)) in SUSTAVI_UVOZA.into_iter().enumerate() {
+        let r = Rect::from_min_size(
+            pos2(x, okvir.min.y + 110.0 + i as f32 * 62.0),
+            vec2(sirina - 48.0, 54.0),
+        );
+        let opis = katalog.tekst(kljuc);
+        if redak_sustava(ui, r, (naziv, &opis), *odabran == sustav, boje) {
+            *odabran = sustav;
+        }
+    }
+    let by = okvir.max.y - 48.0;
+    let uvezi = Rect::from_min_size(pos2(okvir.max.x - 124.0, by), vec2(100.0, 32.0));
+    let odustani = Rect::from_min_size(pos2(uvezi.min.x - 108.0, by), vec2(100.0, 32.0));
+    let odustani = gumb_dijaloga(
+        ui,
+        odustani,
+        &katalog.tekst("izvoz-odustani"),
+        false,
+        false,
+        boje,
+    );
+    let uvezi = gumb_dijaloga(ui, uvezi, &katalog.tekst("sustav-uvezi"), true, false, boje);
+    if uvezi.clicked() {
+        Some(IshodDijaloga::Prihvati)
+    } else {
+        odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+    }
+}
+
+/// Ponuda da se vrati rad koji nije spremljen prije pada programa.
+fn crtaj_oporavak(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    ostatak: &crate::oporavak::Ostatak,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let sirina = 460.0;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, 190.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    let naslov = katalog.tekst("oporavak-naslov");
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 24.0),
+        &naslov,
+        font_srednji(15.0),
+        boje.tekst,
+    );
+    let tekstovi = crate::oporavak::tekstovi_ostatka(katalog, ostatak);
+    let poruka = katalog.s_tekstovima("oporavak-poruka", &tekstovi);
+    let galija = ui
+        .painter()
+        .layout(poruka, font_obicni(13.0), boje.tekst_2, sirina - 40.0);
+    ui.painter().galley(
+        pos2(okvir.min.x + 20.0, okvir.min.y + 48.0),
+        galija,
+        boje.tekst_2,
+    );
+    let by = okvir.max.y - 46.0;
+    let vrati = Rect::from_min_size(pos2(okvir.max.x - 116.0, by), vec2(96.0, 30.0));
+    let odbaci = Rect::from_min_size(pos2(vrati.min.x - 104.0, by), vec2(96.0, 30.0));
+    let odbaci = gumb_dijaloga(
+        ui,
+        odbaci,
+        &katalog.tekst("oporavak-odbaci"),
+        false,
+        false,
+        boje,
+    );
+    let vrati = gumb_dijaloga(
+        ui,
+        vrati,
+        &katalog.tekst("oporavak-vrati"),
+        true,
+        false,
+        boje,
+    );
+    if vrati.clicked() {
+        Some(IshodDijaloga::Oporavak(true))
+    } else {
+        odbaci.clicked().then_some(IshodDijaloga::Oporavak(false))
+    }
+}
+
+/// Znak uz stavku pregleda: kvačica, uskličnik ili križić u krugu.
+fn znak_prolaza(ui: &egui::Ui, srediste: egui::Pos2, prolaz: Prolaz, boje: &Boje) {
+    let (boja, znak) = match prolaz {
+        Prolaz::Da => (boje.zelena, "✓"),
+        Prolaz::Pazi => (boje.upozorenje, "!"),
+        Prolaz::Ne => (boje.crvena, "×"),
+    };
+    ui.painter().circle_filled(srediste, 9.0, boja);
+    tekst_sredina(ui, srediste, znak, font_srednji(12.0), Color32::WHITE);
+}
+
+/// Vraća visinu stavke.
+fn crtaj_stavku_pregleda(
+    ui: &mut egui::Ui,
+    stavka: &StavkaPregleda,
+    pocetak: egui::Pos2,
+    sirina: f32,
+    boje: &Boje,
+) -> f32 {
+    znak_prolaza(
+        ui,
+        pos2(pocetak.x + 9.0, pocetak.y + 10.0),
+        stavka.prolaz,
+        boje,
+    );
+    let x = pocetak.x + 30.0;
+    tekst_lijevo(
+        ui,
+        pos2(x, pocetak.y + 10.0),
+        &stavka.naslov,
+        font_obicni(14.0),
+        boje.tekst,
+    );
+    let opis = ui.painter().layout(
+        stavka.opis.clone(),
+        font_obicni(12.5),
+        boje.tekst_2,
+        sirina - 30.0,
+    );
+    let visina = opis.size().y;
+    ui.painter()
+        .galley(pos2(x, pocetak.y + 20.0), opis, boje.tekst_2);
+    visina + 34.0
+}
+
+/// Gumbi za sustav izvoza u SHP.
+fn izbor_sustava_izvoza(
+    ui: &mut egui::Ui,
+    priprema: &mut crate::izvoz::PripremaIzvoza,
+    pocetak: egui::Pos2,
+    boje: &Boje,
+) {
+    for (i, (sustav, naziv, _)) in SUSTAVI_UVOZA.into_iter().enumerate() {
+        let okvir = Rect::from_min_size(
+            pos2(pocetak.x + i as f32 * 124.0, pocetak.y),
+            vec2(116.0, 28.0),
+        );
+        if gumb_dijaloga(ui, okvir, naziv, priprema.sustav == sustav, false, boje).clicked() {
+            priprema.sustav = sustav;
+        }
+    }
+}
+
+/// Gumbi za format izvoza. Klik na drugi format mijenja pregled.
+fn izbor_formata(
+    ui: &mut egui::Ui,
+    priprema: &mut crate::izvoz::PripremaIzvoza,
+    pocetak: egui::Pos2,
+    boje: &Boje,
+) {
+    for (i, f) in crate::izvoz::FormatIzvoza::SVI.into_iter().enumerate() {
+        let okvir = Rect::from_min_size(
+            pos2(pocetak.x + i as f32 * 96.0, pocetak.y),
+            vec2(88.0, 28.0),
+        );
+        if gumb_dijaloga(ui, okvir, f.naziv(), priprema.format == f, false, boje).clicked() {
+            priprema.format = f;
+        }
+    }
+}
+
+/// Zaslon K: format, datoteka, popis onoga što ide u datoteku i gumbi.
+fn crtaj_izvoz(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    priprema: &mut crate::izvoz::PripremaIzvoza,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let stavke = priprema.stavke(katalog);
+    let shp = priprema.format == crate::izvoz::FormatIzvoza::Shp;
+    let dodatak = if shp { 40.0 } else { 0.0 };
+    let sirina = 560.0;
+    let visina = 210.0 + dodatak + 60.0 * stavke.len() as f32;
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, visina));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 12.0);
+    let x = okvir.min.x + 24.0;
+    let naslov = katalog.s_tekstovima(
+        "izvoz-naslov",
+        &[("format", priprema.format.naziv().to_owned())],
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 30.0),
+        &naslov,
+        font_srednji(18.0),
+        boje.tekst,
+    );
+    izbor_formata(ui, priprema, pos2(x, okvir.min.y + 52.0), boje);
+    if shp {
+        izbor_sustava_izvoza(ui, priprema, pos2(x, okvir.min.y + 90.0), boje);
+    }
+    let tekstovi = [
+        ("naziv", priprema.naziv.clone()),
+        ("nastavak", priprema.format.nastavak().to_owned()),
+    ];
+    let datoteka = katalog.s_tekstovima("izvoz-datoteka", &tekstovi);
+    tekst_lijevo(
+        ui,
+        pos2(x, okvir.min.y + 100.0),
+        &datoteka,
+        font_obicni(13.0),
+        boje.tekst_2,
+    );
+    let crta = okvir.min.y + 120.0;
+    ui.painter().line_segment(
+        [pos2(x, crta), pos2(okvir.max.x - 24.0, crta)],
+        egui::Stroke::new(1.0, boje.obrub),
+    );
+    tekst_lijevo(
+        ui,
+        pos2(x, crta + 20.0),
+        &katalog.tekst("izvoz-sto-ide"),
+        font_obicni(13.0),
+        boje.tekst_2,
+    );
+    let mut y = crta + 38.0;
+    for stavka in &stavke {
+        y += crtaj_stavku_pregleda(ui, stavka, pos2(x, y), sirina - 48.0, boje);
+    }
+    let by = okvir.max.y - 48.0;
+    let izvezi = Rect::from_min_size(pos2(okvir.max.x - 124.0, by), vec2(100.0, 32.0));
+    let odustani = Rect::from_min_size(pos2(izvezi.min.x - 108.0, by), vec2(100.0, 32.0));
+    let odustani = gumb_dijaloga(
+        ui,
+        odustani,
+        &katalog.tekst("izvoz-odustani"),
+        false,
+        false,
+        boje,
+    );
+    let gumb = katalog.tekst("izvoz-gumb");
+    let moze = priprema.moze();
+    let izvezi = ui
+        .add_enabled_ui(moze, |ui| {
+            gumb_dijaloga(ui, izvezi, &gumb, true, false, boje)
+        })
+        .inner;
+    if izvezi.clicked() && moze {
+        Some(IshodDijaloga::Prihvati)
+    } else {
+        odustani.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
     }
 }
 
@@ -282,6 +831,142 @@ fn crtaj_o_programu(
         boje,
     );
     zatvori.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+}
+
+/// Skupine prečaca: naslov skupine i parovi (radnja, ključ prečaca). Lijevi stupac su Datoteka i
+/// Uređivanje, a desni crtanje, odabir i karta.
+const PRECACI: [(&str, &[(&str, &str)]); 5] = [
+    (
+        "precaci-datoteka",
+        &[
+            ("izbornik-datoteka-novi", "precac-novi"),
+            ("izbornik-datoteka-otvori", "precac-otvori"),
+            ("izbornik-datoteka-spremi", "precac-spremi"),
+            ("izbornik-datoteka-spremi-kao", "precac-spremi-kao"),
+        ],
+    ),
+    (
+        "precaci-uredjivanje",
+        &[
+            ("gumb-ponisti", "precac-ponisti"),
+            ("gumb-ponovi", "precac-ponovi"),
+            ("precaci-trazi", "precac-trazi"),
+            ("precaci-preimenuj", "precac-preimenuj"),
+            ("precaci-obrisi", "precac-obrisi"),
+            ("precaci-odustani", "precac-odustani"),
+            ("precaci-pomoc", "precac-pomoc"),
+        ],
+    ),
+    (
+        "precaci-crtanje",
+        &[
+            ("precaci-dodaj-tocku", "precac-klik"),
+            ("precaci-zavrsi", "precac-desni-klik"),
+            ("precaci-obrisi-tocku", "precac-obrisi-tocku"),
+            ("precaci-pomakni-tocku", "precac-povuci"),
+        ],
+    ),
+    (
+        "precaci-odabir",
+        &[
+            ("precaci-dodaj-u-odabir", "precac-klik"),
+            ("precaci-izbaci-iz-odabira", "precac-shift-klik"),
+            ("precaci-okvir", "precac-okvir"),
+            ("precaci-okvir-smjer", "precac-okvir-smjer"),
+        ],
+    ),
+    (
+        "precaci-karta",
+        &[
+            ("precaci-priblizi", "precac-kotacic"),
+            ("precaci-pomakni-kartu", "precac-povuci"),
+        ],
+    ),
+];
+
+/// Redak popisa prečaca: naslov skupine ili radnja s prečacem.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RedakPrecaca {
+    Skupina(String),
+    Precac { radnja: String, tipke: String },
+}
+
+/// Prečaci kako ih piše sustav: na Macu `⌘Z`, drugdje `Ctrl+Z`.
+#[must_use]
+pub fn retci_precaca(
+    katalog: &KatalogPoruka,
+    sustav: egui::os::OperatingSystem,
+) -> [Vec<RedakPrecaca>; 2] {
+    let stupac = |skupine: &[(&str, &[(&str, &str)])]| {
+        let mut retci = Vec::new();
+        for (naslov, parovi) in skupine {
+            retci.push(RedakPrecaca::Skupina(katalog.tekst(naslov)));
+            retci.extend(parovi.iter().map(|(radnja, tipke)| RedakPrecaca::Precac {
+                radnja: katalog.tekst(radnja),
+                tipke: oznaka_precaca(katalog, sustav, tipke),
+            }));
+        }
+        retci
+    };
+    [stupac(&PRECACI[..2]), stupac(&PRECACI[2..])]
+}
+
+fn crtaj_precace(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(900.0, 430.0));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 26.0),
+        &katalog.tekst("precaci-naslov"),
+        font_srednji(17.0),
+        boje.tekst,
+    );
+    let stupci = retci_precaca(katalog, ui.ctx().os());
+    for (i, stupac) in stupci.iter().enumerate() {
+        let x = okvir.min.x + 20.0 + i as f32 * 440.0;
+        let mut y = okvir.min.y + 62.0;
+        for redak in stupac {
+            y += crtaj_redak_precaca(ui, redak, x, y, boje);
+        }
+    }
+    let zatvori = gumb_dijaloga(
+        ui,
+        Rect::from_min_size(
+            pos2(okvir.max.x - 106.0, okvir.max.y - 42.0),
+            vec2(86.0, 30.0),
+        ),
+        &katalog.tekst("o-programu-zatvori"),
+        true,
+        false,
+        boje,
+    );
+    zatvori.clicked().then_some(IshodDijaloga::ZatvoriPoruku)
+}
+
+/// Vraća visinu retka.
+fn crtaj_redak_precaca(ui: &egui::Ui, redak: &RedakPrecaca, x: f32, y: f32, boje: &Boje) -> f32 {
+    match redak {
+        RedakPrecaca::Skupina(naslov) => {
+            tekst_lijevo(ui, pos2(x, y + 8.0), naslov, font_srednji(13.0), boje.tekst);
+            28.0
+        }
+        RedakPrecaca::Precac { radnja, tipke } => {
+            tekst_lijevo(ui, pos2(x, y), radnja, font_obicni(12.5), boje.tekst_2);
+            tekst_lijevo(
+                ui,
+                pos2(x + 212.0, y),
+                tipke,
+                font_srednji(12.5),
+                boje.tekst,
+            );
+            21.0
+        }
+    }
 }
 
 /// Odluke (9. 11. 2026.): nakon sukoba nudi se samo Spremi kao. Gumba koji bi pregazio izmjene
@@ -409,7 +1094,7 @@ fn crtaj_potvrdu_nespremljenog(
     );
 
     if odustani.clicked() {
-        Some(IshodDijaloga::PotvrdaOdustani)
+        Some(IshodDijaloga::ZatvoriPoruku)
     } else if ne_spremaj.clicked() {
         Some(IshodDijaloga::PotvrdaNeSpremaj(namjera))
     } else if spremi.clicked() {
@@ -488,7 +1173,7 @@ fn crtaj_upozorenje_brisanja(
     let obrisi = gumb_dijaloga(ui, okvir_obrisi, &oznaka_obrisi, false, true, boje);
 
     if odustani.clicked() {
-        Some(IshodDijaloga::ObrisiOdustani)
+        Some(IshodDijaloga::ZatvoriPoruku)
     } else if obrisi.clicked() {
         Some(IshodDijaloga::ObrisiPotvrdjeno(stavka))
     } else {
@@ -496,16 +1181,27 @@ fn crtaj_upozorenje_brisanja(
     }
 }
 
-fn crtaj_poruku_greske(
+/// Poruka s naslovom i gumbom „U redu”. Visina prati duljinu teksta.
+fn crtaj_poruku(
     ui: &mut egui::Ui,
     dostupan: Rect,
-    naslov: &str,
+    (naslov, boja_naslova): (&str, egui::Color32),
     poruka: &str,
     boje: &Boje,
     katalog: &KatalogPoruka,
 ) -> Option<IshodDijaloga> {
     let sirina = 440.0;
-    let visina = 160.0;
+    let visina_teksta = ui
+        .painter()
+        .layout(
+            poruka.to_owned(),
+            font_obicni(13.0),
+            boje.tekst_2,
+            sirina - 40.0,
+        )
+        .size()
+        .y;
+    let visina = 105.0 + visina_teksta.max(55.0);
     let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, visina));
 
     zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
@@ -515,12 +1211,12 @@ fn crtaj_poruku_greske(
         pos2(okvir.min.x + 20.0, okvir.min.y + 24.0),
         naslov,
         font_srednji(15.0),
-        boje.crvena,
+        boja_naslova,
     );
 
     let tekst_okvir = Rect::from_min_size(
         pos2(okvir.min.x + 20.0, okvir.min.y + 50.0),
-        vec2(sirina - 40.0, 55.0),
+        vec2(sirina - 40.0, visina - 105.0),
     );
     ui.put(
         tekst_okvir,
@@ -661,4 +1357,21 @@ fn gumb_dijaloga(
     let odg = ui.interact(okvir, id, Sense::click());
     odg.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), tekst));
     odg
+}
+
+#[cfg(test)]
+mod testovi {
+    use super::*;
+
+    #[test]
+    fn ostali_prozorcici_ne_crtaju_one_s_vlastitom_granom() {
+        let ctx = egui::Context::default();
+        let katalog = KatalogPoruka::hrvatski();
+        let mut izlaz = ctx.run_ui(egui::RawInput::default(), |ui| {
+            let mut d = AktivniDijalog::SukobSpremanja;
+            let boje = Boje::za_temu(false);
+            assert!(crtaj_ostale(ui, ui.max_rect(), &mut d, &boje, &katalog).is_none());
+        });
+        izlaz.textures_delta.clear();
+    }
 }

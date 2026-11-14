@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+<Document>
+  <name>Ispit podjele na slojeve</name>
+  <Folder>
+    <name>Mapa 1: samo točke</name>
+    <Placemark><name>T1</name><Point><coordinates>18.61,45.51,0</coordinates></Point></Placemark>
+    <Placemark><name>T2</name><Point><coordinates>18.62,45.52,0</coordinates></Point></Placemark>
+    <Placemark><name>T3</name><Point><coordinates>18.63,45.53,0</coordinates></Point></Placemark>
+  </Folder>
+  <Folder>
+    <name>Mapa 2: točke i linije</name>
+    <Placemark><name>T4</name><Point><coordinates>18.64,45.54,0</coordinates></Point></Placemark>
+    <Placemark><name>T5</name><Point><coordinates>18.65,45.55,0</coordinates></Point></Placemark>
+    <Placemark><name>L1</name><LineString><coordinates>18.60,45.50,0 18.61,45.51,0</coordinates></LineString></Placemark>
+    <Placemark><name>L2</name><LineString><coordinates>18.62,45.52,0 18.63,45.53,0</coordinates></LineString></Placemark>
+  </Folder>
+  <Folder>
+    <name>Mapa 3: sve vrste i miješani MultiGeometry</name>
+    <Placemark><name>T6</name><Point><coordinates>18.66,45.56,0</coordinates></Point></Placemark>
+    <Placemark><name>L3</name><LineString><coordinates>18.66,45.56,0 18.67,45.57,0</coordinates></LineString></Placemark>
+    <Placemark>
+      <name>Trag1</name>
+      <gx:Track>
+        <when>2026-11-07T08:00:00Z</when>
+        <when>2026-11-07T08:01:00Z</when>
+        <gx:coord>18.67 45.57 85.0</gx:coord>
+        <gx:coord>18.68 45.58 85.5</gx:coord>
+      </gx:Track>
+    </Placemark>
+    <Placemark>
+      <name>P1</name>
+      <Polygon>
+        <outerBoundaryIs><LinearRing><coordinates>18.60,45.50,0 18.62,45.50,0 18.62,45.52,0 18.60,45.52,0 18.60,45.50,0</coordinates></LinearRing></outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>MijesaniMG</name>
+      <MultiGeometry>
+        <Point><coordinates>18.69,45.59,0</coordinates></Point>
+        <LineString><coordinates>18.68,45.58,0 18.69,45.59,0</coordinates></LineString>
+      </MultiGeometry>
+    </Placemark>
+  </Folder>
+  <Folder>
+    <name>Mapa 4: prazna mapa</name>
+  </Folder>
+</Document>
+</kml>

@@ -1,5 +1,67 @@
 # Popis promjena
 
+## 0.0.6 alfa (probno, 14. 11. 2026.)
+
+- Novo: natpisi na karti. Uz rijeku ili kanal naziv ide uz liniju i prati njezin zavoj, a ponavlja se kad
+  zumiraš bliže. Uz točku stoji desno od znaka, a u liku unutar lika. Natpisi se ne preklapaju: kad nema
+  mjesta, manje važan se ne crta. U ploči Stil, kartica Natpis, uključuje se natpis sloja i bira veličina,
+  boja, kurziv i bijeli obrub. QGIS otvara iste natpise.
+- Novo: izvoz. Desni klik na mapu ili sloj, „Izvezi…”, ili cijeli projekt iz izbornika Datoteka. Bira se
+  KML, KMZ, GeoJSON ili SHP, a prozorčić prije izvoza kaže što ide u datoteku i što se gubi, npr.
+  isprekidana crta ili šrafura. SHP se piše u odabranom sustavu (zadano HTRS96/TM), jedna datoteka po sloju.
+- Novo: uvoz GeoJSON-a, shapefilea i GeoPackagea, istim gumbom „Uvezi sloj”. Kad datoteka ne kaže u kojem
+  je sustavu, program pita i predloži sustav po koordinatama. Iz GeoPackagea se biraju slojevi, a kopiraju
+  se u projekt s nazivima, opisima i stilom; izvorna datoteka se ne mijenja. U shapefileu se dobro čitaju
+  č, ć, š, ž i đ i kad `.cpg` kaže krivu kodnu stranicu.
+- Novo: automatsko spremanje. Dok ima nespremljenih izmjena, program svakih 30 sekundi sprema kopiju u
+  svoju mapu. Projekt se mijenja tek na Spremi. Ako se program sruši, pri sljedećem pokretanju nudi Vrati
+  ili Odbaci.
+- Ploča Slojevi: kotačić iznad ploče sad pomiče stablo, a ne kartu, i desno je klizač. Dugi nazivi završavaju
+  s „…”, a mapa broji i podmape. Rezultati tražilice više se ne skrivaju ispod alata i kažu u kojem je sloju
+  objekt.
+
+## 0.0.5 alfa (probno, 10. 11. 2026.)
+
+- Novo: uvoz KML-a i KMZ-a iz Google Eartha, gumbom „Uvezi sloj” u ploči Slojevi ili iz izbornika
+  Datoteka. Sve ide u novu mapu nazvanu po datoteci. Svaka mapa Google Eartha ostaje mapa, a njezini objekti
+  idu u slojeve Točke, Linije i Poligoni. Prenose se nazivi, opisi, rupe u poligonima, visine i boje.
+  Linija s točkom natpisa postaje dva objekta istog naziva. Ono što karta zasad ne prikazuje (mrežne veze,
+  slike preko karte, obilasci) navede se nakon uvoza, a cijeli uvoz poništava se jednim korakom. Na
+  `myplaces.kml` od 147 MB čitanje i uvoz traju oko pola sekunde.
+- Novo: ploča Stil. Desni klik na sloj ili objekt u ploči Slojevi, pa „Stil”. Bira se jedna od osam boja ili
+  bilo koja druga, debljina, prozirnost, vrsta crte (puna, isprekidana, točkasta, crta-točka) i ispuna lika
+  (puna, šrafura, bez ispune), a za točke veličina. Iz retka objekta mijenja se samo taj objekt ili, uz
+  „Cijeli sloj”, cijeli sloj. Karta se mijenja odmah, a cijelo povlačenje klizača poništava se jednim
+  korakom. Stil se sprema u GeoPackage, pa ga QGIS otvara isti.
+- Novo: gumb „?” u gornjoj traci, tipka F1 ili ⌘/ (Ctrl+/ drugdje) otvaraju popis prečaca tipkovnice i
+  miša. „O programu” je i dalje u izborniku Pomoć.
+- Program sam prepoznaje sustav. Na Macu popis prečaca piše ⌘, ⇧, delete i dodirnu plohu (dva prsta,
+  štipanje), a na Windowsu i Linuxu Ctrl, Shift, Delete i kotačić. Na Macu je ⌃ + klik desni klik, kao u
+  drugim programima za Mac; na Windowsu i Linuxu Ctrl + klik ostaje običan klik.
+- Objekte, slojeve i mape sad briše i ⌘ + delete na Macu (Ctrl + Backspace drugdje), kao u Finderu. Delete
+  i fn + delete rade kao i dosad.
+- Sam Backspace (na Macu tipka delete) briše samo točku: zadnju dok crtaš, a odabranu na gotovom objektu.
+  Dosad je bez odabrane točke brisao cijeli objekt, pa se lako moglo obrisati više nego što si htio.
+- Lik iz Google Eartha bez ispune dobiva „Bez ispune”.
+
+## 0.0.4 alfa (probno, 10. 11. 2026.)
+
+- Mapa ili sloj premješta se u drugu mapu desnim klikom i stavkom „Premjesti u”, koja nudi sve mape i
+  „Izvan mapa”. Mapa ne nudi samu sebe ni svoje podmape.
+- Isto se može povlačenjem mišem: ispušteno na mapu ide na kraj te mape, a ispušteno na sloj ide ispred
+  njega. Premještanje se poništava kao i svaka druga izmjena.
+- Objekt se na isti način prebacuje u drugi sloj iste vrste: poligon u sloj poligona, linija u sloj linija.
+  Podizbornik pokazuje mape kao natpise, a nudi samo slojeve u koje objekt smije.
+- Desni klik sad završava crtu, lik ili mjerenje, umjesto dvoklika. Dok crtaš, Backspace briše zadnju točku.
+- Čim je objekt nacrtan, otvara se prozorčić s nazivom. Predloženi naziv, npr. „Poligon 3”, sav je označen,
+  pa ga upisivanje zamijeni. Enter sprema naziv, a Esc ostavlja predloženi.
+- Nakon crtanja alat se vraća na Odaberi. Dosad je ostajao uključen, iako je karta već prešla na odabir.
+- Odabir kao u AutoCAD-u: klik na objekt dodaje ga u odabir, a Shift + klik ga izbacuje. Klik na prazno
+  mjesto počinje okvir, a drugi klik ga zatvara. Okvir slijeva nadesno bira samo ono što je cijelo u njemu,
+  a zdesna nalijevo sve što dotakne. Esc poništava odabir.
+- Delete briše sve odabrane objekte odjednom, a poništava se jednim korakom.
+- Klik na točku odabranog objekta odabire tu točku, a Backspace je briše. Desni klik više ne briše točku.
+
 ## 0.0.3 alfa (probno, 10. 11. 2026.)
 
 - Pri zatvaranju programa „Ne spremaj” nije zatvaralo prozor, nego je pitanje stalno dolazilo ponovno, pa se

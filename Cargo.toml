@@ -1,5 +1,5 @@
 [workspace]
-members = ["geometrija", "geopaket", "karta", "koordinate", "prozor", "qgis", "slojevi", "xtask"]
+members = ["formati", "geometrija", "geopaket", "karta", "koordinate", "prozor", "qgis", "slojevi", "xtask"]
 exclude = ["probe"]
 resolver = "3"
 

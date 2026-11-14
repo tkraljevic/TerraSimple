@@ -8,15 +8,35 @@ pub mod datoteka;
 mod datoteka_testovi;
 pub mod dijalozi;
 pub mod ikone;
+pub mod izvoz;
+#[cfg(test)]
+mod izvoz_testovi;
 pub mod karta_prozora;
+pub mod naziv_objekta;
 pub mod novi_sloj;
+pub mod oporavak;
+#[cfg(test)]
+mod oporavak_testovi;
 pub mod ploca;
+#[cfg(test)]
+mod ploca_testovi;
 pub mod poruke;
+#[cfg(test)]
+mod precaci_testovi;
+pub mod premjestanje;
 pub mod primjer;
 pub mod qgis_veza;
 pub mod sastavnice;
 pub mod stanje;
+pub mod stil;
+#[cfg(test)]
+mod stil_testovi;
 pub mod tema;
 pub mod trazilica;
 #[cfg(test)]
 mod trazilica_testovi;
+pub mod unos;
+pub mod uvoz;
+pub mod uvoz_gpkg;
+#[cfg(test)]
+mod uvoz_testovi;

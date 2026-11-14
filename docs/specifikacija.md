@@ -50,20 +50,20 @@ Korisnici: građevinari, geodeti, službe zaštite i spašavanja, komunalne slu�
 ## 4. UX pravila
 
 - **Nacrtaj odmah:** alati Točka, Linija, Poligon i Mjeri uvijek su dostupni. Nema obveznog prebacivanja sloja u način uređivanja za osobne objekte.
-- **Klik–klik–dvoklik:** klik dodaje vrh, dvoklik završava geometriju; Escape odustaje; Backspace uklanja posljednji vrh.
+- **Klik–klik–desni klik:** klik dodaje vrh, desni klik završava geometriju; Escape odustaje; Backspace uklanja posljednji vrh (Odluke (10. 11. 2026.), prije dvoklik).
 - **Uredi izravno:** odabir objekta otvara jednostavan panel; vrhovi se povlače, dodaju i brišu bez posebnog dijaloga.
 - **Sigurno uređivanje:** Undo/Redo za geometriju, atribute, stilove i raspored ispisa; upozorenje prije destruktivnih promjena.
-- **Poznata organizacija:** lijevi panel „Moja mjesta” s mapama i objektima; desni panel svojstava po potrebi; tablica se otvara na dnu ili u zasebnom prozoru.
+- **Poznata organizacija:** ploča **Slojevi** s mapama, slojevima i objektima, zadano desno (Odluke (6. 11. 2026.)); desni panel svojstava po potrebi; tablica se otvara na dnu ili u zasebnom prozoru.
 - **Napredne opcije po potrebi:** CRS, sheme i izvori podataka dostupni su, ali ne blokiraju jednostavne radnje.
 - **Pristupačnost:** tipkovnički prečaci, skaliranje sučelja, čitljive kontrole. Sučelje je zasad na hrvatskom, a tekstovi su u katalogu, pa se drugi jezik može dodati novom datotekom (Odluke (6. 11. 2026.)).
 
 ## 5. Sučelje
 
-Glavni prozor: gornji izbornik i mala traka alata; lijevo stablo mapa/slojeva; sredina karta; opcionalno desno svojstva; opcionalno dolje atributna tablica; statusna traka s koordinatama, CRS-om, mjerilom i stanjem mreže.
+Glavni prozor: gornji izbornik i mala traka alata; sredina karta; desno ploča Slojevi sa stablom mapa i slojeva (može se povući lijevo); svojstva po potrebi; opcionalno dolje atributna tablica; statusna traka s koordinatama, CRS-om, mjerilom i stanjem mreže.
 
 Predloženi izbornici: Datoteka, Uredi, Crtanje, Slojevi, Prikaz, Ispis, Alati, Pomoć.
 
-Osnovni tijek crtanja poligona: odabir alata → klikovi po karti → dvoklik → automatska površina → opcionalni naziv/stil → autosave. Zadani osobni sloj automatski se kreira ako ne postoji.
+Osnovni tijek crtanja poligona: odabir alata → klikovi po karti → desni klik → automatska površina → naziv u prozorčiću → alat se vraća na Odaberi → autosave. Zadani osobni sloj automatski se kreira ako ne postoji.
 
 ## 6. GIS podaci i kompatibilnost
 
@@ -196,4 +196,45 @@ Ukupno: približno 6–10 mjeseci kontinuiranog razvoja za ambicioznu v1.0 uz AI
 - **Kompatibilnost:** razdvojiti „podaci se otvaraju u QGIS-u” od „QGIS projekt i layout identični su”.
 - **GDAL/PROJ distribucija:** odlučiti između pakiranja biblioteka i čistog Rusta prema testu pokrivenosti formata i CRS-a.
 - **Scope creep:** napredne analize, 3D i puni QGZ odgoditi dok osnovni tijek crtanje → atributi → izvoz → ispis ne bude stabilan.
-- **Licenca projekta:** EUPL-1.2, kao i goCOP (Odluke (6. 11. 2026.)). Svaka ovisnost mora biti spojiva s njom, a to provjerava `cargo-deny`.
+- **Licenca projekta:** EUPL-1.2 (Odluke (6. 11. 2026.)). Svaka ovisnost mora biti spojiva s njom, a to provjerava `cargo-deny`.
+
+## 15. Odluke i primjedbe uz nacrt
+
+Primjedbe uz nacrt od 27. 10. 2026. Prijedlozi su, a ono što je usvojeno vodi se u [plan.md](plan.md).
+
+1. **HDKS** (Gauss-Krüger, zone 5 i 6) od v1.0. Stari planovi, katastar i DXF-ovi geodeta često su u
+   njemu. Transformacija službenom mrežom DGU-a ili barem 7 parametara, uz natpis o točnosti (~1 m).
+2. **Bez GDAL-a u v1.0.** WGS84, Web Mercator i HTRS96/TM pokriva čisti Rust. GDAL/PROJ tek za HDKS
+   sa službenom mrežom, ako ne ide drukčije, ili za GeoTIFF.
+3. **Projekt kao jedan GeoPackage:** stanje sučelja, stilovi i predlošci u vlastitim tablicama, slojevi
+   kao obični slojevi, stil u `layer_styles` koji QGIS sam čita.
+4. **Slikovni prekrivač u v1.0** (KML GroundOverlay i LatLonQuad): skenirana karta razvučena na kutove.
+5. **Pravi `myplaces.kml`** kao kriterij prihvaćanja: mape, NetworkLink, gx-proširenja, stilovi ikona.
+   Datoteka ne ide u repozitorij.
+6. **Upotrebljivo izdanje prije ispisa:** 0.x s podlogama, crtanjem, KML-om i GeoPackageom već
+   zamjenjuje Google Earth Pro većini ljudi; ispis i PDF poslije.
+7. **Ekran i PDF iz istog popisa vektorskih naredbi**, da se boje, debljine i natpisi ne raziđu.
+8. **Vrijeme** (KML TimeSpan i TimeStamp, vremenski klizač) za kasnije.
+9. **Reljef** kao vrsta podloge, nakon v1.0: sjenčanje, boje po visini i izohipse, visina ispod
+   pokazivača i visinski profil linije. Izvori: Copernicus DEM, SRTM, DGU, LiDAR.
+10. **Karta bez interneta** i iz PMTilesa, ne samo iz MBTilesa.
+
+Odluke (6. 11. 2026.):
+
+- Mjerilo je Google Earth Pro: jednako jednostavno, ali moderno i kompatibilno s QGIS-om. Google
+  najavljuje da Earth Pro za računala od 25. 6. 2027. više neće biti dostupan za preuzimanje.
+- Umjesto „Moja mjesta” ploča se zove **Slojevi**. Slojevi se slažu u mape, sloj se može napraviti ili
+  uvesti postojeći. Ploča je zadano desno, a povlačenjem za glavu može se premjestiti lijevo.
+- Podloga se može učitati iz datoteke ili dodati preko WMS-a.
+- Atributna tablica može se izvesti u CSV ili Excel, urediti i ponovno uvesti. Retke spaja stupac
+  `fid`, izmjene se pregledaju prije primjene, a obrisan redak ne briše objekt.
+- Sloj ima jednu vrstu geometrije (točke, linije ili poligoni). KML s miješanim objektima pri uvozu se
+  dijeli na više slojeva.
+- Gumb „Otvori u QGIS-u” stoji u gornjoj traci. Glavna boja je tirkizna. Globusa nema i ne treba.
+- TerraSimple radimo za svoje potrebe, a ne radi popularnosti: tko god želi, može ga koristiti i
+  prenamijeniti, a na privlačenje korisnika i suradnika ne trošimo vrijeme. Kod i sučelje su na
+  hrvatskom, a ako ga budemo htjeli izložiti široj publici, prepisat ćemo ga na engleski.
+- Sučelje se od početka radi tako da se jezik može dodati: tekstovi su u katalogu, podaci ne ovise o
+  jeziku, a brojevi i datumi idu preko jedne funkcije. Engleski prijevod se zasad ne radi.
+- Stil (vrsta crte, boja, debljina, ikona, natpis) bira se za cijeli sloj ili za jedan objekt.
+  Debljine su u milimetrima.

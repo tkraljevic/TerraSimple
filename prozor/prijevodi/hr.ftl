@@ -51,6 +51,52 @@ gumb-uvezi-sloj = Uvezi sloj
 gumb-nova-mapa = Mapa
 gumb-preimenuj = Preimenuj
 gumb-obrisi = Obriši
+izbornik-stil = Stil
+stil-naslov = Stil · { $naziv }
+stil-natrag = Natrag na slojeve
+stil-zatvori = Zatvori ploču Stil
+stil-cijeli-sloj = Cijeli sloj
+stil-samo-objekt = Samo ovaj objekt
+stil-boja = Boja
+stil-druga-boja = Druga boja
+stil-debljina = Debljina
+stil-debljina-ruba = Debljina ruba
+stil-prozirnost = Prozirnost
+stil-prozirnost-ispune = Prozirnost ispune
+stil-velicina = Veličina
+stil-vrsta-crte = Vrsta crte
+stil-ispuna = Ispuna
+crta-puna = Puna
+crta-isprekidana = Isprekidana
+crta-tockasta = Točkasta
+crta-crta-tocka = Crta-točka
+ispuna-puna = Puna
+ispuna-srafura = Šrafura
+ispuna-bez = Bez ispune
+stil-napomena = Stil se sprema uz sloj, pa ga QGIS otvara s njim.
+stil-zakljucano = Sloj je samo za čitanje, pa mu se stil ne može mijenjati.
+stil-vrati-zadano = Vrati zadano
+stil-gotovo = Gotovo
+stil-izgled = Izgled
+stil-natpis = Natpis
+natpis-prikazi = Prikaži nazive na karti
+natpis-velicina = Veličina slova
+natpis-kurziv = Kurziv
+natpis-obrub = Obrub
+natpis-za-sloj = Natpis vrijedi za cijeli sloj. Naziv se pokaže kad na karti ima mjesta za njega.
+boja-narancasta = Narančasta
+boja-crvena = Crvena
+boja-ljubicasta = Ljubičasta
+boja-plava = Plava
+boja-tirkizna = Tirkizna
+boja-zelena = Zelena
+boja-zuta = Žuta
+boja-tamnosiva = Tamnosiva
+boja-nijansa = Nijansa
+boja-zasicenost = Zasićenost
+boja-svjetlina = Svjetlina
+izbornik-premjesti-u = Premjesti u
+premjesti-izvan-mapa = Izvan mapa
 
 podloga-naslov = Podloga
 podloga-karta = Karta
@@ -75,6 +121,13 @@ broj-slojeva =
         [one] { $broj } sloj
         [few] { $broj } sloja
        *[other] { $broj } slojeva
+    }
+
+broj-mapa =
+    { $broj ->
+        [one] { $broj } mapa
+        [few] { $broj } mape
+       *[other] { $broj } mapa
     }
 
 broj-objekata =
@@ -150,6 +203,11 @@ novi-sloj-napomena = Sloj drži samo jednu vrstu, pa točke, linije i poligoni i
 novi-sloj-prazan-naziv = Upiši naziv sloja.
 gumb-odustani = Odustani
 gumb-napravi-sloj = Napravi sloj
+naziv-objekta-naslov = Naziv objekta
+naziv-objekta-polje = Naziv
+naziv-objekta-napomena = Naziv se poslije mijenja u ploči Slojevi, desnim klikom i „Preimenuj”.
+gumb-preskoci = Preskoči
+gumb-spremi-naziv = Spremi naziv
 objekt-tocka = Točka { $redni }
 objekt-linija = Linija { $redni }
 objekt-poligon = Poligon { $redni }
@@ -162,6 +220,117 @@ izbornik-datoteka-novi = Novi
 izbornik-datoteka-otvori = Otvori…
 izbornik-datoteka-spremi = Spremi
 izbornik-datoteka-spremi-kao = Spremi kao…
+izbornik-datoteka-uvezi = Uvezi sloj…
+izbornik-datoteka-izvezi = Izvezi…
+izbornik-izvezi = Izvezi…
+uvoz-sloj-tocke = Točke
+uvoz-sloj-linije = Linije
+uvoz-sloj-poligoni = Poligoni
+uvoz-mapa-bez-naziva = Mapa bez naziva
+izvoz-naslov = Izvoz u { $format }
+izvoz-datoteka = Datoteka: { $naziv }.{ $nastavak }, mjesto biraš u sljedećem koraku.
+izvoz-sto-ide = Što ide u datoteku
+izvoz-geometrije = Sve geometrije, nazivi, opisi i mape
+izvoz-geometrije-opis = { $objekti }, { $mape }.
+izvoz-atributi = Atributi
+izvoz-atributi-opis = Polja iz tablice idu u ExtendedData: { $popis }.
+izvoz-sustav = Koordinate se pretvaraju u WGS84
+izvoz-sustav-opis = Dio slojeva je u datoteci u drugom sustavu, a KML zna samo WGS84.
+izvoz-isprekidane = Isprekidane crte postaju pune
+izvoz-isprekidane-opis = KML nema isprekidane crte. Boja i širina ostaju.
+izvoz-srafura = Šrafura postaje puna ispuna
+izvoz-srafura-opis = KML nema šrafuru. Boja ostaje.
+izvoz-natpisi = Natpisi uz linije i likove
+izvoz-natpisi-opis = Google Earth naziv pokazuje samo uz točke.
+izvoz-kurziv = Kurziv natpisa
+izvoz-kurziv-opis = Google Earth nema kurziv. Veličina i boja natpisa ostaju.
+izvoz-izostavljeno = Neke vrijednosti ne idu u KML
+izvoz-izostavljeno-opis = Vrijednosti koje nisu tekst ni broj, npr. slike u tablici: { $broj }.
+izvoz-prazno = Nema objekata za izvoz
+izvoz-prazno-opis = Nacrtaj ili uvezi objekte, pa izvezi ponovno.
+izvoz-geojson-mape = Mape postaju svojstvo
+izvoz-geojson-mape-opis = GeoJSON nema mapa, pa svaki objekt pamti mapu i sloj u svojstvima mapa i sloj.
+izvoz-geojson-stil = Stil ide kao simplestyle
+izvoz-geojson-stil-opis = Boju i debljinu čitaju geojson.io i GitHub, a QGIS ih ne čita.
+izvoz-geojson-crte = Vrsta crte, šrafura i natpisi ne idu u GeoJSON
+izvoz-geojson-crte-opis = Ostaje samo boja, debljina i prozirnost.
+izvoz-shp-sustav = Koordinate u odabranom sustavu
+izvoz-shp-sustav-opis = Shapefile ide u { $sustav }, a .prj to zapisuje, pa ga QGIS stavlja na pravo mjesto.
+izvoz-shp-datoteke = Svaki sloj ide u svoju datoteku
+izvoz-shp-datoteke-opis = Shapefile ima jednu vrstu geometrije, pa datoteke dobivaju naziv po sloju.
+izvoz-shp-mape = Mape se ne zapisuju
+izvoz-shp-mape-opis = Shapefile nema mapa. Ostaju samo slojevi.
+izvoz-shp-stil = Stil ne ide u SHP
+izvoz-shp-stil-opis = Shapefile nema stila. Boje i debljine ostaju u projektu.
+izvoz-shp-visine = Visine ne idu u SHP
+izvoz-shp-visine-opis = Zapisuju se samo istok i sjever.
+izvoz-shp-polja = Nazivi polja skraćuju se na 10 znakova
+izvoz-shp-polja-opis = To je granica formata .dbf. Isti nazivi dobiju broj.
+izvoz-zadani-naziv = TerraSimple
+izvoz-gumb = Izvezi…
+izvoz-odustani = Odustani
+izvoz-gotov-naslov = Izvoz je gotov
+izvoz-gotov = U datoteku { $datoteka } izvezeno je: { $objekti }.
+izvoz-gotov-shp = Izvezeno je: { $objekti }, u { $datoteke } shapefilea, po jedan za svaki sloj.
+izvoz-greska-naslov = Izvoz nije uspio
+izvoz-greska = Datoteka { $datoteka } nije napisana. Provjeri smiješ li pisati u tu mapu i ima li mjesta na disku.
+oporavak-naslov = Vratiti nespremljeni rad?
+oporavak-poruka = TerraSimple se prošli put nije uredno zatvorio. Nespremljeni rad iz { $izvor } sačuvan je { $vrijeme }.
+oporavak-novi-projekt = novog projekta
+oporavak-vrati = Vrati
+oporavak-odbaci = Odbaci
+oporavak-vraceno-naslov = Rad je vraćen
+oporavak-vraceno = Vraćen je rad iz { $izvor }, sačuvan { $vrijeme }. Spremi ga sa Spremi kao, preko stare datoteke ili kao novu.
+oporavak-greska-naslov = Vraćanje nije uspjelo
+oporavak-greska = Kopija rada nije se mogla otvoriti.
+uvoz-gpkg-naslov = Uvoz sloja
+uvoz-gpkg-datoteka = Datoteka: { $datoteka }.gpkg
+uvoz-gpkg-slojevi = Slojevi u datoteci
+uvoz-gpkg-opis-sloja = { $objekti } · { $sustav }
+uvoz-gpkg-kopija = Odabrani slojevi kopiraju se u projekt, u novu mapu. Izvorna datoteka se ne mijenja.
+uvoz-gpkg-polja = Polja { $popis } ne kopiraju se, jer projekt zasad pamti samo naziv i opis. Ostaju u izvornoj datoteci.
+uvoz-gpkg-gumb = Uvezi { $slojevi }
+uvoz-gpkg-sazetak = Uvezeno je { $objekti } u { $slojevi }.
+uvoz-gpkg-prazno = U datoteci nema slojeva koje TerraSimple zna prikazati.
+uvoz-gpkg-greska = Datoteka nije GeoPackage ili se ne može pročitati.
+uvoz-izostavljena-svojstva = svojstva koja projekt ne pamti: { $popis }
+sustav-naslov = U kojem su koordinatnom sustavu podaci?
+sustav-poruka = Datoteka { $datoteka } nema zapisan koordinatni sustav. Odaberi sustav u kojem je nastala, pa provjeri gdje su objekti na karti.
+sustav-htrs-opis = EPSG:3765 · službeni sustav u Hrvatskoj
+sustav-hdks6-opis = EPSG:3908 · stari planovi istočno od 16° 30′ · točnost oko 1 m
+sustav-hdks5-opis = EPSG:3907 · stari planovi zapadno od 16° 30′ · točnost oko 1 m
+sustav-wgs-opis = EPSG:4326 · GPS i Google Earth
+sustav-uvezi = Uvezi
+uvoz-naslov = Uvoz je gotov
+uvoz-greska-naslov = Uvoz nije uspio
+uvoz-sazetak = Uvezeno je { $objekata } u { $slojeva } i { $mapa }. Sve je u novoj mapi na dnu ploče Slojevi, a uvoz se poništava jednim korakom.
+uvoz-broj-mapa =
+    { $broj ->
+        [one] { $broj } mapu
+        [few] { $broj } mape
+       *[other] { $broj } mapa
+    }
+uvoz-nije-uvezeno = Nije uvezeno ono što karta zasad ne prikazuje: { $popis }.
+uvoz-preskoceno-mrezne-veze = mrežne veze
+uvoz-preskoceno-slike = slike preko karte
+uvoz-preskoceno-slike-zaslona = slike na zaslonu
+uvoz-preskoceno-fotografije = fotografije
+uvoz-preskoceno-obilasci = obilasci
+uvoz-preskoceno-modeli = 3D modeli
+uvoz-preskoceno-prazne = prazne ili nepotpune geometrije
+uvoz-preskoceno-koordinate = geometrije s neispravnim koordinatama
+uvoz-preskoceno-odbijeno = geometrije koje projekt ne prima
+uvoz-greska-citanje = Datoteka se ne može pročitati. Provjeri postoji li još i smiješ li je otvoriti.
+uvoz-greska-xml = Datoteka nije ispravan KML, pa ništa nije uvezeno. Otvori je u Google Earthu i spremi ponovno.
+uvoz-greska-duboko = Datoteka ima previše razina mapa jedne u drugoj, pa ništa nije uvezeno.
+uvoz-greska-arhiva = KMZ datoteka nije ispravna arhiva, pa ništa nije uvezeno.
+uvoz-greska-nema-kml = U KMZ datoteci nema KML-a, pa nema što uvesti.
+uvoz-greska-putanja = KMZ datoteka sadrži putanju izvan arhive, pa se radi sigurnosti ne otvara.
+uvoz-greska-prevelika = KMZ datoteka se raspakira u neočekivano veliku datoteku, pa se radi sigurnosti ne otvara.
+uvoz-greska-json = GeoJSON datoteka nije ispravna, pa se ne može pročitati.
+uvoz-greska-bez-sustava = Datoteka ne kaže u kojem je koordinatnom sustavu.
+uvoz-greska-sustav = Datoteka je u koordinatnom sustavu koji program ne zna. Spremi je u QGIS-u u WGS84 ili HTRS96/TM, pa je uvezi ponovno.
+uvoz-greska-projekt = Uvezeno nije moglo ući u projekt: { $opis }. Projekt je ostao kakav je bio.
 # Prečaci: na Macu ⌘, drugdje Ctrl (Odluke (9. 11. 2026.)).
 precac-novi = { $sustav ->
     [mac] ⌘N
@@ -179,6 +348,69 @@ precac-spremi-kao = { $sustav ->
     [mac] ⇧⌘S
    *[ostali] Ctrl+Shift+S
 }
+precac-ponisti = { $sustav ->
+    [mac] ⌘Z
+   *[ostali] Ctrl+Z
+}
+precac-ponovi = { $sustav ->
+    [mac] ⇧⌘Z ili ⌘Y
+   *[ostali] Ctrl+Y ili Ctrl+Shift+Z
+}
+precac-trazi = { $sustav ->
+    [mac] ⌘F
+   *[ostali] Ctrl+F
+}
+precac-preimenuj = F2
+precac-obrisi = { $sustav ->
+    [mac] ⌘ + delete ili fn + delete
+   *[ostali] Delete ili Ctrl+Backspace
+}
+precac-odustani = Esc
+precac-pomoc = { $sustav ->
+    [mac] ⌘/ ili fn + F1
+   *[ostali] Ctrl+/ ili F1
+}
+precac-klik = klik
+precac-desni-klik = { $sustav ->
+    [mac] desni klik, ⌃ + klik ili dva prsta
+   *[ostali] desni klik
+}
+precac-obrisi-tocku = { $sustav ->
+    [mac] delete
+   *[ostali] Backspace
+}
+precac-povuci = povuci mišem
+precac-shift-klik = { $sustav ->
+    [mac] ⇧ + klik
+   *[ostali] Shift+klik
+}
+precac-okvir = klik na prazno, pa klik
+precac-okvir-smjer = slijeva nadesno ili obratno
+precac-kotacic = { $sustav ->
+    [mac] dva prsta gore-dolje ili štipanje
+   *[ostali] kotačić miša
+}
+precaci-naslov = Prečaci tipkovnice i miša
+precaci-datoteka = Datoteka
+precaci-uredjivanje = Uređivanje
+precaci-crtanje = Crtanje i točke
+precaci-odabir = Odabir na karti
+precaci-karta = Karta
+precaci-trazi = Traži mjesto ili objekt
+precaci-preimenuj = Preimenuj odabrano
+precaci-obrisi = Obriši odabrano
+precaci-odustani = Odustani od crteža ili odabira
+precaci-pomoc = Ovaj popis prečaca
+precaci-dodaj-tocku = Dodaj točku
+precaci-zavrsi = Završi crtu ili lik
+precaci-obrisi-tocku = Obriši zadnju ili odabranu točku
+precaci-pomakni-tocku = Pomakni točku
+precaci-dodaj-u-odabir = Dodaj objekt u odabir
+precaci-izbaci-iz-odabira = Izbaci objekt iz odabira
+precaci-okvir = Odaberi okvirom
+precaci-okvir-smjer = Cijeli objekti ili sve što dotakne
+precaci-priblizi = Približi ili udalji
+precaci-pomakni-kartu = Pomakni kartu
 
 potvrda-naslov = Nespremljene izmjene
 potvrda-poruka = Želiš li spremiti izmjene u projektu prije nastavka?

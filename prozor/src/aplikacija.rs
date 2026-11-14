@@ -8,6 +8,7 @@ use crate::dijalozi::{
 };
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::karta_prozora::{KartaProzora, StatusKarte, tekst_mjerila, zaklon};
+use crate::naziv_objekta::crtaj_prozorcic_naziva;
 use crate::novi_sloj::crtaj_prozorcic_novog_sloja;
 use crate::ploca::{
     crtaj_plocu_slojeva, obrisi_odabrano, pokreni_preimenovanje_odabranog, potvrdi_preimenovanje,
@@ -35,6 +36,8 @@ pub struct PostavkeAplikacije {
     /// Podloga s mreže. Pravi program je uključuje, a testovi rade bez mreže.
     pub podloga_s_mreze: bool,
     pub dijalog: Option<String>,
+    /// Mapa za automatsko spremanje u kopiju. Bez nje kopije nema, npr. u testovima.
+    pub oporavak: Option<PathBuf>,
 }
 
 #[must_use]
@@ -160,6 +163,16 @@ fn okvir_ploce(stanje: &StanjePrikaza, okvir_karte: Rect) -> Option<Rect> {
     ))
 }
 
+/// Kotačić iznad ploče pomiče ploču, a ne kartu: karta ga ispod ploče ne smije dobiti.
+fn preuzmi_klizanje(ui: &egui::Ui, okvir: Option<Rect>) -> f32 {
+    let pokazivac = ui.input(|i| i.pointer.hover_pos());
+    let nad_plocom = matches!((okvir, pokazivac), (Some(o), Some(p)) if o.contains(p));
+    if !nad_plocom {
+        return 0.0;
+    }
+    ui.input_mut(|i| std::mem::take(&mut i.smooth_scroll_delta).y)
+}
+
 pub struct Aplikacija {
     pub uredjivac: Uredjivac,
     pub stanje: StanjePrikaza,
@@ -168,6 +181,7 @@ pub struct Aplikacija {
     pub katalog: KatalogPoruka,
     pub datoteka: PodaciDatoteke,
     pub birac: Box<dyn BiracDatoteka>,
+    desni_klik_maca: crate::unos::DesniKlikMaca,
     pub qgis: Box<dyn crate::qgis_veza::PokretacQgisa>,
     pub aktivni_dijalog: Option<AktivniDijalog>,
     /// Korisnik je već odgovorio na pitanje pri zatvaranju, pa se prozor zatvara bez novog pitanja.
@@ -181,6 +195,7 @@ pub struct Aplikacija {
     pocetak: Instant,
     pub zadnje_vrijeme_okvira: Duration,
     pub pocetak_rada: Instant,
+    pub oporavak: Option<crate::oporavak::Oporavak>,
 }
 
 impl Default for Aplikacija {
@@ -192,6 +207,13 @@ impl Default for Aplikacija {
 /// Prozorčić koji se otvori sam, za snimke i pregled izgleda (`--dijalog <naziv>`).
 /// Stavke gornjeg izbornika koje nešto rade; ostale su zasad samo natpis.
 const STAVKE_S_RADNJOM: [&str; 3] = ["izbornik-datoteka", "izbornik-slojevi", "izbornik-pomoc"];
+
+/// Popis upozorenja nakon otvaranja otvara se i zatvara istim gumbom.
+fn preklopi_popis(dijalog: &mut AktivniDijalog) {
+    if let AktivniDijalog::UpozorenjaOtvaranja { otvoren_popis, .. } = dijalog {
+        *otvoren_popis = !*otvoren_popis;
+    }
+}
 
 pub(crate) fn dijalog_za_pregled(
     naziv: Option<&str>,
@@ -236,7 +258,24 @@ impl Aplikacija {
             // Izmišljeni likovi primjera su kod 16,0° E i 45,8° N.
             karta.karta().idi_na(16.004, 45.802, 16.5);
         }
-        let aktivni_dijalog = dijalog_za_pregled(postavke.dijalog.as_deref(), &katalog);
+        let izvoz = || {
+            let opseg = formati::OpsegIzvoza::Projekt;
+            AktivniDijalog::Izvoz(crate::izvoz::pripremi(
+                uredjivac.projekt(),
+                opseg,
+                None,
+                &katalog,
+            ))
+        };
+        let oporavak = postavke
+            .oporavak
+            .and_then(|m| crate::oporavak::Oporavak::novi(m).ok());
+        let ostatak = oporavak
+            .as_ref()
+            .and_then(|o| o.ostaci().into_iter().next());
+        let aktivni_dijalog = dijalog_za_pregled(postavke.dijalog.as_deref(), &katalog)
+            .or_else(|| (postavke.dijalog.as_deref() == Some("izvoz")).then(izvoz))
+            .or_else(|| ostatak.map(AktivniDijalog::Oporavak));
         Self {
             uredjivac,
             stanje,
@@ -245,6 +284,7 @@ impl Aplikacija {
             katalog,
             datoteka: PodaciDatoteke::nova(),
             birac: Box::new(SustavskiBirac),
+            desni_klik_maca: crate::unos::DesniKlikMaca::default(),
             qgis: Box::new(crate::qgis_veza::SustavskiQgis),
             aktivni_dijalog,
             zatvaranje_potvrdjeno: false,
@@ -260,6 +300,66 @@ impl Aplikacija {
             pocetak: Instant::now(),
             zadnje_vrijeme_okvira: Duration::ZERO,
             pocetak_rada: Instant::now(),
+            oporavak,
+        }
+    }
+
+    /// Kopija nespremljenog rada. Dok ima izmjena, okvir se crta barem svakih 5 s, da kopija
+    /// nastane i kad korisnik ništa ne dira.
+    fn automatsko_spremanje(&mut self, ctx: &egui::Context) {
+        let Some(o) = self.oporavak.as_mut() else {
+            return;
+        };
+        o.tik(
+            &self.uredjivac,
+            self.datoteka.staza.as_deref(),
+            Instant::now(),
+        );
+        if self.uredjivac.je_li_izmijenjen() {
+            ctx.request_repaint_after(Duration::from_secs(5));
+        }
+    }
+
+    fn obradi_oporavak(&mut self, vrati: bool, dijalog: &AktivniDijalog) {
+        self.aktivni_dijalog = None;
+        let (AktivniDijalog::Oporavak(ostatak), Some(o)) = (dijalog, self.oporavak.as_mut()) else {
+            return;
+        };
+        if !vrati {
+            o.odbaci(ostatak);
+            self.aktivni_dijalog = o.ostaci().into_iter().next().map(AktivniDijalog::Oporavak);
+            return;
+        }
+        let otvoreno = o
+            .preuzmi(ostatak)
+            .map_err(|e| e.to_string())
+            .and_then(|staza| {
+                radnja_otvori(
+                    &mut self.uredjivac,
+                    &mut self.datoteka,
+                    &mut self.stanje,
+                    &self.katalog,
+                    staza,
+                )
+            });
+        self.aktivni_dijalog = Some(match otvoreno {
+            Ok(_) => self.vraceni_rad(ostatak),
+            Err(_) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("oporavak-greska-naslov"),
+                poruka: self.katalog.tekst("oporavak-greska"),
+            },
+        });
+    }
+
+    /// Vraćeni rad nema svoju datoteku, pa Spremi pita kamo, i ostaje nespremljen dok se ne spremi.
+    fn vraceni_rad(&mut self, ostatak: &crate::oporavak::Ostatak) -> AktivniDijalog {
+        self.datoteka.staza = None;
+        self.uredjivac.oznaci_nespremljeno();
+        self.karta.novi_projekt(self.uredjivac.projekt());
+        let tekstovi = crate::oporavak::tekstovi_ostatka(&self.katalog, ostatak);
+        AktivniDijalog::Obavijest {
+            naslov: self.katalog.tekst("oporavak-vraceno-naslov"),
+            poruka: self.katalog.s_tekstovima("oporavak-vraceno", &tekstovi),
         }
     }
 
@@ -297,6 +397,14 @@ impl Aplikacija {
                 &mut self.ikone,
                 &boje,
             );
+        } else if self.stanje.naziv_novog.is_some() {
+            crtaj_prozorcic_naziva(
+                ui,
+                &mut self.uredjivac,
+                &mut self.stanje,
+                &self.katalog,
+                &boje,
+            );
         } else if self.aktivni_dijalog.is_none() {
             // Dok dijalog čeka odgovor, Delete i prečaci ne smiju mijenjati projekt ispod njega.
             self.obradi_tipkovnicu(ui);
@@ -324,9 +432,16 @@ impl Aplikacija {
         if std::mem::take(&mut self.stanje.zatrazeno_brisanje) {
             self.pokreni_brisanje();
         }
+        if std::mem::take(&mut self.stanje.zatrazen_uvoz) {
+            self.izvrsi_uvoz();
+        }
+        if let Some(stavka) = self.stanje.zatrazen_izvoz.take() {
+            self.pokreni_izvoz(formati::OpsegIzvoza::Stavka(stavka));
+        }
         self.crtaj_statusnu_traku(ui, w, h, &boje);
         self.crtaj_slojeve_dijaloga(ui, &boje);
 
+        self.automatsko_spremanje(ui.ctx());
         self.zadnje_vrijeme_okvira = pocetak.elapsed();
     }
 
@@ -394,25 +509,37 @@ impl Aplikacija {
 
     fn izvrsi_precac(&mut self, key: Key, modifiers: &egui::Modifiers) {
         // `command` je ⌘ na Macu, a Ctrl drugdje, pa Ctrl na Macu nije prečac (Odluke (9. 11. 2026.)).
+        if je_precac_pomoci(key, modifiers.command) {
+            self.aktivni_dijalog = Some(AktivniDijalog::Precaci);
+            return;
+        }
+        if self.smije_brisati_tipkom(key, modifiers.command) {
+            self.pokreni_brisanje();
+            return;
+        }
         if modifiers.command {
             self.obradi_cmd_precac(key, modifiers.shift);
             return;
         }
-        if key == Key::F2 {
-            let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
-            return;
-        }
-        if key == Key::Escape {
-            self.trazilica.ponisti_ili_zatvori();
-            return;
-        }
-        if self.smije_brisati_tipkom(key) {
-            self.pokreni_brisanje();
+        match key {
+            Key::F2 => {
+                let _ = pokreni_preimenovanje_odabranog(self.uredjivac.projekt(), &mut self.stanje);
+            }
+            Key::Escape => {
+                let _ = self.trazilica.ponisti_ili_zatvori();
+            }
+            _ => {}
         }
     }
 
-    fn smije_brisati_tipkom(&mut self, key: Key) -> bool {
-        let tipka_brisanja = key == Key::Delete || key == Key::Backspace;
+    /// Objekte, mape i slojeve briše Delete ili ⌘ + Backspace, kao u Finderu (Odluke (10. 11. 2026.)).
+    /// Sam Backspace briše samo točku, a to radi karta.
+    fn smije_brisati_tipkom(&mut self, key: Key, cmd: bool) -> bool {
+        let tipka_brisanja = match key {
+            Key::Delete => true,
+            Key::Backspace => cmd,
+            _ => false,
+        };
         tipka_brisanja && !self.karta.u_tijeku() && !self.trazilica.fokusirana
     }
 
@@ -585,12 +712,13 @@ impl Aplikacija {
             labela: &self.katalog.tekst("gumb-pomoc"),
         };
         if gumb_ikona(ui, &mut self.ikone, &opis_pomoc, tamna, boje).clicked() {
-            self.aktivni_dijalog = Some(AktivniDijalog::OProgramu);
+            self.aktivni_dijalog = Some(AktivniDijalog::Precaci);
         }
     }
 
     fn crtaj_podrucje_karte(&mut self, ui: &mut egui::Ui, okvir_karte: Rect, boje: &Boje) {
         ui.painter().rect_filled(okvir_karte, 0.0, boje.k_zemlja);
+        self.stanje.klizanje_ploce = preuzmi_klizanje(ui, okvir_ploce(&self.stanje, okvir_karte));
         self.karta.prikazi(
             ui,
             okvir_karte,
@@ -623,7 +751,7 @@ impl Aplikacija {
         };
         let lijevi_x = okvir_karte.min.x + pomak_lijevo + Razmaci::RUB;
 
-        self.crtaj_trazilicu(ui, pos2(lijevi_x, okvir_karte.min.y + 12.0), boje);
+        // Tražilica ide poslije alata i ploče mjerenja, da popis rezultata leži iznad njih.
         self.crtaj_alatnu_traku(ui, pos2(lijevi_x, okvir_karte.min.y + 68.0), boje);
         self.karta.crtaj_plocu_mjerenja(
             ui,
@@ -634,6 +762,7 @@ impl Aplikacija {
             &mut self.ikone,
             boje,
         );
+        self.crtaj_trazilicu(ui, pos2(lijevi_x, okvir_karte.min.y + 12.0), boje);
         let sredina = (lijevi_x + desni_rub) / 2.0;
         self.karta.crtaj_poruku(
             ui,
@@ -919,7 +1048,133 @@ impl Aplikacija {
                 }
             }
             StavkaIzbornikaDatoteka::SpremiKao => self.izvrsi_spremi_kao(),
+            StavkaIzbornikaDatoteka::Uvezi => self.izvrsi_uvoz(),
+            StavkaIzbornikaDatoteka::Izvezi => self.pokreni_izvoz(formati::OpsegIzvoza::Projekt),
         }
+    }
+
+    /// Prvo pregled onoga što ide u KML, a datoteka se bira tek nakon toga.
+    pub fn pokreni_izvoz(&mut self, opseg: formati::OpsegIzvoza) {
+        let priprema = crate::izvoz::pripremi(
+            self.uredjivac.projekt(),
+            opseg,
+            self.datoteka.staza.as_deref(),
+            &self.katalog,
+        );
+        self.aktivni_dijalog = Some(AktivniDijalog::Izvoz(priprema));
+    }
+
+    fn izvrsi_izvoz(&mut self, dijalog: &AktivniDijalog) {
+        let AktivniDijalog::Izvoz(priprema) = dijalog else {
+            return;
+        };
+        let nastavak = priprema.format.nastavak();
+        let ime = format!("{}.{nastavak}", priprema.naziv);
+        let Some(staza) = self.birac.izvezi_datoteku(&ime, nastavak) else {
+            return;
+        };
+        let ishod = crate::izvoz::izvezi(self.uredjivac.projekt(), priprema, &staza, &self.katalog);
+        self.aktivni_dijalog = Some(match ishod {
+            Ok(poruka) => AktivniDijalog::Obavijest {
+                naslov: self.katalog.tekst("izvoz-gotov-naslov"),
+                poruka,
+            },
+            Err(poruka) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("izvoz-greska-naslov"),
+                poruka,
+            },
+        });
+    }
+
+    /// KML ili KMZ ide u novu mapu, a karta se pomiče na uvezeno.
+    fn izvrsi_uvoz(&mut self) {
+        let Some(staza) = self.birac.uvezi_datoteku() else {
+            return;
+        };
+        let gpkg = staza
+            .extension()
+            .is_some_and(|n| n.eq_ignore_ascii_case("gpkg"));
+        if gpkg {
+            self.aktivni_dijalog = Some(match crate::uvoz_gpkg::pripremi(&staza, &self.katalog) {
+                Ok(priprema) => AktivniDijalog::UvozGpkg(priprema),
+                Err(poruka) => AktivniDijalog::PorukaGreske {
+                    naslov: self.katalog.tekst("uvoz-greska-naslov"),
+                    poruka,
+                },
+            });
+            return;
+        }
+        self.uvezi_u_sustavu(staza, None);
+    }
+
+    /// Uvoz datoteke. Kad datoteka ne kaže sustav, prozorčić pita za njega i uvozi ponovno.
+    fn uvezi_u_sustavu(&mut self, staza: PathBuf, sustav: Option<koordinate::Sustav>) {
+        let ishod = crate::uvoz::uvezi_datoteku(
+            &mut self.uredjivac,
+            &mut self.stanje,
+            &self.katalog,
+            &staza,
+            sustav,
+        );
+        self.aktivni_dijalog = Some(match ishod {
+            Ok(sazetak) => {
+                if let Some((d, s, zum)) =
+                    crate::uvoz::obuhvat_mape(self.uredjivac.projekt(), sazetak.mapa)
+                {
+                    self.karta.karta().idi_na(d, s, zum);
+                }
+                AktivniDijalog::Obavijest {
+                    naslov: self.katalog.tekst("uvoz-naslov"),
+                    poruka: crate::uvoz::poruka_sazetka(&self.katalog, &sazetak),
+                }
+            }
+            Err(crate::uvoz::GreskaUvozaDatoteke::BezSustava(odabran)) => {
+                AktivniDijalog::SustavUvoza { staza, odabran }
+            }
+            Err(crate::uvoz::GreskaUvozaDatoteke::Poruka(poruka)) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("uvoz-greska-naslov"),
+                poruka,
+            },
+        });
+    }
+
+    fn izvrsi_uvoz_sustava(&mut self, dijalog: &AktivniDijalog) {
+        if let AktivniDijalog::SustavUvoza { staza, odabran } = dijalog {
+            self.uvezi_u_sustavu(staza.clone(), Some(*odabran));
+        }
+    }
+
+    /// Odabrani slojevi idu u novu mapu, a karta se pomiče na njih.
+    fn izvrsi_uvoz_gpkg(&mut self, dijalog: &AktivniDijalog) {
+        let AktivniDijalog::UvozGpkg(priprema) = dijalog else {
+            return;
+        };
+        let ishod = crate::uvoz_gpkg::uvezi(&mut self.uredjivac, priprema);
+        self.aktivni_dijalog = Some(match ishod {
+            Ok(s) => {
+                self.stanje.postavi_otvorenost_mape(s.mapa, true);
+                self.stanje.odabrano = Some(Odabir::Mapa(s.mapa));
+                if let Some((d, sirina, zum)) =
+                    crate::uvoz::obuhvat_mape(self.uredjivac.projekt(), s.mapa)
+                {
+                    self.karta.karta().idi_na(d, sirina, zum);
+                }
+                let tekstovi = [
+                    ("objekti", self.katalog.broj_objekata(s.objekata)),
+                    ("slojevi", self.katalog.broj_slojeva(s.slojeva)),
+                ];
+                AktivniDijalog::Obavijest {
+                    naslov: self.katalog.tekst("uvoz-naslov"),
+                    poruka: self.katalog.s_tekstovima("uvoz-gpkg-sazetak", &tekstovi),
+                }
+            }
+            Err(g) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("uvoz-greska-naslov"),
+                poruka: self
+                    .katalog
+                    .s_tekstovima("uvoz-greska-projekt", &[("opis", g.to_string())]),
+            },
+        });
     }
 
     fn pokreni_novi(&mut self) {
@@ -1031,6 +1286,10 @@ impl Aplikacija {
     }
 
     fn pokreni_brisanje(&mut self) {
+        if self.karta.broj_odabranih() > 1 {
+            let _ = self.karta.obrisi_odabrane(&mut self.uredjivac);
+            return;
+        }
         let Some(cilj) = self.stanje.odabrano else {
             return;
         };
@@ -1109,24 +1368,23 @@ impl Aplikacija {
                 self.aktivni_dijalog = None;
                 self.nastavi_nakon_potvrde(ui, namjera);
             }
-            IshodDijaloga::PotvrdaOdustani => self.aktivni_dijalog = None,
+            IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
             IshodDijaloga::ObrisiPotvrdjeno(stavka) => self.obradi_potvrdu_brisanja(stavka),
-            IshodDijaloga::ObrisiOdustani => self.aktivni_dijalog = None,
             IshodDijaloga::UpozorenjaPreklopiPopis => {
-                if let AktivniDijalog::UpozorenjaOtvaranja {
-                    ref mut otvoren_popis,
-                    ..
-                } = dijalog
-                {
-                    *otvoren_popis = !*otvoren_popis;
-                }
+                preklopi_popis(&mut dijalog);
                 self.aktivni_dijalog = Some(dijalog);
             }
-            IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
             IshodDijaloga::SukobSpremiKao => {
                 self.aktivni_dijalog = None;
                 self.izvrsi_spremi_kao();
             }
+            IshodDijaloga::Prihvati => {
+                self.aktivni_dijalog = None;
+                self.izvrsi_izvoz(&dijalog);
+                self.izvrsi_uvoz_gpkg(&dijalog);
+                self.izvrsi_uvoz_sustava(&dijalog);
+            }
+            IshodDijaloga::Oporavak(vrati) => self.obradi_oporavak(vrati, &dijalog),
         }
     }
 
@@ -1201,6 +1459,11 @@ impl eframe::App for Aplikacija {
         self.crtaj_sucelje(ui);
         self.obradi_snimanje_zaslona(ui);
     }
+
+    /// Program sam prepoznaje sustav: na Macu je ⌃ + klik desni klik.
+    fn raw_input_hook(&mut self, ctx: &egui::Context, unos: &mut egui::RawInput) {
+        self.desni_klik_maca.obradi(ctx.os(), unos);
+    }
 }
 
 pub fn spremi_sliku_zaslona(slika: &egui::ColorImage, putanja: &Path) {
@@ -1219,6 +1482,11 @@ pub fn spremi_sliku_zaslona(slika: &egui::ColorImage, putanja: &Path) {
         slika.height() as u32,
         image::ColorType::Rgba8,
     );
+}
+
+/// F1 ili ⌘/ (Ctrl+/ drugdje) otvara popis prečaca.
+const fn je_precac_pomoci(key: Key, cmd: bool) -> bool {
+    matches!(key, Key::F1) || (cmd && matches!(key, Key::Slash))
 }
 
 #[cfg(test)]
@@ -1322,6 +1590,7 @@ mod testovi {
                 snimka: Some(PathBuf::from("a.png")),
                 podloga_s_mreze: false,
                 dijalog: None,
+                oporavak: None,
             }
         );
 
@@ -1378,6 +1647,141 @@ mod testovi {
         assert!(harness.query_by_label("Kanali").is_none());
         assert!(harness.query_by_label("Parcela 7a").is_none());
         assert!(harness.state().uredjivac.je_li_izmijenjen());
+    }
+
+    /// Mapa na vrhu stabla.
+    fn mapa_po_nazivu(app: &Aplikacija, naziv: &str) -> slojevi::IdMape {
+        let projekt = app.uredjivac.projekt();
+        projekt
+            .korijen()
+            .iter()
+            .find_map(|s| match *s {
+                Stavka::Mapa(id) if projekt.mapa(id).is_some_and(|m| m.naziv == naziv) => Some(id),
+                _ => None,
+            })
+            .expect("mapa")
+    }
+
+    fn mapa_sloja(app: &Aplikacija, naziv: &str) -> Option<slojevi::IdMape> {
+        app.uredjivac
+            .projekt()
+            .slojevi()
+            .find(|(_, s)| s.naziv == naziv)
+            .and_then(|(_, s)| s.roditelj)
+    }
+
+    #[test]
+    fn desni_klik_premjesta_sloj_u_drugu_mapu() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+        let uvezeno = mapa_po_nazivu(harness.state(), "Uvezeno");
+
+        izbornik_retka(&mut harness, "Trase", "Premjesti u");
+        // „Uvezeno” je i redak u stablu, pa se uzima onaj u stupcu podizbornika, uz „Izvan mapa”.
+        let stupac = harness.get_by_label("Izvan mapa").rect().min.x;
+        harness
+            .get_all_by_label("Uvezeno")
+            .find(|n| (n.rect().min.x - stupac).abs() < 1.0)
+            .expect("Uvezeno u podizborniku")
+            .click();
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+
+        assert_eq!(mapa_sloja(harness.state(), "Trase"), Some(uvezeno));
+        assert!(harness.query_by_label("Izvan mapa").is_none());
+        assert!(harness.state().uredjivac.je_li_izmijenjen());
+    }
+
+    fn sloj_objekta(app: &Aplikacija, naziv: &str) -> Option<String> {
+        app.uredjivac
+            .projekt()
+            .slojevi()
+            .find(|(_, s)| s.objekti.values().any(|o| o.naziv == naziv))
+            .map(|(_, s)| s.naziv.clone())
+    }
+
+    #[test]
+    fn objekt_prelazi_u_drugi_sloj_izbornikom_i_povlacenjem() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+
+        // Mapa Parcele 2025 je zatvorena, pa „Stare parcele” postoji samo u podizborniku.
+        izbornik_retka(&mut harness, "Parcela 1126", "Premjesti u");
+        harness.get_by_label("Stare parcele").click();
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let stare = Some("Stare parcele".to_owned());
+        assert_eq!(sloj_objekta(harness.state(), "Parcela 1126"), stare);
+
+        // Na sloj linija poligon ne ide, a na sloj poligona ide.
+        let parcela = harness.get_by_label("Parcela 1118/2").rect().center();
+        let trase = harness.get_by_label("Trase").rect().center();
+        harness.drag_at(parcela);
+        harness.hover_at(parcela + vec2(0.0, 20.0));
+        harness.drop_at(trase);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let parcele = Some("Parcele".to_owned());
+        assert_eq!(sloj_objekta(harness.state(), "Parcela 1118/2"), parcele);
+
+        let parcela = harness.get_by_label("Parcela 1118/2").rect().center();
+        let cilj = harness.get_by_label("Stare parcele").rect().center();
+        harness.drag_at(parcela);
+        harness.hover_at(parcela + vec2(0.0, 20.0));
+        harness.hover_at(cilj);
+        harness.drop_at(cilj);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert_eq!(sloj_objekta(harness.state(), "Parcela 1118/2"), stare);
+    }
+
+    #[test]
+    fn povlacenje_premjesta_sloj_a_mapu_ne_pusta_u_vlastitu_podmapu() {
+        let app = Aplikacija::nova(PostavkeAplikacije {
+            primjer: true,
+            ..Default::default()
+        });
+        let mut harness = Harness::builder()
+            .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+            .with_step_dt(0.05)
+            .with_context_setup(Aplikacija::postavi_kontekst)
+            .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+        let uvezeno = mapa_po_nazivu(harness.state(), "Uvezeno");
+        let teren = mapa_po_nazivu(harness.state(), "Teren 2026");
+
+        let pocetak = harness.get_by_label("Točke").rect().center();
+        let cilj = harness.get_by_label("Uvezeno").rect().center();
+        harness.drag_at(pocetak);
+        harness.hover_at(pocetak + vec2(0.0, 20.0));
+        harness.hover_at(cilj);
+        harness.run();
+        assert!(harness.state().stanje.povuceno.is_some());
+        harness.drop_at(cilj);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        assert_eq!(mapa_sloja(harness.state(), "Točke"), Some(uvezeno));
+        assert!(harness.state().stanje.povuceno.is_none());
+
+        // Teren 2026 ispušten na svoj sloj Parcele ostaje gdje je bio.
+        let pocetak = harness.get_by_label("Teren 2026").rect().center();
+        let cilj = harness.get_by_label("Parcele").rect().center();
+        harness.drag_at(pocetak);
+        harness.hover_at(pocetak + vec2(0.0, 20.0));
+        harness.hover_at(cilj);
+        harness.drop_at(cilj);
+        cekaj_smirenje(&mut harness, Duration::from_millis(500));
+        let projekt = harness.state().uredjivac.projekt();
+        assert_eq!(projekt.mapa(teren).and_then(|m| m.roditelj), None);
+        assert_eq!(mapa_sloja(harness.state(), "Parcele"), Some(teren));
     }
 
     #[test]

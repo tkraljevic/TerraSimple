@@ -9,7 +9,7 @@ use lyon_tessellation::geometry_builder::{BuffersBuilder, VertexBuffers};
 use lyon_tessellation::math::point;
 use lyon_tessellation::path::Path;
 use lyon_tessellation::{FillOptions, FillRule, FillTessellator, FillVertex};
-use slojevi::{Boja, Geometrija, IdObjekta, Objekt, Sloj, Stil, Vrh};
+use slojevi::{Boja, Geometrija, IdObjekta, Objekt, Sloj, Stil, Vrh, VrstaCrte, VrstaIspune};
 use std::collections::BTreeMap;
 
 /// Dopuštena greška razine u metrima. Izmjereno na 3 milijuna vrhova (probe/mnogo).
@@ -22,7 +22,12 @@ const TOCAKA_PO_MM: f64 = 96.0 / 25.4;
 pub(crate) struct VrhIspune {
     pub polozaj: [f32; 2],
     pub boja: [u8; 4],
+    /// 0 je puna ispuna, a `SRAFURA` kose crte.
+    pub uzorak: f32,
 }
+
+/// Uzorak ispune koji sjenčar crta kao kose crte.
+pub(crate) const SRAFURA: f32 = 10.0;
 
 /// Crta između dvije točke. Točka je odsječak s istim krajevima.
 #[repr(C)]
@@ -32,6 +37,10 @@ pub(crate) struct Odsjecak {
     pub b: [f32; 2],
     pub boja: [u8; 4],
     pub sirina: f32,
+    /// Duljina crte do točke `a`, u metrima, da se uzorak nastavlja preko vrhova.
+    pub put: f32,
+    /// 0 puna, 1 isprekidana, 2 točkasta, 3 crta-točka.
+    pub uzorak: f32,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -57,6 +66,17 @@ struct Oblik {
     ispuna: Option<[u8; 4]>,
     sirina: f32,
     tocka: bool,
+    uzorak_crte: f32,
+    uzorak_ispune: f32,
+}
+
+const fn uzorak_crte(v: VrstaCrte) -> f32 {
+    match v {
+        VrstaCrte::Puna => 0.0,
+        VrstaCrte::Isprekidana => 1.0,
+        VrstaCrte::Tockasta => 2.0,
+        VrstaCrte::CrtaTocka => 3.0,
+    }
 }
 
 fn boja(b: Boja) -> [u8; 4] {
@@ -110,9 +130,19 @@ fn u_oblik(objekt: &Objekt, stil_sloja: &Stil) -> Oblik {
         okvir: okvir(&dijelovi),
         dijelovi,
         crta: boja(stil.boja_crte),
-        ispuna: lik.then_some(boja(stil.boja_ispune)),
+        ispuna: (lik && stil.vrsta_ispune != VrstaIspune::Bez).then_some(boja(stil.boja_ispune)),
         sirina: (sirina_mm * TOCAKA_PO_MM) as f32,
         tocka,
+        uzorak_crte: if tocka {
+            0.0
+        } else {
+            uzorak_crte(stil.vrsta_crte)
+        },
+        uzorak_ispune: if stil.vrsta_ispune == VrstaIspune::Srafura {
+            SRAFURA
+        } else {
+            0.0
+        },
     }
 }
 
@@ -171,7 +201,7 @@ fn dodaj_ispunu(
     ten: &mut FillTessellator,
     k: &mut Komad,
     dijelovi: &[Vec<[f64; 2]>],
-    boja: [u8; 4],
+    (boja, uzorak): ([u8; 4], f32),
 ) {
     let ish = k.ishodiste;
     let u = |t: [f64; 2]| point((t[0] - ish[0]) as f32, (t[1] - ish[1]) as f32);
@@ -189,6 +219,7 @@ fn dodaj_ispunu(
     let mut gradnja = BuffersBuilder::new(&mut izlaz, |v: FillVertex| VrhIspune {
         polozaj: v.position().to_array(),
         boja,
+        uzorak,
     });
     // Lik koji se ne da popuniti ostaje samo crta, a ostali se i dalje crtaju.
     if ten.tessellate_path(&put, &opcije, &mut gradnja).is_ok() {
@@ -210,7 +241,7 @@ fn prosiri(k: &mut Komad, o: [f64; 4]) {
 fn dodaj_crte(k: &mut Komad, oblik: &Oblik, dijelovi: &[Vec<[f64; 2]>]) {
     let ish = k.ishodiste;
     let u = |t: &[f64; 2]| [(t[0] - ish[0]) as f32, (t[1] - ish[1]) as f32];
-    let (boja, sirina) = (oblik.crta, oblik.sirina);
+    let (boja, sirina, uzorak) = (oblik.crta, oblik.sirina, oblik.uzorak_crte);
     for d in dijelovi {
         if oblik.tocka {
             let a = u(&d[0]);
@@ -219,14 +250,22 @@ fn dodaj_crte(k: &mut Komad, oblik: &Oblik, dijelovi: &[Vec<[f64; 2]>]) {
                 b: a,
                 boja,
                 sirina,
+                put: 0.0,
+                uzorak,
             });
-        } else {
-            k.odsjecci.extend(d.windows(2).map(|w| Odsjecak {
+            continue;
+        }
+        let mut put = 0.0_f64;
+        for w in d.windows(2) {
+            k.odsjecci.push(Odsjecak {
                 a: u(&w[0]),
                 b: u(&w[1]),
                 boja,
                 sirina,
-            }));
+                put: put as f32,
+                uzorak,
+            });
+            put += (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]);
         }
     }
 }
@@ -261,7 +300,7 @@ fn razina(ten: &mut FillTessellator, oblici: &[Oblik], r: usize, greska: f64) ->
             .map(|d| pojednostavi(d, greska))
             .collect();
         if let Some(b) = oblik.ispuna {
-            dodaj_ispunu(ten, k, &dijelovi, b);
+            dodaj_ispunu(ten, k, &dijelovi, (b, oblik.uzorak_ispune));
         }
         dodaj_crte(k, oblik, &dijelovi);
     }
@@ -560,6 +599,8 @@ mod testovi {
             ispuna: None,
             sirina: 1.0,
             tocka: false,
+            uzorak_crte: 0.0,
+            uzorak_ispune: 0.0,
         };
         assert!(!premali(&lik(1.0), 2.0));
         assert!(premali(&lik(0.99), 2.0));

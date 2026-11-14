@@ -1,7 +1,7 @@
 # Kvaliteta koda
 
 TerraSimple preuzima standarde kvalitete iz goCOP-a (`docs/CODE_QUALITY.md` i
-`quality/config.json` u goCOP-u) i globalni standard (EMM #2845). Mijenjaju se
+`quality/config.json` u goCOP-u). Mijenjaju se
 samo alati, jer je goCOP-ov `dev/quality` napisan za Go.
 
 Stanje 7. 11. 2026.: redovna i duboka provjera postoje. Duboka mjeri mutacije
@@ -124,7 +124,7 @@ kritični dijelovi moraju imati i ove testove:
 
 Prednost imaju standardni alati Rusta. Projekt je pod licencom EUPL-1.2, pa
 `cargo-deny` provjerava i jesu li licence ovisnosti spojive s njom. Repozitorij
-je privatan, a kasnije može postati javan. U testne podatke ne ide ništa iz goCOP-a.
+je javan, pa u testne podatke idu samo izmišljeni podaci.
 
 
 | Provjera | Alat | Kada |
@@ -230,7 +230,7 @@ provjerena sintaksa YAML-a; stvarni CI i druge platforme nisu pokrenuti.
 ## Otvoreno
 
 - **Testovi sučelja:** provjeriti može li `egui_kittest` pokriti crtanje mišem
-  (lijevi klik, povlačenje, desni klik, dvoklik).
+  (lijevi i desni klik, povlačenje, okvir odabira).
 - **Granice za Rust:** potvrditi na prvom mjerenju programa.
 - **Proturječje u granicama kritičnog koda:** uz složenost 7 i pokrivenost 95 % rizik je
   7,006, pa granica rizika 7 u tom slučaju traži 100 % pokrivenosti. Odlučiti na prvom
