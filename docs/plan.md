@@ -7,11 +7,11 @@ od prvog retka. Što smo isprobali i izmjerili, s odlukama koje su iz toga slije
 
 ## Stanje
 
-Stanje 10. 11. 2026.:
+Stanje 14. 11. 2026.:
 
-- **Izdanja:** 0.0.1 do 0.0.5 alfa izašla su 10. 11. 2026. kao probna, za Windows, macOS i Linux. Što je
-  ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
-  brisanje s ⌘ + delete i popis prečaca.
+- **Izdanja:** 0.0.1 do 0.0.6 alfa izašla su od 10. do 14. 11. 2026. kao probna, za Windows, macOS i Linux.
+  Što je ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.6 donosi natpise, izvoz u KML, KMZ, GeoJSON
+  i SHP, uvoz GeoJSON-a, SHP-a i GeoPackagea te automatsko spremanje.
 - **Faze:** 0 i 1 su gotove. Faza 2 je gotova, osim sloja koji se čita iz izvorne datoteke. Iz
   faze 3 radi sve (KML, KMZ, GeoJSON i SHP, uvoz i izvoz), a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
 - **Kvaliteta:** provjera `cargo xtask provjera` prolazi, s pokrivenošću oko 96 %.

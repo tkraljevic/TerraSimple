@@ -22,7 +22,7 @@ raspakira u svoju mapu i pokrene. Upute za svaki sustav su u [izdanje.md](docs/i
 
 ## Što radi
 
-Stanje 0.0.5. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
+Stanje 0.0.6. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
 
 - **Karta:** podloga OpenFreeMap ili DGU ortofoto, svijetla i tamna tema, mjerilo i koordinate pod mišem u
   HTRS96/TM.
@@ -32,19 +32,25 @@ Stanje 0.0.5. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
   sve odabrano. Mape, slojevi i objekti premještaju se povlačenjem ili desnim klikom i „Premjesti u”.
 - **Stil:** boja, debljina, prozirnost, vrsta crte i šrafura za cijeli sloj ili jedan objekt, a za točke
   veličina. Otvara se desnim klikom na sloj ili objekt i „Stil”.
+- **Natpisi:** naziv uz liniju, točku ili u liku, s veličinom, bojom, kurzivom i obrubom. Ne preklapaju se
+  i mijenjaju se sa zumom.
 - **Mjerenje:** udaljenost i površina na elipsoidu WGS84, kao u QGIS-u. Izmjereno se može spremiti kao
   linija ili poligon.
 - **Tražilica:** koordinate u stupnjevima i u HTRS96/TM te slojevi i objekti po nazivu.
 - **Spremanje:** projekt je jedna GeoPackage datoteka. Tuđi slojevi i stupci u njoj ostaju netaknuti.
 - **QGIS:** gumb „Otvori u QGIS-u” sprema projekt i otvara ga u QGIS-u, s nazivima slojeva, mapama i
   stilovima. Ako je QGIS u međuvremenu promijenio datoteku, TerraSimple je ne pregazi, nego nudi Spremi kao.
-- **Uvoz iz Google Eartha:** KML i KMZ, gumbom „Uvezi sloj” ili iz izbornika Datoteka. Mape ostaju mape, a
-  objekti idu u slojeve Točke, Linije i Poligoni, s nazivima, opisima i bojama.
+- **Uvoz:** KML i KMZ iz Google Eartha, GeoJSON, shapefile i slojevi iz GeoPackagea, gumbom „Uvezi sloj” ili
+  iz izbornika Datoteka. Mape ostaju mape, s nazivima, opisima i bojama. Kad datoteka ne kaže sustav,
+  program pita.
+- **Izvoz:** KML, KMZ, GeoJSON i SHP, za cijeli projekt, mapu ili sloj. Prije izvoza piše što se gubi.
+- **Automatsko spremanje:** kopija svakih 30 sekundi dok ima nespremljenih izmjena; nakon pada program nudi
+  da je vrati.
 - **Prečaci:** gumb „?” ili F1. Program sam prepoznaje sustav, pa na Macu piše ⌘ i dodirnu plohu, a
   drugdje Ctrl i kotačić.
 - **Poništavanje:** svaka izmjena, i cijeli uvoz, vraća se s ⌘Z (Ctrl+Z).
 
-Još ne radi: izvoz u KML, GeoJSON i SHP, ikone i natpisi na karti, atributna tablica, podloge iz vlastitih
+Još ne radi: ikone za točke, atributna tablica, sloj koji se čita ravno iz tuđe datoteke, podloge iz vlastitih
 datoteka i ispis. Dolaze redom, po [planu rada](docs/plan.md).
 
 ## Iz izvornog koda
