@@ -133,6 +133,8 @@ pub struct Crtanje {
     vuce: Option<Vucenje>,
     pub(crate) hvatista: Vec<Hvatiste>,
     pub(crate) poruka: Option<Poruka>,
+    /// Objekt na koji je upravo bio desni klik, da prozor otvori izbornik.
+    pub(crate) izbornik: Option<(IdSloja, IdObjekta)>,
     aktivni: Vec<(VrstaGeometrije, IdSloja)>,
     mjeri_povrsinu: bool,
 }
@@ -304,7 +306,12 @@ impl Crtanje {
 
     /// Odabir iz ploče Slojevi, da karta istakne isti objekt.
     pub fn postavi_odabrani(&mut self, objekt: Option<(IdSloja, IdObjekta)>) {
-        self.odabrani = objekt.into_iter().collect();
+        self.postavi_odabrane(objekt.into_iter().collect());
+    }
+
+    /// Novi odabir više objekata, npr. nakon premještanja u drugi sloj.
+    pub fn postavi_odabrane(&mut self, objekti: Vec<(IdSloja, IdObjekta)>) {
+        self.odabrani = objekti;
         self.tocka = None;
         self.okvir = None;
     }
@@ -676,14 +683,26 @@ impl Crtanje {
             .or_else(|| slojevi_odozgo(projekt).into_iter().find(dobar))
     }
 
-    /// Desni klik završava crtež, a okvir za odabir odbacuje.
-    pub(crate) fn desni_klik(&mut self, u: &mut Uredjivac, ok: &Okolina<'_>) {
+    /// Desni klik završava crtež, a okvir za odabir odbacuje. Inače, uz alat Odaberi, desni klik
+    /// na objekt traži izbornik.
+    pub(crate) fn desni_klik(
+        &mut self,
+        m: Pos2,
+        u: &mut Uredjivac,
+        ok: &Okolina<'_>,
+        p: &dyn Pretvorba,
+    ) {
         self.poruka = None;
         if self.crtez.as_ref().is_some_and(|c| !c.gotov) {
             self.zavrsi(u, ok);
-        } else {
-            self.okvir = None;
+        } else if self.okvir.take().is_none() && self.alat == Alat::Odaberi {
+            self.izbornik_za(m, u.projekt(), ok, p);
         }
+    }
+
+    /// Objekt na koji je bio desni klik, samo jednom: prozor tada otvara izbornik.
+    pub fn uzmi_izbornik(&mut self) -> Option<(IdSloja, IdObjekta)> {
+        self.izbornik.take()
     }
 
     fn makni_prazan_crtez(&mut self) {

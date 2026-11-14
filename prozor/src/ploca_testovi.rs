@@ -139,7 +139,7 @@ fn sloj_nadjen_trazilicom_stablo_dovodi_u_vidno_polje() {
 
     assert_eq!(h.state().stanje.odabrano, Some(Odabir::Sloj(zadnji)));
     assert!(h.state().stanje.pomak_stabla > 0.0);
-    assert!(!h.state().stanje.pokazi_odabrano);
+    assert!(h.state().stanje.pokazi.is_none());
 }
 
 #[test]

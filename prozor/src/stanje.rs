@@ -158,8 +158,9 @@ pub struct StanjePrikaza {
     pub pomak_stabla: f32,
     /// Kotačić ili dodirna ploha iznad ploče Slojevi u ovom okviru; karta ga tada ne dobije.
     pub klizanje_ploce: f32,
-    /// Tražilica je odabrala sloj ili objekt, pa ga stablo treba dovesti u vidno polje.
-    pub pokazi_odabrano: bool,
+    /// Redak koji stablo treba dovesti u vidno polje, npr. nakon tražilice ili desnog klika na
+    /// objekt na karti. Objekt koji ploča ne prikazuje zamjenjuje njegov sloj.
+    pub pokazi: Option<Odabir>,
     /// Mapa, sloj ili objekt koji korisnik upravo povlači mišem u ploči Slojevi.
     pub povuceno: Option<Odabir>,
     pub novi_sloj: Option<NoviSloj>,
@@ -205,7 +206,7 @@ impl StanjePrikaza {
             zatrazen_izvoz: None,
             pomak_stabla: 0.0,
             klizanje_ploce: 0.0,
-            pokazi_odabrano: false,
+            pokazi: None,
             povuceno: None,
             novi_sloj: None,
             stil: None,

@@ -96,6 +96,12 @@ boja-nijansa = Nijansa
 boja-zasicenost = Zasićenost
 boja-svjetlina = Svjetlina
 izbornik-premjesti-u = Premjesti u
+izbornik-zumiraj = Zumiraj na objekt
+izbornik-obrisi-odabrane = { $broj ->
+    [one] Obriši { $broj } odabrani objekt
+    [few] Obriši { $broj } odabrana objekta
+   *[other] Obriši { $broj } odabranih objekata
+}
 premjesti-izvan-mapa = Izvan mapa
 
 podloga-naslov = Podloga
