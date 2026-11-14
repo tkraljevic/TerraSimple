@@ -53,6 +53,9 @@ fn postavke(argumenti: &[String], provjera: bool) -> PostavkeAplikacije {
     } else {
         let mut p = rasclani_argumente(argumenti);
         p.podloga_s_mreze = true;
+        // Primjer i snimka zaslona nisu pravi rad, pa im kopija ne treba.
+        let pravi_rad = !p.primjer && p.snimka.is_none();
+        p.oporavak = pravi_rad.then(prozor::oporavak::zadana_mapa).flatten();
         p
     }
 }

@@ -1022,3 +1022,48 @@ fn mijesanje_visina_prilagodjava_samo_deklaraciju_a_ne_stare_geometrije() {
         assert_eq!(v.visina, visina);
     }
 }
+#[test]
+fn kopija_za_oporavak_nosi_nespremljeno_i_tudje_tablice() {
+    // Novi projekt bez datoteke: kopija je nova baza.
+    let (p, mut d, u, s, _o) = pripremi("oporavak-izvor");
+    let cilj = put("oporavak-novi");
+    let _ = std::fs::remove_file(&cilj);
+    geopaket::spremi_kopiju(None, &cilj, u.projekt()).unwrap();
+    let mut k = Datoteka::otvori(&cilj).unwrap();
+    assert_eq!(k.ucitaj().unwrap().sloj(s).unwrap().objekti.len(), 1);
+    assert!(!cilj.with_extension("u-tijeku").exists());
+
+    // Projekt iz datoteke: izmjena koja nije spremljena ide u kopiju, a izvornik se ne mijenja.
+    d.spremi(u.projekt()).unwrap();
+    Connection::open(&p)
+        .unwrap()
+        .execute_batch("CREATE TABLE biljeske(v TEXT); INSERT INTO biljeske VALUES('ostaje');")
+        .unwrap();
+    let mut u = Uredjivac::iz_projekta(d.ucitaj().unwrap());
+    u.izvrsi(NaredbaObjekta::Dodaj {
+        sloj: s,
+        naziv: "Nespremljena".into(),
+        geometrija: Geometrija::Tocka(Vrh::novi(18.7, 45.6)),
+    })
+    .unwrap();
+    let cilj = put("oporavak-iz-datoteke");
+    let _ = std::fs::remove_file(&cilj);
+    geopaket::spremi_kopiju(Some(&p), &cilj, u.projekt()).unwrap();
+    let vraceno = Datoteka::otvori(&cilj).unwrap().ucitaj().unwrap();
+    assert_eq!(vraceno.sloj(s).unwrap().objekti.len(), 2);
+    let c = Connection::open(&cilj).unwrap();
+    let v: String = c
+        .query_row("SELECT v FROM biljeske", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(v, "ostaje");
+    let izvornik = Datoteka::otvori(&p).unwrap().ucitaj().unwrap();
+    assert_eq!(izvornik.sloj(s).unwrap().objekti.len(), 1);
+
+    // Izvornika više nema: kopija se ne radi, a prazna baza ne nastaje na njegovu mjestu.
+    let nema = put("oporavak-nema");
+    let _ = std::fs::remove_file(&nema);
+    let cilj = put("oporavak-bez-izvora");
+    assert!(geopaket::spremi_kopiju(Some(&nema), &cilj, u.projekt()).is_err());
+    assert!(!nema.exists() && !cilj.exists());
+    assert!(!cilj.with_extension("u-tijeku").exists());
+}

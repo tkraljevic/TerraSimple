@@ -36,6 +36,8 @@ pub struct PostavkeAplikacije {
     /// Podloga s mreže. Pravi program je uključuje, a testovi rade bez mreže.
     pub podloga_s_mreze: bool,
     pub dijalog: Option<String>,
+    /// Mapa za automatsko spremanje u kopiju. Bez nje kopije nema, npr. u testovima.
+    pub oporavak: Option<PathBuf>,
 }
 
 #[must_use]
@@ -193,6 +195,7 @@ pub struct Aplikacija {
     pocetak: Instant,
     pub zadnje_vrijeme_okvira: Duration,
     pub pocetak_rada: Instant,
+    pub oporavak: Option<crate::oporavak::Oporavak>,
 }
 
 impl Default for Aplikacija {
@@ -264,8 +267,15 @@ impl Aplikacija {
                 &katalog,
             ))
         };
+        let oporavak = postavke
+            .oporavak
+            .and_then(|m| crate::oporavak::Oporavak::novi(m).ok());
+        let ostatak = oporavak
+            .as_ref()
+            .and_then(|o| o.ostaci().into_iter().next());
         let aktivni_dijalog = dijalog_za_pregled(postavke.dijalog.as_deref(), &katalog)
-            .or_else(|| (postavke.dijalog.as_deref() == Some("izvoz")).then(izvoz));
+            .or_else(|| (postavke.dijalog.as_deref() == Some("izvoz")).then(izvoz))
+            .or_else(|| ostatak.map(AktivniDijalog::Oporavak));
         Self {
             uredjivac,
             stanje,
@@ -290,6 +300,66 @@ impl Aplikacija {
             pocetak: Instant::now(),
             zadnje_vrijeme_okvira: Duration::ZERO,
             pocetak_rada: Instant::now(),
+            oporavak,
+        }
+    }
+
+    /// Kopija nespremljenog rada. Dok ima izmjena, okvir se crta barem svakih 5 s, da kopija
+    /// nastane i kad korisnik ništa ne dira.
+    fn automatsko_spremanje(&mut self, ctx: &egui::Context) {
+        let Some(o) = self.oporavak.as_mut() else {
+            return;
+        };
+        o.tik(
+            &self.uredjivac,
+            self.datoteka.staza.as_deref(),
+            Instant::now(),
+        );
+        if self.uredjivac.je_li_izmijenjen() {
+            ctx.request_repaint_after(Duration::from_secs(5));
+        }
+    }
+
+    fn obradi_oporavak(&mut self, vrati: bool, dijalog: &AktivniDijalog) {
+        self.aktivni_dijalog = None;
+        let (AktivniDijalog::Oporavak(ostatak), Some(o)) = (dijalog, self.oporavak.as_mut()) else {
+            return;
+        };
+        if !vrati {
+            o.odbaci(ostatak);
+            self.aktivni_dijalog = o.ostaci().into_iter().next().map(AktivniDijalog::Oporavak);
+            return;
+        }
+        let otvoreno = o
+            .preuzmi(ostatak)
+            .map_err(|e| e.to_string())
+            .and_then(|staza| {
+                radnja_otvori(
+                    &mut self.uredjivac,
+                    &mut self.datoteka,
+                    &mut self.stanje,
+                    &self.katalog,
+                    staza,
+                )
+            });
+        self.aktivni_dijalog = Some(match otvoreno {
+            Ok(_) => self.vraceni_rad(ostatak),
+            Err(_) => AktivniDijalog::PorukaGreske {
+                naslov: self.katalog.tekst("oporavak-greska-naslov"),
+                poruka: self.katalog.tekst("oporavak-greska"),
+            },
+        });
+    }
+
+    /// Vraćeni rad nema svoju datoteku, pa Spremi pita kamo, i ostaje nespremljen dok se ne spremi.
+    fn vraceni_rad(&mut self, ostatak: &crate::oporavak::Ostatak) -> AktivniDijalog {
+        self.datoteka.staza = None;
+        self.uredjivac.oznaci_nespremljeno();
+        self.karta.novi_projekt(self.uredjivac.projekt());
+        let tekstovi = crate::oporavak::tekstovi_ostatka(&self.katalog, ostatak);
+        AktivniDijalog::Obavijest {
+            naslov: self.katalog.tekst("oporavak-vraceno-naslov"),
+            poruka: self.katalog.s_tekstovima("oporavak-vraceno", &tekstovi),
         }
     }
 
@@ -371,6 +441,7 @@ impl Aplikacija {
         self.crtaj_statusnu_traku(ui, w, h, &boje);
         self.crtaj_slojeve_dijaloga(ui, &boje);
 
+        self.automatsko_spremanje(ui.ctx());
         self.zadnje_vrijeme_okvira = pocetak.elapsed();
     }
 
@@ -1235,9 +1306,7 @@ impl Aplikacija {
                 self.aktivni_dijalog = None;
                 self.nastavi_nakon_potvrde(ui, namjera);
             }
-            IshodDijaloga::PotvrdaOdustani
-            | IshodDijaloga::ObrisiOdustani
-            | IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
+            IshodDijaloga::ZatvoriPoruku => self.aktivni_dijalog = None,
             IshodDijaloga::ObrisiPotvrdjeno(stavka) => self.obradi_potvrdu_brisanja(stavka),
             IshodDijaloga::UpozorenjaPreklopiPopis => {
                 preklopi_popis(&mut dijalog);
@@ -1251,6 +1320,7 @@ impl Aplikacija {
                 self.aktivni_dijalog = None;
                 self.izvrsi_izvoz(&dijalog);
             }
+            IshodDijaloga::Oporavak(vrati) => self.obradi_oporavak(vrati, &dijalog),
         }
     }
 
@@ -1456,6 +1526,7 @@ mod testovi {
                 snimka: Some(PathBuf::from("a.png")),
                 podloga_s_mreze: false,
                 dijalog: None,
+                oporavak: None,
             }
         );
 

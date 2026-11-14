@@ -196,6 +196,12 @@ impl Uredjivac {
         self.spremljena_oznaka = self.oznaka_stanja();
     }
 
+    /// Projekt vraćen iz kopije nikad nije spremljen u svoju datoteku, pa ostaje izmijenjen dok se
+    /// ne spremi.
+    pub fn oznaci_nespremljeno(&mut self) {
+        self.spremljena_oznaka = u64::MAX;
+    }
+
     /// Vraća je li projekt izmijenjen u odnosu na zadnje spremljeno stanje.
     #[must_use]
     pub fn je_li_izmijenjen(&self) -> bool {

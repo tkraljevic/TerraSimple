@@ -14,6 +14,9 @@ mod izvoz_testovi;
 pub mod karta_prozora;
 pub mod naziv_objekta;
 pub mod novi_sloj;
+pub mod oporavak;
+#[cfg(test)]
+mod oporavak_testovi;
 pub mod ploca;
 #[cfg(test)]
 mod ploca_testovi;
