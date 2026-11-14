@@ -13,7 +13,7 @@ Stanje 10. 11. 2026.:
   ušlo u koje, piše u [PROMJENE.md](../PROMJENE.md). 0.0.5 donosi uvoz iz Google Eartha, ploču Stil,
   brisanje s ⌘ + delete i popis prečaca.
 - **Faze:** 0 i 1 su gotove. Faza 2 je gotova, osim sloja koji se čita iz izvorne datoteke. Iz
-  faze 3 radi uvoz i izvoz KML-a i KMZ-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
+  faze 3 radi uvoz i izvoz KML-a, KMZ-a i GeoJSON-a, a iz faze 4 stil sloja i objekta i natpisi, bez ikona.
 - **Kvaliteta:** provjera `cargo xtask provjera` prolazi, s pokrivenošću oko 96 %.
 - **Repozitorij** je javan na GitHubu od 10. 11. 2026. Razvijamo na Rustu 1.99.1.
 
@@ -127,7 +127,11 @@ razmjena s Earth Proom.
   šrafura, natpisi uz linije, kurziv, drugi koordinatni sustav, vrijednosti koje nisu tekst ni broj.
   Sloj s nazivom iz uvoza (Točke, Linije, Poligoni) ne dobiva svoju mapu, pa se uvezeni KML vraća u
   istom obliku. Stupci iz GeoPackagea idu u `ExtendedData`.
-- Nedostaje: GeoJSON, SHP i pitanje o sustavu.
+- **GeoJSON (14. 11. 2026.):** uvoz kroz „Uvezi sloj” istim putem kao KML, sa skupnim geometrijama,
+  stilom `simplestyle` i starim `crs`-om (HTRS96/TM i HDKS se preračunaju, nepoznat sustav se odbije).
+  Svojstva koja projekt ne pamti navedu se nakon uvoza. Izvoz u istom prozorčiću kao KML, s izborom formata
+  KML, KMZ ili GeoJSON; mapa i sloj idu u svojstva `mapa` i `sloj`.
+- Nedostaje: SHP i pitanje o sustavu (zaslon L).
 
 **Na kraju izlazi 0.1, prvo upotrebljivo izdanje:** zamjenjuje Earth Pro za crtanje, mjerenje i KML, a sve se
 otvara u QGIS-u. Do ovdje je 12–18 tjedana rada.

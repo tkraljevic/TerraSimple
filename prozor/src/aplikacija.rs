@@ -1068,8 +1068,9 @@ impl Aplikacija {
         let AktivniDijalog::Izvoz(priprema) = dijalog else {
             return;
         };
-        let ime = format!("{}.kml", priprema.naziv);
-        let Some(staza) = self.birac.izvezi_datoteku(&ime) else {
+        let nastavak = priprema.format.nastavak();
+        let ime = format!("{}.{nastavak}", priprema.naziv);
+        let Some(staza) = self.birac.izvezi_datoteku(&ime, nastavak) else {
             return;
         };
         let ishod = crate::izvoz::izvezi(self.uredjivac.projekt(), priprema, &staza, &self.katalog);

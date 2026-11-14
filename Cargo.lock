@@ -1173,6 +1173,7 @@ dependencies = [
  "geopaket",
  "koordinate",
  "quick-xml 0.42.0",
+ "serde_json",
  "slojevi",
  "zip",
 ]

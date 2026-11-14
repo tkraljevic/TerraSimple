@@ -70,6 +70,8 @@ pub struct Gubici {
     pub neispravne_koordinate: usize,
     /// Objekti bez ijedne geometrije.
     pub bez_geometrije: usize,
+    /// Svojstva iz GeoJSON-a koja projekt ne pamti, po nazivu.
+    pub izostavljena_svojstva: std::collections::BTreeSet<String>,
 }
 
 impl Gubici {
@@ -122,7 +124,7 @@ fn vrh(tekst: &str) -> Option<Vrh> {
     ispravan(d, s, v)
 }
 
-fn ispravan(duzina: f64, sirina: f64, visina: Option<f64>) -> Option<Vrh> {
+pub(crate) fn ispravan(duzina: f64, sirina: f64, visina: Option<f64>) -> Option<Vrh> {
     let u_rasponu = (-180.0..=180.0).contains(&duzina) && (-90.0..=90.0).contains(&sirina);
     let visina_broj = visina.is_none_or(f64::is_finite);
     (u_rasponu && visina_broj).then_some(Vrh {
