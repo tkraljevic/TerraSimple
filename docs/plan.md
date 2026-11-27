@@ -253,6 +253,8 @@ pregled uvjeta, a ne pravno mišljenje. OpenFreeMap i DGU ostaju ugrađeni, Esri
 ako ih korisnik doda sam, a Google se ne koristi. Program mora slati svoj `User-Agent` i prikazivati
 propisani navod izvora na karti i na ispisu, što `walkers` ne radi sam.
 
+Ideje koje još nisu u planu su u [ideje.md](ideje.md).
+
 ## Polazišta koja proba može srušiti
 
 - Nema GDAL-a ni PROJ-a u programu. Proba je to potvrdila za naših pet sustava. HDKS ide
