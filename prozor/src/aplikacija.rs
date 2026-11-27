@@ -3,8 +3,8 @@ use crate::datoteka::{
     radnja_spremi, radnja_spremi_kao, tekst_statusa_datoteke,
 };
 use crate::dijalozi::{
-    AktivniDijalog, IshodDijaloga, NamjeraPotvrde, StavkaIzbornikaDatoteka, crtaj_aktivni_dijalog,
-    crtaj_padajuci_izbornik_datoteka,
+    AktivniDijalog, IshodDijaloga, NamjeraPotvrde, StavkaIzbornikaDatoteka, StavkaIzbornikaPomoci,
+    crtaj_aktivni_dijalog, crtaj_padajuci_izbornik_datoteka, crtaj_padajuci_izbornik_pomoci,
 };
 use crate::ikone::{SkladisteIkona, okvir_ikone_u_sredini};
 use crate::karta_prozora::{KartaProzora, StatusKarte, tekst_mjerila, zaklon};
@@ -187,6 +187,8 @@ pub struct Aplikacija {
     /// Korisnik je već odgovorio na pitanje pri zatvaranju, pa se prozor zatvara bez novog pitanja.
     pub zatvaranje_potvrdjeno: bool,
     pub izbornik_datoteka_otvoren: bool,
+    pub izbornik_pomoci_otvoren: bool,
+    pub nadogradnja: crate::nadogradnja_prozora::Nadogradnja,
     pub trazilica: StanjeTrazilice,
     pub snimka: Option<PathBuf>,
     pub okvir_brojac: u32,
@@ -205,6 +207,21 @@ impl Default for Aplikacija {
 }
 
 /// Prozorčić koji se otvori sam, za snimke i pregled izgleda (`--dijalog <naziv>`).
+/// Stavke gornjeg izbornika, s lijeva na desno.
+const STAVKE_IZBORNIKA: [&str; 7] = [
+    "izbornik-datoteka",
+    "izbornik-uredi",
+    "izbornik-crtanje",
+    "izbornik-slojevi",
+    "izbornik-prikaz",
+    "izbornik-alati",
+    "izbornik-pomoc",
+];
+
+fn sirina_stavke(naziv: &str) -> f32 {
+    naziv.chars().count() as f32 * 7.2 + 14.0
+}
+
 /// Stavke gornjeg izbornika koje nešto rade; ostale su zasad samo natpis.
 const STAVKE_S_RADNJOM: [&str; 3] = ["izbornik-datoteka", "izbornik-slojevi", "izbornik-pomoc"];
 
@@ -289,6 +306,8 @@ impl Aplikacija {
             aktivni_dijalog,
             zatvaranje_potvrdjeno: false,
             izbornik_datoteka_otvoren: false,
+            izbornik_pomoci_otvoren: false,
+            nadogradnja: crate::nadogradnja_prozora::Nadogradnja::za_program(),
             trazilica: StanjeTrazilice::default(),
             snimka: postavke.snimka,
             okvir_brojac: 0,
@@ -581,20 +600,21 @@ impl Aplikacija {
         self.crtaj_gumbe_izbornika(ui, w, boje);
     }
 
+    /// Lijevi rub stavke gornjeg izbornika; padajući izbornik Pomoć otvara se ispod nje.
+    fn x_stavke_izbornika(&self, trazena: &str) -> f32 {
+        STAVKE_IZBORNIKA
+            .iter()
+            .take_while(|k| **k != trazena)
+            .map(|k| sirina_stavke(&self.katalog.tekst(k)))
+            .sum::<f32>()
+            + 44.0
+    }
+
     fn crtaj_stavke_izbornika(&mut self, ui: &mut egui::Ui, boje: &Boje) {
-        let stavke = [
-            "izbornik-datoteka",
-            "izbornik-uredi",
-            "izbornik-crtanje",
-            "izbornik-slojevi",
-            "izbornik-prikaz",
-            "izbornik-alati",
-            "izbornik-pomoc",
-        ];
         let mut x = 44.0;
-        for kljuc in stavke {
+        for kljuc in STAVKE_IZBORNIKA {
             let naziv = self.katalog.tekst(kljuc);
-            let sirina = naziv.chars().count() as f32 * 7.2 + 14.0;
+            let sirina = sirina_stavke(&naziv);
             tekst_lijevo(ui, pos2(x, 20.0), &naziv, font_obicni(13.0), boje.tekst_2);
             if STAVKE_S_RADNJOM.contains(&kljuc) {
                 let inter = Rect::from_min_size(pos2(x - 4.0, 6.0), vec2(sirina, 28.0));
@@ -608,13 +628,72 @@ impl Aplikacija {
         }
     }
 
-    /// Pomoć zasad ima samo jednu stavku, pa odmah otvara „O programu”.
+    /// Datoteka i Pomoć otvaraju svoj padajući izbornik (otvoren je samo jedan), a Slojevi ploču.
     pub(crate) fn otvori_stavku_izbornika(&mut self, kljuc: &str) {
         match kljuc {
-            "izbornik-datoteka" => self.izbornik_datoteka_otvoren = !self.izbornik_datoteka_otvoren,
+            "izbornik-datoteka" => {
+                self.izbornik_datoteka_otvoren = !self.izbornik_datoteka_otvoren;
+                self.izbornik_pomoci_otvoren = false;
+            }
+            "izbornik-pomoc" => {
+                self.izbornik_pomoci_otvoren = !self.izbornik_pomoci_otvoren;
+                self.izbornik_datoteka_otvoren = false;
+            }
             "izbornik-slojevi" => self.stanje.ploca_otvorena = !self.stanje.ploca_otvorena,
-            _ => self.aktivni_dijalog = Some(AktivniDijalog::OProgramu),
+            _ => {}
         }
+    }
+
+    pub(crate) fn odaberi_stavku_pomoci(
+        &mut self,
+        ctx: &egui::Context,
+        stavka: StavkaIzbornikaPomoci,
+    ) {
+        self.aktivni_dijalog = Some(match stavka {
+            StavkaIzbornikaPomoci::OProgramu => AktivniDijalog::OProgramu,
+            StavkaIzbornikaPomoci::Nadogradnja => {
+                AktivniDijalog::Nadogradnja(self.nadogradnja.provjeri(ctx))
+            }
+        });
+    }
+
+    /// Stanje iz niti nadogradnje upisuje se u prozorčić ako je još otvoren.
+    pub(crate) fn primi_nadogradnju(&mut self) {
+        if let Some(novo) = self.nadogradnja.primi(&self.katalog)
+            && let Some(AktivniDijalog::Nadogradnja(stanje)) = &mut self.aktivni_dijalog
+        {
+            *stanje = novo;
+        }
+    }
+
+    pub(crate) fn obradi_gumb_nadogradnje(
+        &mut self,
+        ctx: &egui::Context,
+        gumb: crate::nadogradnja_prozora::GumbNadogradnje,
+        dijalog: AktivniDijalog,
+    ) {
+        use crate::nadogradnja_prozora::{GumbNadogradnje as G, StanjeNadogradnje as S, stranica};
+        let AktivniDijalog::Nadogradnja(stanje) = dijalog else {
+            return;
+        };
+        self.aktivni_dijalog = match (gumb, stanje) {
+            (G::Instaliraj, S::Dostupna { ponuda, .. }) => self
+                .nadogradnja
+                .ugradi(ctx, ponuda)
+                .map(AktivniDijalog::Nadogradnja),
+            (G::StranicaIzdanja, stanje) => {
+                if let Some(adresa) = stranica(&stanje) {
+                    crate::nadogradnja_prozora::otvori_stranicu(adresa);
+                }
+                Some(AktivniDijalog::Nadogradnja(stanje))
+            }
+            (G::PonovnoPokreni, _) => {
+                self.nadogradnja.pokreni_nakon_izlaska();
+                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                None
+            }
+            _ => None,
+        };
     }
 
     fn crtaj_gumbe_izbornika(&mut self, ui: &mut egui::Ui, w: f32, boje: &Boje) {
@@ -1342,6 +1421,17 @@ impl Aplikacija {
         ) {
             self.pokreni_radnju_datoteke(odabrana_stavka);
         }
+        let x = self.x_stavke_izbornika("izbornik-pomoc");
+        if let Some(stavka) = crtaj_padajuci_izbornik_pomoci(
+            ui,
+            &mut self.izbornik_pomoci_otvoren,
+            x,
+            boje,
+            &self.katalog,
+        ) {
+            self.odaberi_stavku_pomoci(ui.ctx(), stavka);
+        }
+        self.primi_nadogradnju();
 
         if let Some(mut dijalog) = self.aktivni_dijalog.take() {
             let ishod = crtaj_aktivni_dijalog(ui, &mut dijalog, boje, &self.katalog);
@@ -1385,6 +1475,9 @@ impl Aplikacija {
                 self.izvrsi_uvoz_sustava(&dijalog);
             }
             IshodDijaloga::Oporavak(vrati) => self.obradi_oporavak(vrati, &dijalog),
+            IshodDijaloga::Nadogradnja(gumb) => {
+                self.obradi_gumb_nadogradnje(ui.ctx(), gumb, dijalog);
+            }
         }
     }
 
@@ -1463,6 +1556,10 @@ impl eframe::App for Aplikacija {
     /// Program sam prepoznaje sustav: na Macu je ⌃ + klik desni klik.
     fn raw_input_hook(&mut self, ctx: &egui::Context, unos: &mut egui::RawInput) {
         self.desni_klik_maca.obradi(ctx.os(), unos);
+    }
+
+    fn on_exit(&mut self) {
+        self.nadogradnja.na_izlasku();
     }
 }
 

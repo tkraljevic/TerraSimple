@@ -47,6 +47,21 @@ Ako želiš prečac u izborniku, kopiraj `TerraSimple.desktop` u
 `Icon` na punu stazu priloženog `terrasimple.png`. Stazu s razmacima u `Exec`
 stavi u dvostruke navodnike. Samo raspakiravanje ne mijenja sustav.
 
+## Nadogradnja iz programa
+
+Od izdanja 0.0.8 program se može sam nadograditi: **Pomoć → Provjeri nadogradnju…**. Program pita
+GitHub za izdanja samo kad to zatražiš; bez toga ne šalje ništa osim zahtjeva za kartu. Kad postoji
+novije izdanje, nudi **Instaliraj**: preuzme paket za tvoj sustav, provjeri njegov potpis, zamijeni se
+novim izdanjem i nakon **Ponovno pokreni** otvori novo izdanje. Tvoji projekti ostaju gdje jesu.
+
+Program instalira samo paket potpisan ključem izdanja TerraSimplea. Ako potpis ne odgovara ili paketa
+za tvoj sustav nema, ništa ne mijenja i nudi stranicu izdanja za ručno preuzimanje. Program pokrenut iz
+izvornog koda ne zamjenjuje se sam.
+
+Program mora smjeti pisati u mapu u kojoj je: na Macu u mapu s `TerraSimple.app`, a drugdje u mapu s
+programom. Na Windowsu stari program ostaje uz novi kao `TerraSimple.exe.stara` dok se program ne
+pokrene sljedeći put; tada ga sam obriše.
+
 ## Provjera paketa i licence
 
 Skrivena zastavica `--provjeri-pokretanje` otvara stvarni prozor s izmišljenim
@@ -82,6 +97,29 @@ provjera paketa je padala.
 Windows se gradi sa statičkim MSVC okruženjem (`crt-static`) kako prenosivi EXE
 ne bi tražio njegovu zasebnu instalaciju; [Rustove upute](https://doc.rust-lang.org/reference/linkage.html#static-and-dynamic-c-runtimes).
 Profil izdanja uklanja simbole (`strip = "symbols"`); ostale optimizacije ostaju zadane.
+
+### Potpis paketa za nadogradnju
+
+Odluke (27. 11. 2026.): paketi se potpisuju na računalu s kojeg se izdaje, a ne na GitHubu. Tajni
+ključ je u `~/.config/terrasimple/nadogradnja-ed25519.pk8` i nikad ne ide u repozitorij ni na GitHub.
+Javni par upisan je u `nadogradnja/src/mreza.rs`. Potpisuje se ime paketa zajedno sa sadržajem, pa
+stariji paket ne vrijedi pod imenom novijega.
+
+Kad tijek izdanja napravi nacrt, prije objave:
+
+```bash
+gh release download vX.Y.Z -R tkraljevic/TerraSimple -p 'TerraSimple-*' -D target/potpis-vX.Y.Z
+cargo run -q -p nadogradnja --example potpis -- potpisi target/potpis-vX.Y.Z/*.zip target/potpis-vX.Y.Z/*.tar.gz
+gh release upload vX.Y.Z -R tkraljevic/TerraSimple target/potpis-vX.Y.Z/*.sig
+```
+
+Izdanje bez datoteka `.sig` program nudi samo za ručno preuzimanje. Sigurnosnu kopiju tajnog ključa
+drži u upravitelju lozinki. Bez njega instalirani programi ne prihvaćaju nadogradnju, pa bi ih svi
+morali jednom zamijeniti ručno. Novi ključ (`… --example potpis -- novi-kljuc`) ne prepisuje postojeći.
+
+Za probu bez objave izdanja program čita izdanja s adrese iz `TERRASIMPLE_NADOGRADNJA_IZVOR` (npr.
+`http://127.0.0.1:8000`, s `/releases` i `/download/…`). Ključ ostaje isti, pa paket i tada mora biti
+potpisan.
 
 Identifikator `org.terrasimple.TerraSimple` zasad je prijedlog za potvrdu.
 Može se zadati varijablom `TERRASIMPLE_BUNDLE_ID`. Za ovo izdanje pripremljeni su
