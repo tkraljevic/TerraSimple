@@ -288,7 +288,7 @@ pub fn primijeni_odabir(
                 stanje.postavi_otvorenost_sloja(*sloj_id, true);
                 otvori_roditeljske_mape(projekt, stanje, *sloj_id);
                 stanje.odabrano = Some(Odabir::Objekt(*sloj_id, *objekt_id));
-                stanje.pokazi_odabrano = true;
+                stanje.pokazi = stanje.odabrano;
                 karta
                     .karta()
                     .crtanje()
@@ -302,7 +302,7 @@ pub fn primijeni_odabir(
                 }
                 otvori_roditeljske_mape(projekt, stanje, *id);
                 stanje.odabrano = Some(Odabir::Sloj(*id));
-                stanje.pokazi_odabrano = true;
+                stanje.pokazi = stanje.odabrano;
             }
         }
     }

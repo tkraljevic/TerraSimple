@@ -872,7 +872,7 @@ fn pregled_dijaloga_po_nazivu() {
     assert_eq!(dijalog_za_pregled(None, &k), None);
 }
 
-/// Izbornik Pomoć otvara „O programu” s inačicom, licencom i izvorom karte, a gumb „?” prečace.
+/// Izbornik Pomoć nudi „O programu” (inačica, licenca, izvor karte) i nadogradnju, a gumb „?” prečace.
 #[test]
 fn pomoc_otvara_o_programu() {
     let app = Aplikacija::nova(PostavkeAplikacije::default());
@@ -905,6 +905,14 @@ fn pomoc_otvara_o_programu() {
             h.run_steps(1);
         }
         cekaj_smirenje(&mut h, Duration::from_millis(500));
+        if ocekivano == AktivniDijalog::OProgramu {
+            // Pomoć u izborniku otvara popis; nadogradnja je druga stavka.
+            assert!(h.state().izbornik_pomoci_otvoren);
+            let _ = h.get_by_label("Provjeri nadogradnju…");
+            h.get_by_label("O programu").click();
+            cekaj_smirenje(&mut h, Duration::from_millis(500));
+            assert!(!h.state().izbornik_pomoci_otvoren);
+        }
         assert_eq!(h.state().aktivni_dijalog, Some(ocekivano.clone()));
         if ocekivano == AktivniDijalog::Precaci {
             assert!(nacrtani_tekstovi(&h).contains(&"Prečaci tipkovnice i miša".to_owned()));
@@ -937,7 +945,123 @@ fn stavke_izbornika_rade_svaka_svoje() {
     assert_eq!(app.stanje.ploca_otvorena, !ploca);
     assert!(app.aktivni_dijalog.is_none());
     app.otvori_stavku_izbornika("izbornik-pomoc");
+    assert!(app.izbornik_pomoci_otvoren && !app.izbornik_datoteka_otvoren);
+    app.otvori_stavku_izbornika("izbornik-datoteka");
+    assert!(app.izbornik_datoteka_otvoren && !app.izbornik_pomoci_otvoren);
+    app.otvori_stavku_izbornika("izbornik-uredi");
+    assert!(app.aktivni_dijalog.is_none());
+}
+
+/// Pomoć › Provjeri nadogradnju otvara prozorčić koji čeka provjeru, a njezin ishod se upisuje u njega.
+#[test]
+fn pomoc_nudi_provjeru_nadogradnje() {
+    use crate::dijalozi::StavkaIzbornikaPomoci;
+    use crate::nadogradnja_prozora::{GumbNadogradnje, Nadogradnja, StanjeNadogradnje};
+    let mut app = Aplikacija::nova(PostavkeAplikacije::default());
+    // Izvor na koji se ne može spojiti: test ne izlazi na mrežu.
+    let izvor = nadogradnja::Izvor {
+        popis: "http://127.0.0.1:1/releases".into(),
+        prefiks: "http://127.0.0.1:1/download/".into(),
+        javni_kljuc: Vec::new(),
+    };
+    app.nadogradnja = Nadogradnja::nova(izvor, nadogradnja::Inacica(0, 0, 8), None);
+    let ctx = egui::Context::default();
+    app.odaberi_stavku_pomoci(&ctx, StavkaIzbornikaPomoci::OProgramu);
     assert_eq!(app.aktivni_dijalog, Some(AktivniDijalog::OProgramu));
+    app.odaberi_stavku_pomoci(&ctx, StavkaIzbornikaPomoci::Nadogradnja);
+    assert_eq!(
+        app.aktivni_dijalog,
+        Some(AktivniDijalog::Nadogradnja(StanjeNadogradnje::Provjera))
+    );
+    let pocetak = std::time::Instant::now();
+    while app.aktivni_dijalog == Some(AktivniDijalog::Nadogradnja(StanjeNadogradnje::Provjera)) {
+        assert!(pocetak.elapsed() < Duration::from_secs(20));
+        std::thread::sleep(Duration::from_millis(10));
+        app.primi_nadogradnju();
+    }
+    let Some(AktivniDijalog::Nadogradnja(stanje)) = app.aktivni_dijalog.clone() else {
+        panic!("prozorčić treba ostati otvoren");
+    };
+    assert!(matches!(stanje, StanjeNadogradnje::Greska { .. }));
+    // Stranica izdanja bez adrese ne zatvara prozorčić; Zatvori ga zatvara.
+    let dijalog = AktivniDijalog::Nadogradnja(stanje);
+    app.obradi_gumb_nadogradnje(&ctx, GumbNadogradnje::StranicaIzdanja, dijalog.clone());
+    assert_eq!(app.aktivni_dijalog, Some(dijalog.clone()));
+    app.obradi_gumb_nadogradnje(&ctx, GumbNadogradnje::Zatvori, dijalog);
+    assert!(app.aktivni_dijalog.is_none());
+    // Bez mjesta programa „Instaliraj” ne pokreće ništa, a gumb drugog prozorčića se ne obrađuje.
+    let ponuda = nadogradnja::Ponuda {
+        inacica: nadogradnja::Inacica(0, 0, 9),
+        stranica: String::new(),
+        paket: nadogradnja::Datoteka {
+            ime: String::new(),
+            velicina: 0,
+            adresa: String::new(),
+        },
+        potpis: nadogradnja::Datoteka {
+            ime: String::new(),
+            velicina: 0,
+            adresa: String::new(),
+        },
+    };
+    let dostupna = AktivniDijalog::Nadogradnja(StanjeNadogradnje::Dostupna {
+        ponuda,
+        moze_sam: true,
+    });
+    app.obradi_gumb_nadogradnje(&ctx, GumbNadogradnje::Instaliraj, dostupna);
+    assert!(app.aktivni_dijalog.is_none());
+    app.aktivni_dijalog = Some(AktivniDijalog::OProgramu);
+    app.obradi_gumb_nadogradnje(&ctx, GumbNadogradnje::Zatvori, AktivniDijalog::OProgramu);
+    assert_eq!(app.aktivni_dijalog, Some(AktivniDijalog::OProgramu));
+    app.obradi_gumb_nadogradnje(
+        &ctx,
+        GumbNadogradnje::PonovnoPokreni,
+        AktivniDijalog::Nadogradnja(StanjeNadogradnje::Instalirana(nadogradnja::Inacica(
+            0, 0, 9,
+        ))),
+    );
+    assert!(app.aktivni_dijalog.is_none());
+}
+
+/// Prozorčić nadogradnje pokazuje ponudu i gumbe; „Kasnije” ga zatvara bez instalacije.
+#[test]
+fn prozorcic_nadogradnje_nudi_instalaciju() {
+    use crate::nadogradnja_prozora::StanjeNadogradnje;
+    let datoteka = |ime: &str| nadogradnja::Datoteka {
+        ime: ime.into(),
+        velicina: 24_652_928,
+        adresa: String::new(),
+    };
+    let ponuda = nadogradnja::Ponuda {
+        inacica: nadogradnja::Inacica(0, 0, 9),
+        stranica: String::new(),
+        paket: datoteka("TerraSimple-0.0.9-macos-universal.zip"),
+        potpis: datoteka("TerraSimple-0.0.9-macos-universal.zip.sig"),
+    };
+    let mut app = Aplikacija::nova(PostavkeAplikacije::default());
+    app.aktivni_dijalog = Some(AktivniDijalog::Nadogradnja(StanjeNadogradnje::Dostupna {
+        ponuda,
+        moze_sam: true,
+    }));
+    let mut h = Harness::builder()
+        .with_size(vec2(Razmaci::SIRINA_PROZORA, Razmaci::VISINA_PROZORA))
+        .with_step_dt(0.05)
+        .with_context_setup(Aplikacija::postavi_kontekst)
+        .build_ui_state(|ui, app: &mut Aplikacija| app.crtaj_sucelje(ui), app);
+    h.run_steps(3);
+    let t = nacrtani_tekstovi(&h);
+    assert!(t.contains(&"Nadogradnja".to_owned()), "{t:?}");
+    assert!(
+        t.iter()
+            .any(|t| t.contains("Dostupno je izdanje 0.0.9 alfa (24,7 MB)")),
+        "{t:?}"
+    );
+    for gumb in ["Kasnije", "Stranica izdanja", "Instaliraj"] {
+        let _ = h.get_by_label(gumb);
+    }
+    h.get_by_label("Kasnije").click();
+    cekaj_smirenje(&mut h, Duration::from_millis(500));
+    assert!(h.state().aktivni_dijalog.is_none());
 }
 
 /// Gumb za temu mijenja svijetlu u tamnu i natrag.

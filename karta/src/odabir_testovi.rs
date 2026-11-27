@@ -104,6 +104,60 @@ impl Stol {
         self.c.klik_s(pos2(x, y), shift, &mut self.u, &OK, &Ravno);
         self.c.osvjezi_hvatista(self.u.projekt(), &Ravno);
     }
+
+    fn desni(&mut self, x: f32, y: f32) {
+        self.c.osvjezi_hvatista(self.u.projekt(), &Ravno);
+        self.c.desni_klik(pos2(x, y), &mut self.u, &OK, &Ravno);
+    }
+}
+
+#[test]
+fn desni_klik_na_objekt_odabire_samo_njega_i_trazi_izbornik() {
+    let mut s = stol();
+    s.klik(50.0, 50.0, false);
+    s.desni(200.0, 50.0);
+    assert_eq!(s.c.odabrani(), [s.desni]);
+    assert_eq!(s.c.uzmi_izbornik(), Some(s.desni));
+    assert_eq!(s.c.uzmi_izbornik(), None, "izbornik se traži samo jednom");
+}
+
+#[test]
+fn desni_klik_na_odabrani_objekt_ostavlja_cijeli_odabir() {
+    let mut s = stol();
+    s.klik(50.0, 50.0, false);
+    s.klik(200.0, 50.0, false);
+    s.desni(50.0, 50.0);
+    assert_eq!(s.c.odabrani(), [s.lijevi, s.desni]);
+    assert_eq!(s.c.uzmi_izbornik(), Some(s.lijevi));
+}
+
+#[test]
+fn desni_klik_na_prazno_ili_uz_okvir_ne_trazi_izbornik() {
+    let mut s = stol();
+    s.klik(50.0, 50.0, false);
+    s.desni(500.0, 500.0);
+    assert_eq!(s.c.uzmi_izbornik(), None);
+    assert_eq!(s.c.odabrani(), [s.lijevi]);
+    s.klik(-10.0, -10.0, false);
+    s.desni(50.0, 50.0);
+    assert!(s.c.okvir_odabira().is_none(), "desni klik odbacuje okvir");
+    assert_eq!(s.c.uzmi_izbornik(), None);
+}
+
+#[test]
+fn desni_klik_uz_alat_crtanja_ne_trazi_izbornik() {
+    let mut s = stol();
+    s.c.postavi_alat(Alat::Tocka);
+    s.desni(50.0, 50.0);
+    assert_eq!(s.c.uzmi_izbornik(), None);
+}
+
+#[test]
+fn postavi_odabrane_zamjenjuje_odabir() {
+    let mut s = stol();
+    s.klik(50.0, 50.0, false);
+    s.c.postavi_odabrane(vec![s.desni, s.lijevi]);
+    assert_eq!(s.c.odabrani(), [s.desni, s.lijevi]);
 }
 
 #[test]

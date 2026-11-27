@@ -86,6 +86,22 @@ impl Crtanje {
         }
     }
 
+    /// Desni klik na objekt koji nije odabran čini ga jedinim odabranim. Na odabrani objekt
+    /// odabir ostaje, pa izbornik vrijedi za sve odabrane.
+    pub(crate) fn izbornik_za(
+        &mut self,
+        m: Pos2,
+        projekt: &Projekt,
+        ok: &Okolina<'_>,
+        p: &dyn Pretvorba,
+    ) {
+        let objekt = objekt_pod(m, projekt, ok, p);
+        if let Some(o) = objekt.filter(|o| !self.odabrani.contains(o)) {
+            self.postavi_odabrani(Some(o));
+        }
+        self.izbornik = objekt;
+    }
+
     /// Okvir koji se upravo crta: prvi kut je zapamćen na karti, a drugi je miš.
     pub(crate) fn okvir_odabira(&self) -> Option<slojevi::Vrh> {
         self.okvir
