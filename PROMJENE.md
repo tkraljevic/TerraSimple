@@ -1,5 +1,14 @@
 # Popis promjena
 
+## 0.0.8 alfa (probno, 27. 11. 2026.)
+
+- Novo: Pomoć → „Provjeri nadogradnju…”. Program pita GitHub za novije izdanje tek kad klikneš. Ako ga
+  ima, nudi Instaliraj: preuzme paket za tvoj sustav, provjeri njegov potpis i zamijeni se novim izdanjem,
+  a nakon „Ponovno pokreni” otvori novo izdanje. Tvoji projekti ostaju gdje jesu. Ako potpis ne odgovara
+  ili nešto ne uspije, program ostaje kakav je bio i nudi stranicu izdanja za ručno preuzimanje.
+- Izbornik Pomoć sad otvara popis s dvije stavke: „O programu” i „Provjeri nadogradnju…”.
+- Ovo izdanje treba jednom instalirati ručno. Od njega dalje program se nadograđuje sam.
+
 ## 0.0.7 alfa (probno, 14. 11. 2026.)
 
 - Novo: desni klik na objekt na karti otvara izbornik uz miš: Preimenuj, Stil, Premjesti u, Zumiraj na

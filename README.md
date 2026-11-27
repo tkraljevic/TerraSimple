@@ -22,7 +22,7 @@ raspakira u svoju mapu i pokrene. Upute za svaki sustav su u [izdanje.md](docs/i
 
 ## Što radi
 
-Stanje 0.0.7. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
+Stanje 0.0.8. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
 
 - **Karta:** podloga OpenFreeMap ili DGU ortofoto, svijetla i tamna tema, mjerilo i koordinate pod mišem u
   HTRS96/TM.
@@ -50,6 +50,8 @@ Stanje 0.0.7. Što je ušlo u koje izdanje, piše u [PROMJENE.md](PROMJENE.md).
 - **Prečaci:** gumb „?” ili F1. Program sam prepoznaje sustav, pa na Macu piše ⌘ i dodirnu plohu, a
   drugdje Ctrl i kotačić.
 - **Poništavanje:** svaka izmjena, i cijeli uvoz, vraća se s ⌘Z (Ctrl+Z).
+- **Nadogradnja:** Pomoć → „Provjeri nadogradnju…” pita GitHub za novije izdanje tek na klik. Program
+  preuzme paket, provjeri potpis, zamijeni se i ponovno otvori.
 
 Još ne radi: ikone za točke, atributna tablica, sloj koji se čita ravno iz tuđe datoteke, podloge iz vlastitih
 datoteka i ispis. Dolaze redom, po [planu rada](docs/plan.md).
