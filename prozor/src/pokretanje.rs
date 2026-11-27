@@ -114,6 +114,8 @@ fn tvornica(
 
 fn pripremi_aplikaciju(p: PostavkeAplikacije, provjera: bool) -> Aplikacija {
     let mut aplikacija = Aplikacija::nova(p);
+    // Ostatak prethodne nadogradnje briše se tek sad, kad stari program više ne radi.
+    aplikacija.nadogradnja.pocisti();
     if provjera {
         // Izmišljeni primjer provjere nema korisničkih promjena za spremanje.
         aplikacija.uredjivac.oznaci_spremljeno();
@@ -153,6 +155,10 @@ struct Omotac {
 impl eframe::App for Omotac {
     fn raw_input_hook(&mut self, ctx: &egui::Context, unos: &mut egui::RawInput) {
         self.aplikacija.raw_input_hook(ctx, unos);
+    }
+
+    fn on_exit(&mut self) {
+        self.aplikacija.on_exit();
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {

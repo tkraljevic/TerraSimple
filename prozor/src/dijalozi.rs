@@ -18,6 +18,13 @@ pub enum StavkaIzbornikaDatoteka {
     Izvezi,
 }
 
+/// Stavka odabrana u padajućem izborniku Pomoć.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StavkaIzbornikaPomoci {
+    OProgramu,
+    Nadogradnja,
+}
+
 /// Svrha potvrde nespremljenih izmjena.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NamjeraPotvrde {
@@ -52,6 +59,8 @@ pub enum AktivniDijalog {
     SukobSpremanja,
     /// Inačica, licenca i izvori karte.
     OProgramu,
+    /// Provjera i instalacija novijeg izdanja.
+    Nadogradnja(crate::nadogradnja_prozora::StanjeNadogradnje),
     /// Prečaci tipkovnice i miša.
     Precaci,
     /// Pregled prije izvoza u KML (zaslon K).
@@ -80,6 +89,7 @@ pub enum IshodDijaloga {
     Prihvati,
     /// Vrati (`true`) ili odbaci kopiju nespremljenog rada.
     Oporavak(bool),
+    Nadogradnja(crate::nadogradnja_prozora::GumbNadogradnje),
 }
 
 /// Oznaka prečaca kako je pišu programi na tom sustavu: na Macu `⌘S`, drugdje `Ctrl+S`.
@@ -147,6 +157,56 @@ pub fn crtaj_padajuci_izbornik_datoteka(
         ),
     ];
 
+    crtaj_padajuci(
+        ui,
+        otvoren,
+        pocetak,
+        stavke.to_vec(),
+        "padajuci_datoteka",
+        boje,
+    )
+}
+
+/// Crta padajući izbornik pomoći ispod stavke „Pomoć” (`x` je njezin lijevi rub).
+pub fn crtaj_padajuci_izbornik_pomoci(
+    ui: &mut egui::Ui,
+    otvoren: &mut bool,
+    x: f32,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<StavkaIzbornikaPomoci> {
+    if !*otvoren {
+        return None;
+    }
+    if ui.input(|i| i.key_pressed(Key::Escape)) {
+        *otvoren = false;
+        return None;
+    }
+    let stavke = vec![
+        (
+            StavkaIzbornikaPomoci::OProgramu,
+            katalog.tekst("izbornik-pomoc-o-programu"),
+            String::new(),
+        ),
+        (
+            StavkaIzbornikaPomoci::Nadogradnja,
+            katalog.tekst("izbornik-pomoc-nadogradnja"),
+            String::new(),
+        ),
+    ];
+    let pocetak = pos2(x - 4.0, Razmaci::VISINA_IZBORNIKA + 2.0);
+    crtaj_padajuci(ui, otvoren, pocetak, stavke, "padajuci_pomoc", boje)
+}
+
+/// Okvir sa stavkama (vrsta, naziv, prečac); klik izvan njega zatvara izbornik.
+fn crtaj_padajuci<T: Copy>(
+    ui: &mut egui::Ui,
+    otvoren: &mut bool,
+    pocetak: egui::Pos2,
+    stavke: Vec<(T, String, String)>,
+    id: &str,
+    boje: &Boje,
+) -> Option<T> {
     let sirina = 220.0;
     let visina_retka = 28.0;
     let ukupna_visina = stavke.len() as f32 * visina_retka + 8.0;
@@ -156,7 +216,7 @@ pub fn crtaj_padajuci_izbornik_datoteka(
     // Dok je izbornik otvoren, klik izvan njega samo ga zatvara i ne pada na kartu ili ploču.
     let mut ispod = ui.ctx().content_rect();
     ispod.min.y = Razmaci::VISINA_IZBORNIKA;
-    crate::karta_prozora::zaklon(ui, ispod, "izbornik_datoteka");
+    crate::karta_prozora::zaklon(ui, ispod, id);
     zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 6.0);
 
     let mut odabrano = None;
@@ -165,7 +225,7 @@ pub fn crtaj_padajuci_izbornik_datoteka(
         let r_okvir =
             Rect::from_min_size(pos2(pocetak.x + 4.0, ry), vec2(sirina - 8.0, visina_retka));
 
-        if crtaj_stavku_padajuceg_izbornika(ui, r_okvir, indeks, &naziv, &precac, boje) {
+        if crtaj_stavku_padajuceg_izbornika(ui, (id, r_okvir, indeks), &naziv, &precac, boje) {
             odabrano = Some(vrsta);
             *otvoren = false;
         }
@@ -183,13 +243,12 @@ pub fn crtaj_padajuci_izbornik_datoteka(
 
 fn crtaj_stavku_padajuceg_izbornika(
     ui: &mut egui::Ui,
-    r_okvir: Rect,
-    indeks: usize,
+    (izbornik, r_okvir, indeks): (&str, Rect, usize),
     naziv: &str,
     precac: &str,
     boje: &Boje,
 ) -> bool {
-    let id = ui.make_persistent_id(("padajuci_datoteka", indeks));
+    let id = ui.make_persistent_id((izbornik, indeks));
     let odg = ui.interact(r_okvir, id, Sense::click());
     odg.widget_info(|| WidgetInfo::labeled(Role::Button, ui.is_enabled(), naziv));
 
@@ -417,6 +476,9 @@ fn crtaj_ostale(
 ) -> Option<IshodDijaloga> {
     match dijalog {
         AktivniDijalog::OProgramu => crtaj_o_programu(ui, dostupan, boje, katalog),
+        AktivniDijalog::Nadogradnja(stanje) => {
+            crtaj_nadogradnju(ui, dostupan, stanje, boje, katalog)
+        }
         AktivniDijalog::Precaci => crtaj_precace(ui, dostupan, boje, katalog),
         AktivniDijalog::Izvoz(priprema) => crtaj_izvoz(ui, dostupan, priprema, boje, katalog),
         AktivniDijalog::Oporavak(ostatak) => crtaj_oporavak(ui, dostupan, ostatak, boje, katalog),
@@ -1243,6 +1305,63 @@ fn crtaj_poruku(
     } else {
         None
     }
+}
+
+/// Prozorčić nadogradnje: naslov, tekst stanja i gumbi s desna na lijevo (zadnji istaknut).
+fn crtaj_nadogradnju(
+    ui: &mut egui::Ui,
+    dostupan: Rect,
+    stanje: &crate::nadogradnja_prozora::StanjeNadogradnje,
+    boje: &Boje,
+    katalog: &KatalogPoruka,
+) -> Option<IshodDijaloga> {
+    use crate::nadogradnja_prozora as n;
+    let poruka = n::poruka(stanje, n::trenutna_inacica(), katalog);
+    let sirina = 460.0;
+    let visina_teksta = ui
+        .painter()
+        .layout(
+            poruka.clone(),
+            font_obicni(13.0),
+            boje.tekst_2,
+            sirina - 40.0,
+        )
+        .size()
+        .y;
+    let visina = 105.0 + visina_teksta.max(40.0);
+    let okvir = Rect::from_center_size(dostupan.center(), vec2(sirina, visina));
+    zaobljeni_okvir(ui, okvir, boje.ploca, Some(boje.obrub), 10.0);
+    tekst_lijevo(
+        ui,
+        pos2(okvir.min.x + 20.0, okvir.min.y + 24.0),
+        &katalog.tekst("nadogradnja-naslov"),
+        font_srednji(15.0),
+        boje.tekst,
+    );
+    ui.put(
+        Rect::from_min_size(
+            pos2(okvir.min.x + 20.0, okvir.min.y + 50.0),
+            vec2(sirina - 40.0, visina - 105.0),
+        ),
+        egui::Label::new(
+            egui::RichText::new(poruka)
+                .font(font_obicni(13.0))
+                .color(boje.tekst_2),
+        ),
+    );
+    let gumbi = n::gumbi(stanje);
+    let mut desno = okvir.max.x - 20.0;
+    let mut odabran = None;
+    for (i, gumb) in gumbi.iter().enumerate().rev() {
+        let tekst = katalog.tekst(n::kljuc_gumba(*gumb));
+        let w = (tekst.chars().count() as f32 * 7.0 + 28.0).max(86.0);
+        let r = Rect::from_min_size(pos2(desno - w, okvir.max.y - 42.0), vec2(w, 30.0));
+        if gumb_dijaloga(ui, r, &tekst, i + 1 == gumbi.len(), false, boje).clicked() {
+            odabran = Some(IshodDijaloga::Nadogradnja(*gumb));
+        }
+        desno -= w + 8.0;
+    }
+    odabran
 }
 
 fn crtaj_upozorenja_otvaranja(

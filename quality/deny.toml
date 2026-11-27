@@ -1,5 +1,9 @@
 [advisories]
 db-urls = ["https://github.com/RustSec/advisory-db"]
+# chrono se više ne održava (RUSTSEC-2026-0543), ali nema poznatu ranjivost. Koristi ga prozor za
+# datume i vrijeme spremanja, a xtask za rokove iznimaka. Zamjena (npr. jiff) je zaseban posao
+# (27. 11. 2026.).
+ignore = [{ id = "RUSTSEC-2026-0543", reason = "chrono se ne održava, bez poznate ranjivosti; zamjena je zaseban posao" }]
 
 [licenses]
 # 0BSD (varint-rs), BSL-1.0 (xxhash-rust) i CDLA-Permissive-2.0 (podaci certifikata, webpki-root-certs)
